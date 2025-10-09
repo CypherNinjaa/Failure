@@ -31,7 +31,9 @@ const StudentForm = ({
 		resolver: zodResolver(studentSchema),
 	});
 
-	const [img, setImg] = useState<any>();
+	const [img, setImg] = useState<any>(
+		data?.img ? { secure_url: data.img } : null
+	);
 
 	const [state, formAction] = useFormState(
 		type === "create" ? createStudent : updateStudent,
@@ -103,12 +105,33 @@ const StudentForm = ({
 			>
 				{({ open }) => {
 					return (
-						<div
-							className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
-							onClick={() => open()}
-						>
-							<Image src="/upload.png" alt="" width={28} height={28} />
-							<span>Upload a photo</span>
+						<div className="flex flex-col gap-2">
+							<label className="text-xs text-gray-500">Photo</label>
+							{img ? (
+								<div className="relative w-full md:w-1/4 h-32">
+									<Image
+										src={img.secure_url}
+										alt="Uploaded photo"
+										fill
+										className="object-cover rounded-md"
+									/>
+									<button
+										type="button"
+										onClick={() => setImg(null)}
+										className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+									>
+										✕
+									</button>
+								</div>
+							) : (
+								<div
+									className="text-xs text-gray-500 flex flex-col items-center justify-center gap-2 cursor-pointer border-2 border-dashed border-gray-300 rounded-md p-4 h-32 w-full md:w-1/4 hover:border-blue-400"
+									onClick={() => open()}
+								>
+									<Image src="/upload.png" alt="" width={28} height={28} />
+									<span>Upload a photo</span>
+								</div>
+							)}
 						</div>
 					);
 				}}
