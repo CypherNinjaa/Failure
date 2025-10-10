@@ -112,6 +112,14 @@ model Lesson {
   exams       Exam[]
   assignments Assignment[]
   attendances Attendance[]
+  
+  // Recurrence fields
+  isRecurring     Boolean  @default(false)
+  recurrenceEndDate DateTime?
+  parentLessonId  Int?     // Reference to the original lesson if this is a duplicate
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 model Exam {

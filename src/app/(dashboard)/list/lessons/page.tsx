@@ -2,6 +2,7 @@ import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import LessonRecurrenceActions from "@/components/LessonRecurrenceActions";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Lesson, Prisma, Subject, Teacher } from "@prisma/client";
@@ -53,7 +54,25 @@ const LessonListPage = async ({
 			key={item.id}
 			className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
 		>
-			<td className="flex items-center gap-4 p-4">{item.subject.name}</td>
+			<td className="flex items-center gap-4 p-4">
+				<div className="flex flex-col">
+					<span>{item.subject.name}</span>
+					{item.isRecurring && (
+						<span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full mt-1 inline-block w-fit">
+							🔁 Auto-Repeat
+							{item.recurrenceEndDate &&
+								` until ${new Date(
+									item.recurrenceEndDate
+								).toLocaleDateString()}`}
+						</span>
+					)}
+					{item.parentLessonId && (
+						<span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block w-fit">
+							📋 Duplicate
+						</span>
+					)}
+				</div>
+			</td>
 			<td>{item.name}</td>
 			<td>{item.class.name}</td>
 			<td className="hidden md:table-cell">
@@ -63,6 +82,12 @@ const LessonListPage = async ({
 				<div className="flex items-center gap-2">
 					{role === "admin" && (
 						<>
+							<LessonRecurrenceActions
+								lessonId={item.id}
+								isRecurring={item.isRecurring}
+								recurrenceEndDate={item.recurrenceEndDate}
+								lessonName={item.name}
+							/>
 							<FormContainer table="lesson" type="update" data={item} />
 							<FormContainer table="lesson" type="delete" id={item.id} />
 						</>

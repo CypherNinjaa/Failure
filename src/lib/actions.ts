@@ -140,9 +140,27 @@ export const deleteClass = async (
 
 		// revalidatePath("/list/class");
 		return { success: true, error: false };
-	} catch (err) {
+	} catch (err: any) {
 		console.log(err);
-		return { success: false, error: true };
+
+		// Check if it's a foreign key constraint error
+		if (
+			err.code === "P2003" ||
+			err.message?.includes("foreign key constraint")
+		) {
+			return {
+				success: false,
+				error: true,
+				message:
+					"Cannot delete this class because it has related students, lessons, events, or announcements. Please delete or reassign those first.",
+			};
+		}
+
+		return {
+			success: false,
+			error: true,
+			message: "Failed to delete class. Please try again.",
+		};
 	}
 };
 
@@ -656,9 +674,210 @@ export const deleteLesson = async (
 
 		// revalidatePath("/list/lessons");
 		return { success: true, error: false };
+	} catch (err: any) {
+		console.log(err);
+
+		// Check if it's a foreign key constraint error
+		if (
+			err.code === "P2003" ||
+			err.message?.includes("foreign key constraint")
+		) {
+			return {
+				success: false,
+				error: true,
+				message:
+					"Cannot delete this lesson because it has related exams, assignments, or attendance records. Please delete those first.",
+			};
+		}
+
+		return {
+			success: false,
+			error: true,
+			message: "Failed to delete lesson. Please try again.",
+		};
+	}
+};
+
+// LESSON RECURRENCE ACTIONS
+
+export const duplicateLessonForDate = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	const lessonId = data.get("lessonId") as string;
+	const newDate = data.get("newDate") as string;
+
+	try {
+		// Fetch the original lesson
+		const originalLesson = await prisma.lesson.findUnique({
+			where: { id: parseInt(lessonId) },
+		});
+
+		if (!originalLesson) {
+			return {
+				success: false,
+				error: true,
+				message: "Original lesson not found",
+			};
+		}
+
+		// Create new lesson with the same data but different date
+		const newStartTime = new Date(
+			newDate + "T" + originalLesson.startTime.toISOString().split("T")[1]
+		);
+		const newEndTime = new Date(
+			newDate + "T" + originalLesson.endTime.toISOString().split("T")[1]
+		);
+
+		await prisma.lesson.create({
+			data: {
+				name: originalLesson.name,
+				day: originalLesson.day,
+				startTime: newStartTime,
+				endTime: newEndTime,
+				subjectId: originalLesson.subjectId,
+				classId: originalLesson.classId,
+				teacherId: originalLesson.teacherId,
+				parentLessonId: parseInt(lessonId),
+			},
+		});
+
+		// revalidatePath("/list/lessons");
+		return {
+			success: true,
+			error: false,
+			message: "Lesson duplicated successfully for the new date!",
+		};
 	} catch (err) {
 		console.log(err);
-		return { success: false, error: true };
+		return {
+			success: false,
+			error: true,
+			message: "Failed to duplicate lesson. Please try again.",
+		};
+	}
+};
+
+export const toggleLessonRecurrence = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	const lessonId = data.get("lessonId") as string;
+	const isRecurring = data.get("isRecurring") === "true";
+	const recurrenceEndDate = data.get("recurrenceEndDate") as string;
+
+	try {
+		await prisma.lesson.update({
+			where: { id: parseInt(lessonId) },
+			data: {
+				isRecurring,
+				recurrenceEndDate: recurrenceEndDate
+					? new Date(recurrenceEndDate)
+					: null,
+			},
+		});
+
+		// revalidatePath("/list/lessons");
+		return {
+			success: true,
+			error: false,
+			message: `Auto-repeat ${
+				isRecurring ? "enabled" : "disabled"
+			} successfully!`,
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to update recurrence settings. Please try again.",
+		};
+	}
+};
+
+export const generateRecurringLessons = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	const lessonId = data.get("lessonId") as string;
+
+	try {
+		const lesson = await prisma.lesson.findUnique({
+			where: { id: parseInt(lessonId) },
+		});
+
+		if (!lesson || !lesson.isRecurring) {
+			return {
+				success: false,
+				error: true,
+				message: "Lesson not found or recurrence not enabled",
+			};
+		}
+
+		const today = new Date();
+		const endDate =
+			lesson.recurrenceEndDate ||
+			new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days default
+
+		const lessonsToCreate = [];
+		let currentDate = new Date(lesson.startTime);
+		currentDate.setDate(currentDate.getDate() + 7); // Start from next week
+
+		while (currentDate <= endDate) {
+			// Check if lesson already exists for this date
+			const existingLesson = await prisma.lesson.findFirst({
+				where: {
+					parentLessonId: parseInt(lessonId),
+					startTime: {
+						gte: new Date(currentDate.setHours(0, 0, 0, 0)),
+						lt: new Date(currentDate.setHours(23, 59, 59, 999)),
+					},
+				},
+			});
+
+			if (!existingLesson) {
+				const newStartTime = new Date(currentDate);
+				newStartTime.setHours(lesson.startTime.getHours());
+				newStartTime.setMinutes(lesson.startTime.getMinutes());
+
+				const newEndTime = new Date(currentDate);
+				newEndTime.setHours(lesson.endTime.getHours());
+				newEndTime.setMinutes(lesson.endTime.getMinutes());
+
+				lessonsToCreate.push({
+					name: lesson.name,
+					day: lesson.day,
+					startTime: newStartTime,
+					endTime: newEndTime,
+					subjectId: lesson.subjectId,
+					classId: lesson.classId,
+					teacherId: lesson.teacherId,
+					parentLessonId: parseInt(lessonId),
+				});
+			}
+
+			currentDate.setDate(currentDate.getDate() + 7); // Move to next week
+		}
+
+		if (lessonsToCreate.length > 0) {
+			await prisma.lesson.createMany({
+				data: lessonsToCreate,
+			});
+		}
+
+		// revalidatePath("/list/lessons");
+		return {
+			success: true,
+			error: false,
+			message: `${lessonsToCreate.length} recurring lessons generated successfully!`,
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to generate recurring lessons. Please try again.",
+		};
 	}
 };
 

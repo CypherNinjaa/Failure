@@ -220,11 +220,22 @@ const FormModal = ({
 
 		useEffect(() => {
 			if (state.success) {
-				toast(`${table} has been deleted!`);
+				toast.success(`${table} has been deleted!`);
 				setOpen(false);
 				router.refresh();
 			}
 		}, [state, router]);
+
+		useEffect(() => {
+			if (state.error) {
+				// Show the custom error message if available, otherwise generic message
+				const errorMessage =
+					(state as any).message ||
+					`Failed to delete ${table}. It may have related data.`;
+				toast.error(errorMessage);
+			}
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [state]);
 
 		return type === "delete" && id ? (
 			<form action={formAction} className="p-4 flex flex-col gap-4">
@@ -232,6 +243,13 @@ const FormModal = ({
 				<span className="text-center font-medium">
 					All data will be lost. Are you sure you want to delete this {table}?
 				</span>
+				{state.error && (state as any).message && (
+					<div className="bg-red-50 border border-red-200 rounded-lg p-3">
+						<p className="text-sm text-red-800 text-center">
+							{(state as any).message}
+						</p>
+					</div>
+				)}
 				<button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
 					Delete
 				</button>
