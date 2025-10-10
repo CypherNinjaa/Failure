@@ -59,7 +59,8 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
 					include: { _count: { select: { students: true } } },
 				});
 				const studentParents = await prisma.parent.findMany({
-					select: { id: true, name: true, surname: true },
+					select: { id: true, name: true, surname: true, createdAt: true },
+					orderBy: { createdAt: "desc" }, // Newest parents first
 				});
 				relatedData = {
 					classes: studentClasses,

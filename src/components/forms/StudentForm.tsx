@@ -11,6 +11,7 @@ import { createStudent, updateStudent } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { CldUploadWidget } from "next-cloudinary";
+import ParentSearchSelect from "../ParentSearchSelect";
 
 const StudentForm = ({
 	type,
@@ -27,6 +28,7 @@ const StudentForm = ({
 		register,
 		handleSubmit,
 		formState: { errors },
+		setValue,
 	} = useForm<StudentSchema>({
 		resolver: zodResolver(studentSchema),
 	});
@@ -35,18 +37,21 @@ const StudentForm = ({
 		data?.img ? { secure_url: data.img } : null
 	);
 
-	const [state, formAction] = useFormState(
-		type === "create" ? createStudent : updateStudent,
-		{
-			success: false,
-			error: false,
-		}
-	);
+	const [parentId, setParentId] = useState<string>(data?.parentId || "");
 
-	const onSubmit = handleSubmit((data) => {
+	const [state, formAction] = useFormState<
+		{ success: boolean; error: boolean; message?: string },
+		any
+	>(type === "create" ? createStudent : updateStudent, {
+		success: false,
+		error: false,
+	});
+
+	const onSubmit = handleSubmit((formData) => {
 		console.log("hello");
-		console.log(data);
-		formAction({ ...data, img: img?.secure_url });
+		console.log(formData);
+		// Include parentId in the form submission
+		formAction({ ...formData, img: img?.secure_url, parentId });
 	});
 
 	const router = useRouter();
@@ -56,10 +61,12 @@ const StudentForm = ({
 			toast(`Student has been ${type === "create" ? "created" : "updated"}!`);
 			setOpen(false);
 			router.refresh();
+		} else if (state.error && state.message) {
+			toast.error(state.message);
 		}
 	}, [state, router, type, setOpen]);
 
-	const { grades, classes } = relatedData;
+	const { grades, classes, parents } = relatedData;
 
 	return (
 		<form className="flex flex-col gap-8" onSubmit={onSubmit}>
@@ -190,28 +197,15 @@ const StudentForm = ({
 					/>
 				)}
 				{!data && (
-					<div className="flex flex-col gap-2 w-full md:w-1/4">
-						<label className="text-xs text-gray-500">Parent</label>
-						<select
-							className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-							{...register("parentId")}
-							defaultValue={data?.parentId}
-						>
-							<option value="">Select a parent</option>
-							{relatedData?.parents?.map(
-								(parent: { id: string; name: string; surname: string }) => (
-									<option value={parent.id} key={parent.id}>
-										{parent.name} {parent.surname}
-									</option>
-								)
-							)}
-						</select>
-						{errors.parentId?.message && (
-							<p className="text-xs text-red-400">
-								{errors.parentId.message.toString()}
-							</p>
-						)}
-					</div>
+					<ParentSearchSelect
+						parents={parents || []}
+						value={parentId}
+						onChange={(value) => {
+							setParentId(value);
+							setValue("parentId", value);
+						}}
+						error={errors.parentId?.message?.toString()}
+					/>
 				)}
 				{data && (
 					<InputField
