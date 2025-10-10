@@ -205,3 +205,70 @@ export const locationSchema = z.object({
 });
 
 export type LocationSchema = z.infer<typeof locationSchema>;
+
+// MCQ System Validation Schemas
+
+export const mcqTestSchema = z.object({
+	id: z.coerce.number().optional(),
+	title: z.string().min(1, { message: "Test title is required!" }),
+	description: z.string().optional(),
+	subjectId: z.coerce.number({ message: "Subject is required!" }),
+	classId: z.coerce.number({ message: "Class is required!" }),
+	teacherId: z.string().optional(), // Will be set from session
+	duration: z.coerce
+		.number()
+		.min(1, { message: "Duration must be at least 1 minute!" }),
+	deadline: z.coerce.date({ message: "Deadline is required!" }),
+	startTime: z.coerce.date({ message: "Start time is required!" }),
+	shuffleQuestions: z.coerce.boolean().default(true),
+	shuffleOptions: z.coerce.boolean().default(true),
+	passingScore: z.coerce.number().optional(),
+	allowReview: z.coerce.boolean().default(true),
+	showResults: z.coerce.boolean().default(true),
+	isPublished: z.coerce.boolean().default(false),
+});
+
+export type MCQTestSchema = z.infer<typeof mcqTestSchema>;
+
+export const mcqQuestionSchema = z.object({
+	id: z.coerce.number().optional(),
+	testId: z.coerce.number({ message: "Test ID is required!" }),
+	questionType: z.enum(
+		[
+			"MULTIPLE_CHOICE",
+			"MULTI_SELECT",
+			"TRUE_FALSE",
+			"FILL_BLANK",
+			"MATCH_FOLLOWING",
+		],
+		{ message: "Question type is required!" }
+	),
+	questionText: z.string().min(1, { message: "Question text is required!" }),
+	options: z.string().optional(), // Will be parsed as JSON
+	correctAnswer: z.string().min(1, { message: "Correct answer is required!" }), // Will be parsed as JSON
+	explanation: z.string().optional(),
+	points: z.coerce
+		.number()
+		.min(1, { message: "Points must be at least 1!" })
+		.default(1),
+	negativeMarking: z.coerce
+		.number()
+		.min(0, { message: "Negative marking cannot be negative!" })
+		.max(4, { message: "Negative marking cannot exceed 4 points!" })
+		.default(0),
+	order: z.coerce.number().default(1),
+	imageUrl: z.string().optional(),
+});
+
+export type MCQQuestionSchema = z.infer<typeof mcqQuestionSchema>;
+
+export const mcqAttemptSchema = z.object({
+	testId: z.coerce.number({ message: "Test ID is required!" }),
+	studentId: z.string().optional(), // Will be set from session
+	answers: z.string(), // JSON string of answers
+	timeSpent: z.coerce.number().default(0),
+	tabSwitches: z.coerce.number().default(0),
+	copyPasteAttempts: z.coerce.number().default(0),
+});
+
+export type MCQAttemptSchema = z.infer<typeof mcqAttemptSchema>;

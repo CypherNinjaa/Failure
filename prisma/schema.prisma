@@ -33,6 +33,12 @@ model Student {
   attendances Attendance[]
   results     Result[]
   birthday    DateTime
+  
+  // MCQ Relations
+  mcqAttempts     MCQAttempt[]
+  wrongAnswers    WrongAnswer[]
+  points          StudentPoints?
+  achievements    Achievement[]
 }
 
 model Teacher {
@@ -52,6 +58,9 @@ model Teacher {
   classes   Class[]
   birthday  DateTime
   teacherAttendances TeacherAttendance[]
+  
+  // MCQ Relations
+  mcqTests    MCQTest[]
 }
 
 model Parent {
@@ -87,6 +96,9 @@ model Class {
   grade         Grade          @relation(fields: [gradeId], references: [id])
   events        Event[]
   announcements Announcement[]
+  
+  // MCQ Relations
+  mcqTests      MCQTest[]
 }
 
 model Subject {
@@ -94,6 +106,9 @@ model Subject {
   name     String    @unique
   teachers Teacher[]
   lessons  Lesson[]
+  
+  // MCQ Relations
+  mcqTests MCQTest[]
 }
 
 model Lesson {
@@ -244,3 +259,138 @@ model AttendanceSettings {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+
+// MCQ System Models
+
+model MCQTest {
+  id                Int       @id @default(autoincrement())
+  title             String
+  description       String?
+  subjectId         Int
+  classId           Int
+  teacherId         String
+  totalPoints       Int       @default(0)
+  duration          Int       // Duration in minutes
+  deadline          DateTime
+  startTime         DateTime
+  isPublished       Boolean   @default(false)
+  shuffleQuestions  Boolean   @default(true)
+  shuffleOptions    Boolean   @default(true)
+  passingScore      Int?      // Minimum score to pass
+  allowReview       Boolean   @default(true)
+  showResults       Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  subject           Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class             Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher           Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  questions         MCQQuestion[]
+  attempts          MCQAttempt[]
+  
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([deadline])
+}
+
+model MCQQuestion {
+  id                Int             @id @default(autoincrement())
+  testId            Int
+  questionType      QuestionType
+  questionText      String          @db.Text
+  options           Json?           // Array of options for MCQ/Match following
+  correctAnswer     Json            // Correct answer(s) - flexible format
+  explanation       String?         @db.Text
+  points            Int             @default(1)
+  negativeMarking   Float           @default(0)
+  order             Int
+  imageUrl          String?         // Optional image for question
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  test              MCQTest         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  wrongAnswers      WrongAnswer[]
+  
+  @@index([testId])
+}
+
+model MCQAttempt {
+  id                Int       @id @default(autoincrement())
+  testId            Int
+  studentId         String
+  score             Int       @default(0)
+  totalPoints       Int
+  correctAnswers    Int       @default(0)
+  wrongAnswers      Int       @default(0)
+  unanswered        Int       @default(0)
+  startedAt         DateTime  @default(now())
+  submittedAt       DateTime?
+  timeSpent         Int       @default(0) // Time in seconds
+  answers           Json      // Student's answers with question IDs
+  tabSwitches       Int       @default(0)
+  copyPasteAttempts Int       @default(0)
+  isFlagged         Boolean   @default(false)
+  isCompleted       Boolean   @default(false)
+  percentageScore   Float     @default(0)
+  
+  test              MCQTest   @relation(fields: [testId], references: [id], onDelete: Cascade)
+  student           Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([testId, studentId])
+  @@index([studentId])
+  @@index([testId])
+  @@index([submittedAt])
+}
+
+model WrongAnswer {
+  id            Int         @id @default(autoincrement())
+  studentId     String
+  questionId    Int
+  attemptCount  Int         @default(1)
+  lastAttempted DateTime    @default(now())
+  isResolved    Boolean     @default(false)
+  
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  question      MCQQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, questionId])
+  @@index([studentId])
+  @@index([questionId])
+}
+
+model StudentPoints {
+  id            Int       @id @default(autoincrement())
+  studentId     String    @unique
+  totalPoints   Int       @default(0)
+  rank          Int?
+  testsCompleted Int      @default(0)
+  averageScore  Float     @default(0)
+  lastUpdated   DateTime  @default(now()) @updatedAt
+  
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@index([totalPoints])
+  @@index([rank])
+}
+
+model Achievement {
+  id          Int       @id @default(autoincrement())
+  studentId   String
+  badgeType   String    // "FIRST_TEST", "10_TESTS", "100_POINTS", "PERFECT_SCORE", etc.
+  earnedAt    DateTime  @default(now())
+  
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@index([studentId])
+  @@unique([studentId, badgeType])
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE   // Single correct answer from options
+  MULTI_SELECT      // Multiple correct answers
+  TRUE_FALSE        // True or False
+  FILL_BLANK        // Fill in the blank
+  MATCH_FOLLOWING   // Match pairs
+}
+

@@ -16,6 +16,9 @@ import {
 	EventSchema,
 	AnnouncementSchema,
 	LocationSchema,
+	MCQTestSchema,
+	MCQQuestionSchema,
+	MCQAttemptSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -1561,6 +1564,787 @@ export const deleteLocation = async (
 		});
 
 		// revalidatePath("/list/locations");
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// ============================================
+// MCQ SYSTEM ACTIONS
+// ============================================
+
+// MCQ TEST ACTIONS
+
+export const createMCQTest = async (
+	currentState: CurrentState,
+	data: MCQTestSchema
+) => {
+	try {
+		await prisma.mCQTest.create({
+			data: {
+				title: data.title,
+				description: data.description,
+				subjectId: data.subjectId,
+				classId: data.classId,
+				teacherId: data.teacherId!,
+				duration: data.duration,
+				deadline: data.deadline,
+				startTime: data.startTime,
+				shuffleQuestions: data.shuffleQuestions,
+				shuffleOptions: data.shuffleOptions,
+				passingScore: data.passingScore,
+				allowReview: data.allowReview,
+				showResults: data.showResults,
+				isPublished: data.isPublished,
+			},
+		});
+
+		// revalidatePath("/list/mcq-tests");
+		return {
+			success: true,
+			error: false,
+			message: "MCQ Test created successfully!",
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to create MCQ test!",
+		};
+	}
+};
+
+export const updateMCQTest = async (
+	currentState: CurrentState,
+	data: MCQTestSchema
+) => {
+	if (!data.id) {
+		return { success: false, error: true, message: "Test ID is required!" };
+	}
+
+	try {
+		await prisma.mCQTest.update({
+			where: { id: data.id },
+			data: {
+				title: data.title,
+				description: data.description,
+				subjectId: data.subjectId,
+				classId: data.classId,
+				duration: data.duration,
+				deadline: data.deadline,
+				startTime: data.startTime,
+				shuffleQuestions: data.shuffleQuestions,
+				shuffleOptions: data.shuffleOptions,
+				passingScore: data.passingScore,
+				allowReview: data.allowReview,
+				showResults: data.showResults,
+				isPublished: data.isPublished,
+			},
+		});
+
+		// revalidatePath("/list/mcq-tests");
+		return {
+			success: true,
+			error: false,
+			message: "MCQ Test updated successfully!",
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to update MCQ test!",
+		};
+	}
+};
+
+export const deleteMCQTest = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	const id = data.get("id") as string;
+	try {
+		await prisma.mCQTest.delete({
+			where: { id: parseInt(id) },
+		});
+
+		// revalidatePath("/list/mcq-tests");
+		return {
+			success: true,
+			error: false,
+			message: "MCQ Test deleted successfully!",
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to delete MCQ test!",
+		};
+	}
+};
+
+export const publishMCQTest = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	const id = data.get("id") as string;
+	const isPublished = data.get("isPublished") === "true";
+
+	try {
+		await prisma.mCQTest.update({
+			where: { id: parseInt(id) },
+			data: { isPublished },
+		});
+
+		// revalidatePath("/list/mcq-tests");
+		return {
+			success: true,
+			error: false,
+			message: isPublished
+				? "Test published successfully!"
+				: "Test unpublished!",
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to update test status!",
+		};
+	}
+};
+
+// MCQ QUESTION ACTIONS
+
+export const createMCQQuestion = async (
+	currentState: CurrentState,
+	data: MCQQuestionSchema
+) => {
+	try {
+		// Parse JSON strings for options and correctAnswer
+		const options = data.options ? JSON.parse(data.options) : null;
+		const correctAnswer = JSON.parse(data.correctAnswer);
+
+		await prisma.mCQQuestion.create({
+			data: {
+				testId: data.testId,
+				questionType: data.questionType,
+				questionText: data.questionText,
+				options,
+				correctAnswer,
+				explanation: data.explanation,
+				points: data.points,
+				negativeMarking: data.negativeMarking,
+				order: data.order,
+				imageUrl: data.imageUrl,
+			},
+		});
+
+		// Update total points for the test
+		const test = await prisma.mCQTest.findUnique({
+			where: { id: data.testId },
+			include: { questions: true },
+		});
+
+		if (test) {
+			const totalPoints = test.questions.reduce(
+				(sum, q) => sum + q.points,
+				data.points
+			);
+			await prisma.mCQTest.update({
+				where: { id: data.testId },
+				data: { totalPoints },
+			});
+		}
+
+		// revalidatePath(`/list/mcq-tests/${data.testId}/questions`);
+		return {
+			success: true,
+			error: false,
+			message: "Question added successfully!",
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true, message: "Failed to add question!" };
+	}
+};
+
+export const updateMCQQuestion = async (
+	currentState: CurrentState,
+	data: MCQQuestionSchema
+) => {
+	if (!data.id) {
+		return { success: false, error: true, message: "Question ID is required!" };
+	}
+
+	try {
+		const options = data.options ? JSON.parse(data.options) : null;
+		const correctAnswer = JSON.parse(data.correctAnswer);
+
+		await prisma.mCQQuestion.update({
+			where: { id: data.id },
+			data: {
+				questionType: data.questionType,
+				questionText: data.questionText,
+				options,
+				correctAnswer,
+				explanation: data.explanation,
+				points: data.points,
+				negativeMarking: data.negativeMarking,
+				order: data.order,
+				imageUrl: data.imageUrl,
+			},
+		});
+
+		// Recalculate total points for the test
+		const question = await prisma.mCQQuestion.findUnique({
+			where: { id: data.id },
+			include: { test: { include: { questions: true } } },
+		});
+
+		if (question) {
+			const totalPoints = question.test.questions.reduce(
+				(sum, q) => sum + q.points,
+				0
+			);
+			await prisma.mCQTest.update({
+				where: { id: question.testId },
+				data: { totalPoints },
+			});
+		}
+
+		// revalidatePath(`/list/mcq-tests/${data.testId}/questions`);
+		return {
+			success: true,
+			error: false,
+			message: "Question updated successfully!",
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to update question!",
+		};
+	}
+};
+
+export const deleteMCQQuestion = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	const id = data.get("id") as string;
+	try {
+		const question = await prisma.mCQQuestion.findUnique({
+			where: { id: parseInt(id) },
+			include: { test: { include: { questions: true } } },
+		});
+
+		if (!question) {
+			return { success: false, error: true, message: "Question not found!" };
+		}
+
+		await prisma.mCQQuestion.delete({
+			where: { id: parseInt(id) },
+		});
+
+		// Recalculate total points
+		const totalPoints = question.test.questions
+			.filter((q) => q.id !== parseInt(id))
+			.reduce((sum, q) => sum + q.points, 0);
+
+		await prisma.mCQTest.update({
+			where: { id: question.testId },
+			data: { totalPoints },
+		});
+
+		// revalidatePath(`/list/mcq-tests/${question.testId}/questions`);
+		return {
+			success: true,
+			error: false,
+			message: "Question deleted successfully!",
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to delete question!",
+		};
+	}
+};
+
+// MCQ ATTEMPT ACTIONS
+
+export const startMCQAttempt = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	const testId = parseInt(data.get("testId") as string);
+	const studentId = data.get("studentId") as string;
+
+	try {
+		// Check if test exists and is published
+		const test = await prisma.mCQTest.findUnique({
+			where: { id: testId },
+			include: { questions: true },
+		});
+
+		if (!test) {
+			return { success: false, error: true, message: "Test not found!" };
+		}
+
+		if (!test.isPublished) {
+			return {
+				success: false,
+				error: true,
+				message: "Test is not published yet!",
+			};
+		}
+
+		// Check if deadline has passed
+		if (new Date() > test.deadline) {
+			return {
+				success: false,
+				error: true,
+				message: "Test deadline has passed!",
+			};
+		}
+
+		// Check if student already attempted
+		const existingAttempt = await prisma.mCQAttempt.findUnique({
+			where: {
+				testId_studentId: {
+					testId,
+					studentId,
+				},
+			},
+		});
+
+		if (existingAttempt) {
+			return {
+				success: false,
+				error: true,
+				message: "You have already attempted this test!",
+			};
+		}
+
+		// Create new attempt
+		const attempt = await prisma.mCQAttempt.create({
+			data: {
+				testId,
+				studentId,
+				totalPoints: test.totalPoints,
+				answers: {},
+			},
+		});
+
+		return {
+			success: true,
+			error: false,
+			message: "Test started successfully!",
+			data: { attemptId: attempt.id },
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true, message: "Failed to start test!" };
+	}
+};
+
+export const submitMCQAttempt = async (
+	currentState: CurrentState,
+	data: MCQAttemptSchema
+) => {
+	try {
+		const answers = JSON.parse(data.answers);
+		const studentId = data.studentId!;
+
+		// Get test with questions
+		const test = await prisma.mCQTest.findUnique({
+			where: { id: data.testId },
+			include: { questions: true },
+		});
+
+		if (!test) {
+			return { success: false, error: true, message: "Test not found!" };
+		}
+
+		// Calculate score
+		let score = 0;
+		let correctAnswers = 0;
+		let wrongAnswers = 0;
+		let unanswered = 0;
+
+		const wrongQuestionIds: number[] = [];
+
+		test.questions.forEach((question) => {
+			const studentAnswer = answers[question.id];
+
+			if (!studentAnswer || studentAnswer === null) {
+				unanswered++;
+				return;
+			}
+
+			// Compare answers (handle different question types)
+			const correct =
+				JSON.stringify(question.correctAnswer) ===
+				JSON.stringify(studentAnswer);
+
+			if (correct) {
+				score += question.points;
+				correctAnswers++;
+			} else {
+				score -= question.negativeMarking;
+				wrongAnswers++;
+				wrongQuestionIds.push(question.id);
+			}
+		});
+
+		// Ensure score doesn't go negative
+		score = Math.max(0, score);
+		const percentageScore = (score / test.totalPoints) * 100;
+
+		// Check if attempt exists, update or create
+		const attempt = await prisma.mCQAttempt.upsert({
+			where: {
+				testId_studentId: {
+					testId: data.testId,
+					studentId,
+				},
+			},
+			update: {
+				score,
+				correctAnswers,
+				wrongAnswers,
+				unanswered,
+				submittedAt: new Date(),
+				timeSpent: data.timeSpent,
+				answers,
+				tabSwitches: data.tabSwitches,
+				copyPasteAttempts: data.copyPasteAttempts,
+				isCompleted: true,
+				percentageScore,
+				isFlagged: data.tabSwitches > 5 || data.copyPasteAttempts > 3,
+			},
+			create: {
+				testId: data.testId,
+				studentId,
+				totalPoints: test.totalPoints,
+				score,
+				correctAnswers,
+				wrongAnswers,
+				unanswered,
+				submittedAt: new Date(),
+				timeSpent: data.timeSpent,
+				answers,
+				tabSwitches: data.tabSwitches,
+				copyPasteAttempts: data.copyPasteAttempts,
+				isCompleted: true,
+				percentageScore,
+				isFlagged: data.tabSwitches > 5 || data.copyPasteAttempts > 3,
+			},
+		});
+
+		// Save wrong answers for adaptive learning
+		for (const questionId of wrongQuestionIds) {
+			await prisma.wrongAnswer.upsert({
+				where: {
+					studentId_questionId: {
+						studentId,
+						questionId,
+					},
+				},
+				update: {
+					attemptCount: {
+						increment: 1,
+					},
+					lastAttempted: new Date(),
+				},
+				create: {
+					studentId,
+					questionId,
+					attemptCount: 1,
+				},
+			});
+		}
+
+		// Update student points
+		await prisma.studentPoints.upsert({
+			where: { studentId },
+			update: {
+				totalPoints: {
+					increment: score,
+				},
+				testsCompleted: {
+					increment: 1,
+				},
+			},
+			create: {
+				studentId,
+				totalPoints: Math.max(0, score),
+				testsCompleted: 1,
+			},
+		});
+
+		// Recalculate ranks
+		await updateLeaderboardRanks();
+
+		// Check and award achievements
+		await checkAndAwardAchievements(
+			studentId,
+			score,
+			percentageScore,
+			test.totalPoints
+		);
+
+		return {
+			success: true,
+			error: false,
+			message: "Test submitted successfully!",
+			data: {
+				score,
+				totalPoints: test.totalPoints,
+				percentageScore,
+				correctAnswers,
+				wrongAnswers,
+				unanswered,
+			},
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true, message: "Failed to submit test!" };
+	}
+};
+
+// ACHIEVEMENTS
+
+export const checkAndAwardAchievements = async (
+	studentId: string,
+	score: number,
+	percentageScore: number,
+	totalPoints: number
+) => {
+	try {
+		const achievements: string[] = [];
+
+		// Get student points
+		const studentPoints = await prisma.studentPoints.findUnique({
+			where: { studentId },
+		});
+
+		if (!studentPoints) return;
+
+		// First Test
+		if (studentPoints.testsCompleted === 1) {
+			await awardAchievement(studentId, "FIRST_TEST");
+			achievements.push("FIRST_TEST");
+		}
+
+		// 10 Tests Completed
+		if (studentPoints.testsCompleted === 10) {
+			await awardAchievement(studentId, "10_TESTS");
+			achievements.push("10_TESTS");
+		}
+
+		// 50 Tests Completed
+		if (studentPoints.testsCompleted === 50) {
+			await awardAchievement(studentId, "50_TESTS");
+			achievements.push("50_TESTS");
+		}
+
+		// 100 Points
+		if (
+			studentPoints.totalPoints >= 100 &&
+			studentPoints.totalPoints - score < 100
+		) {
+			await awardAchievement(studentId, "100_POINTS");
+			achievements.push("100_POINTS");
+		}
+
+		// 500 Points
+		if (
+			studentPoints.totalPoints >= 500 &&
+			studentPoints.totalPoints - score < 500
+		) {
+			await awardAchievement(studentId, "500_POINTS");
+			achievements.push("500_POINTS");
+		}
+
+		// 1000 Points
+		if (
+			studentPoints.totalPoints >= 1000 &&
+			studentPoints.totalPoints - score < 1000
+		) {
+			await awardAchievement(studentId, "1000_POINTS");
+			achievements.push("1000_POINTS");
+		}
+
+		// Perfect Score
+		if (percentageScore === 100) {
+			await awardAchievement(studentId, "PERFECT_SCORE");
+			achievements.push("PERFECT_SCORE");
+		}
+
+		// High Achiever (90%+)
+		if (percentageScore >= 90) {
+			await awardAchievement(studentId, "HIGH_ACHIEVER");
+			achievements.push("HIGH_ACHIEVER");
+		}
+
+		// Top 10 Rank
+		if (studentPoints.rank && studentPoints.rank <= 10) {
+			await awardAchievement(studentId, "TOP_10");
+			achievements.push("TOP_10");
+		}
+
+		// Top 3 Rank
+		if (studentPoints.rank && studentPoints.rank <= 3) {
+			await awardAchievement(studentId, "TOP_3");
+			achievements.push("TOP_3");
+		}
+
+		// Champion (Rank 1)
+		if (studentPoints.rank === 1) {
+			await awardAchievement(studentId, "CHAMPION");
+			achievements.push("CHAMPION");
+		}
+
+		return achievements;
+	} catch (err) {
+		console.log("Achievement error:", err);
+		return [];
+	}
+};
+
+export const awardAchievement = async (
+	studentId: string,
+	badgeType: string
+) => {
+	try {
+		await prisma.achievement.upsert({
+			where: {
+				studentId_badgeType: {
+					studentId,
+					badgeType,
+				},
+			},
+			update: {}, // Already exists, do nothing
+			create: {
+				studentId,
+				badgeType,
+			},
+		});
+	} catch (err) {
+		console.log("Error awarding achievement:", err);
+	}
+};
+
+// LEADERBOARD & POINTS
+
+export const updateLeaderboardRanks = async () => {
+	try {
+		// Get all students ordered by points
+		const students = await prisma.studentPoints.findMany({
+			orderBy: {
+				totalPoints: "desc",
+			},
+		});
+
+		// Update ranks
+		for (let i = 0; i < students.length; i++) {
+			await prisma.studentPoints.update({
+				where: { id: students[i].id },
+				data: { rank: i + 1 },
+			});
+		}
+
+		// Calculate average scores
+		for (const student of students) {
+			const attempts = await prisma.mCQAttempt.findMany({
+				where: {
+					studentId: student.studentId,
+					isCompleted: true,
+				},
+			});
+
+			if (attempts.length > 0) {
+				const avgScore =
+					attempts.reduce((sum, a) => sum + a.percentageScore, 0) /
+					attempts.length;
+
+				await prisma.studentPoints.update({
+					where: { id: student.id },
+					data: { averageScore: avgScore },
+				});
+			}
+		}
+
+		return { success: true };
+	} catch (err) {
+		console.log(err);
+		return { success: false };
+	}
+};
+
+// PENALTY FOR MISSED TESTS
+
+export const applyMissedTestPenalties = async () => {
+	try {
+		const now = new Date();
+
+		// Find all published tests past deadline
+		const expiredTests = await prisma.mCQTest.findMany({
+			where: {
+				isPublished: true,
+				deadline: {
+					lt: now,
+				},
+			},
+			include: {
+				class: {
+					include: {
+						students: true,
+					},
+				},
+			},
+		});
+
+		for (const test of expiredTests) {
+			for (const student of test.class.students) {
+				// Check if student attempted
+				const attempt = await prisma.mCQAttempt.findUnique({
+					where: {
+						testId_studentId: {
+							testId: test.id,
+							studentId: student.id,
+						},
+					},
+				});
+
+				// If not attempted, deduct points
+				if (!attempt) {
+					await prisma.studentPoints.upsert({
+						where: { studentId: student.id },
+						update: {
+							totalPoints: {
+								decrement: test.totalPoints,
+							},
+						},
+						create: {
+							studentId: student.id,
+							totalPoints: 0, // Can't go negative
+						},
+					});
+				}
+			}
+		}
+
+		await updateLeaderboardRanks();
+
 		return { success: true, error: false };
 	} catch (err) {
 		console.log(err);
