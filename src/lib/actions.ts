@@ -266,7 +266,11 @@ export const createStudent = async (
 		});
 
 		if (classItem && classItem.capacity === classItem._count.students) {
-			return { success: false, error: true };
+			return {
+				success: false,
+				error: true,
+				message: `Class is full. Maximum capacity of ${classItem.capacity} students reached.`,
+			};
 		}
 
 		const user = await clerkClient().users.createUser({
@@ -298,9 +302,23 @@ export const createStudent = async (
 
 		// revalidatePath("/list/students");
 		return { success: true, error: false };
-	} catch (err) {
+	} catch (err: any) {
 		console.log(err);
-		return { success: false, error: true };
+		// Check if it's a Clerk error with specific error codes
+		if (err.errors && Array.isArray(err.errors) && err.errors.length > 0) {
+			const clerkError = err.errors[0];
+			return {
+				success: false,
+				error: true,
+				message:
+					clerkError.longMessage || clerkError.message || "An error occurred",
+			};
+		}
+		return {
+			success: false,
+			error: true,
+			message: "An error occurred while creating the student",
+		};
 	}
 };
 
