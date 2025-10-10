@@ -89,10 +89,11 @@ model Class {
 }
 
 model Subject {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  teachers Teacher[]
-  lessons  Lesson[]
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  teachers    Teacher[]
+  lessons     Lesson[]
+  assignments Assignment[]
 }
 
 model Lesson {
@@ -109,7 +110,6 @@ model Lesson {
   teacherId   String
   teacher     Teacher      @relation(fields: [teacherId], references: [id])
   exams       Exam[]
-  assignments Assignment[]
   attendances Attendance[]
 }
 
@@ -130,9 +130,9 @@ model Assignment {
   startDate DateTime
   dueDate   DateTime
 
-  lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
-  results  Result[]
+  subjectId Int
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  results   Result[]
 }
 
 model Result {

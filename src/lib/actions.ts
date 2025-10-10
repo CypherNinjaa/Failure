@@ -654,7 +654,7 @@ export const createAssignment = async (
 				title: data.title,
 				startDate: data.startDate,
 				dueDate: data.dueDate,
-				lessonId: data.lessonId,
+				subjectId: data.subjectId,
 			},
 		});
 
@@ -679,7 +679,7 @@ export const updateAssignment = async (
 				title: data.title,
 				startDate: data.startDate,
 				dueDate: data.dueDate,
-				lessonId: data.lessonId,
+				subjectId: data.subjectId,
 			},
 		});
 
