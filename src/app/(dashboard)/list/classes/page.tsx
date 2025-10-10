@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Prisma, Teacher } from "@prisma/client";
 import Image from "next/image";
+import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
 type ClassList = Class & { supervisor: Teacher | null };
@@ -38,7 +39,7 @@ const ClassListPage = async ({
 			accessor: "supervisor",
 			className: "hidden md:table-cell",
 		},
-		...(role === "admin"
+		...(role === "admin" || role === "teacher"
 			? [
 					{
 						header: "Actions",
@@ -63,6 +64,15 @@ const ClassListPage = async ({
 			</td>
 			<td>
 				<div className="flex items-center gap-2">
+					{(role === "admin" || role === "teacher") && (
+						<Link
+							href={`/list/classes/${item.id}/attendance`}
+							className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky"
+							title="Take Attendance"
+						>
+							<Image src="/view.png" alt="" width={16} height={16} />
+						</Link>
+					)}
 					{role === "admin" && (
 						<>
 							<FormContainer table="class" type="update" data={item} />

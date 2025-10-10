@@ -153,9 +153,12 @@ model Attendance {
   present Boolean
 
   studentId String
-  student   Student @relation(fields: [studentId], references: [id])
-  lessonId  Int
-  lesson    Lesson  @relation(fields: [lessonId], references: [id])
+  student   Student  @relation(fields: [studentId], references: [id])
+  lessonId  Int?
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id])
+
+  @@unique([studentId, date])
+  @@index([date])
 }
 
 model Event {

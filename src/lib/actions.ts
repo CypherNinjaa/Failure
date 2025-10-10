@@ -12,6 +12,7 @@ import {
 	AssignmentSchema,
 	ResultSchema,
 	AttendanceSchema,
+	BulkAttendanceSchema,
 	EventSchema,
 	AnnouncementSchema,
 } from "./formValidationSchemas";
@@ -812,8 +813,8 @@ export const createAttendance = async (
 				date: data.date,
 				present: data.present,
 				studentId: data.studentId,
-				lessonId: data.lessonId,
-			},
+				...(data.lessonId && { lessonId: data.lessonId }),
+			} as any,
 		});
 
 		// revalidatePath("/list/attendance");
@@ -837,8 +838,8 @@ export const updateAttendance = async (
 				date: data.date,
 				present: data.present,
 				studentId: data.studentId,
-				lessonId: data.lessonId,
-			},
+				...(data.lessonId && { lessonId: data.lessonId }),
+			} as any,
 		});
 
 		// revalidatePath("/list/attendance");
@@ -1006,5 +1007,81 @@ export const deleteAnnouncement = async (
 	} catch (err) {
 		console.log(err);
 		return { success: false, error: true };
+	}
+};
+
+export const createBulkAttendance = async (
+	currentState: CurrentState,
+	formData: FormData
+) => {
+	try {
+		const date = new Date(formData.get("date") as string);
+		// Normalize to start of day to avoid time comparison issues
+		date.setHours(0, 0, 0, 0);
+
+		const classId = parseInt(formData.get("classId") as string);
+		const attendances = JSON.parse(formData.get("attendances") as string) as {
+			studentId: string;
+			present: boolean;
+		}[];
+
+		// Check if attendance already exists for this date and class
+		const studentIds = attendances.map((a) => a.studentId);
+
+		const existingRecords = await prisma.attendance.findMany({
+			where: {
+				studentId: { in: studentIds },
+				date: {
+					gte: date,
+					lt: new Date(date.getTime() + 24 * 60 * 60 * 1000), // Same day
+				},
+			},
+		});
+
+		if (existingRecords.length > 0) {
+			// Update existing records instead of creating duplicates
+			await prisma.$transaction(
+				attendances.map((attendance) => {
+					const existing = existingRecords.find(
+						(r) => r.studentId === attendance.studentId
+					);
+
+					if (existing) {
+						// Update existing record
+						return prisma.attendance.update({
+							where: { id: existing.id },
+							data: { present: attendance.present },
+						});
+					} else {
+						// Create new record
+						return prisma.attendance.create({
+							data: {
+								date: date,
+								present: attendance.present,
+								studentId: attendance.studentId,
+							} as any,
+						});
+					}
+				})
+			);
+		} else {
+			// Create all new records
+			await prisma.attendance.createMany({
+				data: attendances.map((attendance) => ({
+					date: date,
+					present: attendance.present,
+					studentId: attendance.studentId,
+				})) as any,
+			});
+		}
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to record attendance",
+		};
 	}
 };
