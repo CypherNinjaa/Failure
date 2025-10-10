@@ -54,6 +54,18 @@ const LessonForm = ({
 
 	const { subjects, classes, teachers } = relatedData;
 
+	// Convert DateTime to datetime-local format (YYYY-MM-DDTHH:mm)
+	const formatDateTimeLocal = (date: Date | string | undefined) => {
+		if (!date) return "";
+		const d = new Date(date);
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, "0");
+		const day = String(d.getDate()).padStart(2, "0");
+		const hours = String(d.getHours()).padStart(2, "0");
+		const minutes = String(d.getMinutes()).padStart(2, "0");
+		return `${year}-${month}-${day}T${hours}:${minutes}`;
+	};
+
 	return (
 		<form className="flex flex-col gap-8" onSubmit={onSubmit}>
 			<h1 className="text-xl font-semibold">
@@ -72,7 +84,7 @@ const LessonForm = ({
 					label="Start Time"
 					name="startTime"
 					type="datetime-local"
-					defaultValue={data?.startTime}
+					defaultValue={formatDateTimeLocal(data?.startTime)}
 					register={register}
 					error={errors?.startTime}
 				/>
@@ -80,7 +92,7 @@ const LessonForm = ({
 					label="End Time"
 					name="endTime"
 					type="datetime-local"
-					defaultValue={data?.endTime}
+					defaultValue={formatDateTimeLocal(data?.endTime)}
 					register={register}
 					error={errors?.endTime}
 				/>

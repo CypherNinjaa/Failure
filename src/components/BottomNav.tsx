@@ -21,16 +21,6 @@ const BottomNav = ({ role }: BottomNavProps) => {
 
 	// Define main navigation items based on role
 	const getMainNavItems = (): NavItem[] => {
-		const commonItems = [
-			{ icon: "/home.png", label: "Home", href: `/${role}` },
-			{ icon: "/calendar.png", label: "Schedule", href: `/${role}` },
-			{
-				icon: "/attendance.png",
-				label: "Attendance",
-				href: "/list/attendance",
-			},
-		];
-
 		if (role === "admin") {
 			return [
 				{ icon: "/home.png", label: "Home", href: "/admin" },
@@ -42,14 +32,25 @@ const BottomNav = ({ role }: BottomNavProps) => {
 
 		if (role === "teacher") {
 			return [
-				...commonItems,
+				{ icon: "/home.png", label: "Home", href: "/teacher" },
+				{ icon: "/calendar.png", label: "Schedule", href: "/teacher" },
+				{
+					icon: "/attendance.png",
+					label: "Attendance",
+					href: "/list/attendance",
+				},
 				{ icon: "/exam.png", label: "Exams", href: "/list/exams" },
 			];
 		}
 
 		if (role === "student") {
 			return [
-				...commonItems,
+				{ icon: "/home.png", label: "Home", href: "/student" },
+				{
+					icon: "/attendance.png",
+					label: "Attendance",
+					href: "/list/attendance",
+				},
 				{
 					icon: "/assignment.png",
 					label: "Assignments",
@@ -60,12 +61,17 @@ const BottomNav = ({ role }: BottomNavProps) => {
 
 		if (role === "parent") {
 			return [
-				...commonItems,
+				{ icon: "/home.png", label: "Home", href: "/parent" },
+				{
+					icon: "/attendance.png",
+					label: "Attendance",
+					href: "/list/attendance",
+				},
 				{ icon: "/result.png", label: "Results", href: "/list/results" },
 			];
 		}
 
-		return commonItems;
+		return [{ icon: "/home.png", label: "Home", href: `/${role}` }];
 	};
 
 	// More menu items

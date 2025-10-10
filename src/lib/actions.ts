@@ -700,6 +700,25 @@ export const deleteLesson = async (
 
 // LESSON RECURRENCE ACTIONS
 
+// Helper function to get day name from date
+const getDayFromDate = (date: Date): string => {
+	const dayMap = [
+		"SUNDAY",
+		"MONDAY",
+		"TUESDAY",
+		"WEDNESDAY",
+		"THURSDAY",
+		"FRIDAY",
+		"SATURDAY",
+	];
+	return dayMap[date.getDay()];
+};
+
+// Helper function to check if day is valid (weekday)
+const isValidSchoolDay = (day: string): boolean => {
+	return ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"].includes(day);
+};
+
 export const duplicateLessonForDate = async (
 	currentState: CurrentState,
 	data: FormData
@@ -729,10 +748,23 @@ export const duplicateLessonForDate = async (
 			newDate + "T" + originalLesson.endTime.toISOString().split("T")[1]
 		);
 
+		// Get the day of the week from the new date
+		const newDay = getDayFromDate(newStartTime);
+
+		// Check if it's a valid school day (Monday-Friday)
+		if (!isValidSchoolDay(newDay)) {
+			return {
+				success: false,
+				error: true,
+				message:
+					"Cannot create lesson on weekends. Please select a weekday (Monday-Friday).",
+			};
+		}
+
 		await prisma.lesson.create({
 			data: {
 				name: originalLesson.name,
-				day: originalLesson.day,
+				day: newDay as any,
 				startTime: newStartTime,
 				endTime: newEndTime,
 				subjectId: originalLesson.subjectId,
@@ -844,16 +876,22 @@ export const generateRecurringLessons = async (
 				newEndTime.setHours(lesson.endTime.getHours());
 				newEndTime.setMinutes(lesson.endTime.getMinutes());
 
-				lessonsToCreate.push({
-					name: lesson.name,
-					day: lesson.day,
-					startTime: newStartTime,
-					endTime: newEndTime,
-					subjectId: lesson.subjectId,
-					classId: lesson.classId,
-					teacherId: lesson.teacherId,
-					parentLessonId: parseInt(lessonId),
-				});
+				// Get the day of the week from the new date
+				const newDay = getDayFromDate(newStartTime);
+
+				// Only create lesson if it's a weekday
+				if (isValidSchoolDay(newDay)) {
+					lessonsToCreate.push({
+						name: lesson.name,
+						day: newDay as any,
+						startTime: newStartTime,
+						endTime: newEndTime,
+						subjectId: lesson.subjectId,
+						classId: lesson.classId,
+						teacherId: lesson.teacherId,
+						parentLessonId: parseInt(lessonId),
+					});
+				}
 			}
 
 			currentDate.setDate(currentDate.getDate() + 7); // Move to next week
