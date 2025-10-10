@@ -8,7 +8,13 @@ const Navbar = async () => {
 		<div className="flex items-center justify-between p-4">
 			{/* LOGO AND BRANDING - Mobile Only */}
 			<div className="flex md:hidden items-center gap-2">
-				<Image src="/logo.png" alt="HCS Logo" width={40} height={40} />
+				<Image
+					src="/logo.png"
+					alt="HCS Logo"
+					width={40}
+					height={40}
+					className="w-auto h-auto"
+				/>
 				<span className="text-xl font-bold text-gray-800">HCS</span>
 			</div>
 

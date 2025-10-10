@@ -47,7 +47,34 @@ const AttendanceListPage = async ({
 		>
 			{role !== "student" && (
 				<td className="flex items-center gap-4 p-4">
-					{item.student.name} {item.student.surname}
+					<div className="flex flex-col">
+						<span className="font-medium">
+							{item.student.name} {item.student.surname}
+						</span>
+						{/* Show date on mobile below name */}
+						<span className="text-xs text-gray-500 md:hidden">
+							{new Intl.DateTimeFormat("en-US", {
+								year: "numeric",
+								month: "short",
+								day: "2-digit",
+							}).format(item.date)}
+						</span>
+					</div>
+				</td>
+			)}
+			{role === "student" && (
+				<td className="p-4">
+					<div className="flex flex-col">
+						<span className="font-medium text-gray-700">Attendance</span>
+						{/* Show date on mobile for students */}
+						<span className="text-xs text-gray-500 md:hidden">
+							{new Intl.DateTimeFormat("en-US", {
+								year: "numeric",
+								month: "short",
+								day: "2-digit",
+							}).format(item.date)}
+						</span>
+					</div>
 				</td>
 			)}
 			<td className="hidden md:table-cell">
