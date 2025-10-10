@@ -1085,3 +1085,81 @@ export const createBulkAttendance = async (
 		};
 	}
 };
+
+export const createFaceRecognitionAttendance = async (
+	studentIds: string[],
+	classId: number,
+	date?: Date
+) => {
+	try {
+		const attendanceDate = date || new Date();
+		// Normalize to start of day
+		attendanceDate.setHours(0, 0, 0, 0);
+
+		// Get all students in the class
+		const allStudents = await prisma.student.findMany({
+			where: { classId },
+			select: { id: true },
+		});
+
+		const attendances = allStudents.map((student) => ({
+			studentId: student.id,
+			present: studentIds.includes(student.id),
+		}));
+
+		// Check existing records
+		const existingRecords = await prisma.attendance.findMany({
+			where: {
+				studentId: { in: allStudents.map((s) => s.id) },
+				date: {
+					gte: attendanceDate,
+					lt: new Date(attendanceDate.getTime() + 24 * 60 * 60 * 1000),
+				},
+			},
+		});
+
+		if (existingRecords.length > 0) {
+			// Update existing
+			await prisma.$transaction(
+				attendances.map((attendance) => {
+					const existing = existingRecords.find(
+						(r) => r.studentId === attendance.studentId
+					);
+
+					if (existing) {
+						return prisma.attendance.update({
+							where: { id: existing.id },
+							data: { present: attendance.present },
+						});
+					} else {
+						return prisma.attendance.create({
+							data: {
+								date: attendanceDate,
+								present: attendance.present,
+								studentId: attendance.studentId,
+							} as any,
+						});
+					}
+				})
+			);
+		} else {
+			// Create all new
+			await prisma.attendance.createMany({
+				data: attendances.map((attendance) => ({
+					date: attendanceDate,
+					present: attendance.present,
+					studentId: attendance.studentId,
+				})) as any,
+			});
+		}
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to record face recognition attendance",
+		};
+	}
+};
