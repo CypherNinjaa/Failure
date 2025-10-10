@@ -227,3 +227,12 @@ model Location {
   
   teacherAttendances TeacherAttendance[]
 }
+
+model AttendanceSettings {
+  id                Int      @id @default(autoincrement())
+  startTime         String   // Format: "HH:MM" (e.g., "08:00")
+  endTime           String   // Format: "HH:MM" (e.g., "08:45")
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

@@ -35,6 +35,8 @@ const TeacherFaceAttendance = ({
 	const [selectedDate, setSelectedDate] = useState<string>(
 		new Date().toISOString().split("T")[0]
 	);
+	const [isWithinTimeWindow, setIsWithinTimeWindow] = useState(true);
+	const [timeWindowMessage, setTimeWindowMessage] = useState("");
 
 	// Liveness and location states
 	const [showLocationCheck, setShowLocationCheck] = useState(false);
@@ -84,6 +86,62 @@ const TeacherFaceAttendance = ({
 		loadModels();
 	}, []);
 
+	// Check time window
+	useEffect(() => {
+		const checkTimeWindow = async () => {
+			try {
+				const response = await fetch("/api/attendance-settings");
+				const result = await response.json();
+
+				if (result.success && result.data && result.data.isActive) {
+					const settings = result.data;
+					const now = new Date();
+					const currentTime =
+						now.getHours().toString().padStart(2, "0") +
+						":" +
+						now.getMinutes().toString().padStart(2, "0");
+
+					const [startHour, startMin] = settings.startTime
+						.split(":")
+						.map(Number);
+					const [endHour, endMin] = settings.endTime.split(":").map(Number);
+					const currentMinutes = now.getHours() * 60 + now.getMinutes();
+					const startMinutes = startHour * 60 + startMin;
+					const endMinutes = endHour * 60 + endMin;
+
+					if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+						setIsWithinTimeWindow(true);
+						setTimeWindowMessage("");
+					} else {
+						setIsWithinTimeWindow(false);
+						if (currentMinutes < startMinutes) {
+							setTimeWindowMessage(
+								`Attendance opens at ${settings.startTime}. Please come back later.`
+							);
+						} else {
+							setTimeWindowMessage(
+								`Attendance closed at ${settings.endTime}. Too late to mark attendance today.`
+							);
+						}
+					}
+				} else {
+					// No time restriction
+					setIsWithinTimeWindow(true);
+					setTimeWindowMessage("");
+				}
+			} catch (error) {
+				console.error("Error checking time window:", error);
+				// On error, allow attendance
+				setIsWithinTimeWindow(true);
+			}
+		};
+
+		checkTimeWindow();
+		// Recheck every minute
+		const interval = setInterval(checkTimeWindow, 60000);
+		return () => clearInterval(interval);
+	}, []);
+
 	// Load teacher's face
 	useEffect(() => {
 		if (!modelsLoaded || !teacher.img) return;
@@ -130,7 +188,7 @@ const TeacherFaceAttendance = ({
 		setShowLocationCheck(true);
 	};
 
-	const handleLocationVerified = (
+	const handleLocationVerified = async (
 		locationId: number,
 		coords: GeolocationCoordinates
 	) => {
@@ -138,6 +196,9 @@ const TeacherFaceAttendance = ({
 		setVerifiedLocationId(locationId);
 		setVerifiedCoords(coords);
 		setShowLocationCheck(false);
+
+		// Start camera first, then show liveness check
+		await startCamera();
 		setShowLivenessCheck(true);
 	};
 
@@ -149,7 +210,7 @@ const TeacherFaceAttendance = ({
 	const handleLivenessComplete = () => {
 		setLivenessVerified(true);
 		setShowLivenessCheck(false);
-		startCamera();
+		// Camera is already running, no need to start again
 	};
 
 	const handleLivenessFailed = (reason: string) => {
@@ -281,7 +342,15 @@ const TeacherFaceAttendance = ({
 			return;
 		}
 
-		const attendanceDate = new Date(selectedDate);
+		if (!isWithinTimeWindow) {
+			setError("Cannot submit attendance outside allowed hours.");
+			return;
+		}
+
+		// Always use today's date
+		const attendanceDate = new Date();
+		attendanceDate.setHours(0, 0, 0, 0);
+
 		onAttendanceMarked(
 			teacher.id,
 			attendanceDate,
@@ -292,7 +361,6 @@ const TeacherFaceAttendance = ({
 	};
 
 	const today = new Date().toISOString().split("T")[0];
-	const yesterday = new Date(Date.now() - 864e5).toISOString().split("T")[0];
 
 	return (
 		<div className="bg-white p-6 rounded-lg shadow-md">
@@ -306,43 +374,80 @@ const TeacherFaceAttendance = ({
 				</p>
 			</div>
 
-			{/* Date Selection */}
+			{/* Time Window Restriction Message */}
+			{!isWithinTimeWindow && timeWindowMessage && (
+				<div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+					<div className="flex items-start gap-3">
+						<svg
+							className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<div>
+							<h3 className="font-semibold text-red-900 mb-1">
+								Outside Attendance Hours
+							</h3>
+							<p className="text-sm text-red-800">{timeWindowMessage}</p>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Date Selection - Today Only */}
 			<div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
 				<label className="block text-sm font-medium text-gray-700 mb-2">
-					Select Attendance Date
+					Attendance Date
 				</label>
 				<div className="flex flex-col md:flex-row gap-3">
-					<input
-						type="date"
-						value={selectedDate}
-						onChange={(e) => setSelectedDate(e.target.value)}
-						max={today}
-						className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lamaPurple focus:border-transparent"
-					/>
-					<button
-						onClick={() => setSelectedDate(today)}
-						className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors"
-					>
-						Today
-					</button>
-					<button
-						onClick={() => setSelectedDate(yesterday)}
-						className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors"
-					>
-						Yesterday
-					</button>
+					<div className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-white">
+						<div className="flex items-center gap-2">
+							<svg
+								className="w-5 h-5 text-gray-500"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+								/>
+							</svg>
+							<span className="font-semibold text-gray-800">
+								{new Date(today).toLocaleDateString("en-US", {
+									weekday: "long",
+									year: "numeric",
+									month: "long",
+									day: "numeric",
+								})}
+							</span>
+						</div>
+					</div>
 				</div>
-				<div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
-					<span className="text-2xl">📅</span>
-					<span className="font-medium">
-						Marking attendance for:{" "}
-						{new Date(selectedDate).toLocaleDateString("en-US", {
-							weekday: "long",
-							year: "numeric",
-							month: "long",
-							day: "numeric",
-						})}
-					</span>
+				<div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
+					<svg
+						className="w-4 h-4 text-blue-500"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<span>You can only mark attendance for today</span>
 				</div>
 			</div>
 
@@ -497,9 +602,16 @@ const TeacherFaceAttendance = ({
 					{!locationVerified && (
 						<button
 							onClick={startAttendanceProcess}
-							className="bg-lamaPurple text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors font-medium"
+							disabled={!isWithinTimeWindow}
+							className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+								isWithinTimeWindow
+									? "bg-lamaPurple text-white hover:bg-opacity-90"
+									: "bg-gray-300 text-gray-500 cursor-not-allowed"
+							}`}
 						>
-							Start Verification
+							{isWithinTimeWindow
+								? "Start Verification"
+								: "Outside Attendance Hours"}
 						</button>
 					)}
 

@@ -238,8 +238,8 @@ const LivenessChallenge = ({
 	if (!currentChallenge) return null;
 
 	return (
-		<div className="absolute top-0 left-0 right-0 bottom-0 bg-black bg-opacity-70 flex items-center justify-center z-10 rounded-lg">
-			<div className="bg-white p-8 rounded-lg shadow-2xl max-w-md w-full mx-4">
+		<div className="absolute top-0 left-0 right-0 bottom-0 bg-black bg-opacity-20 flex items-center justify-center z-10 rounded-lg">
+			<div className="bg-white bg-opacity-20 backdrop-blur-lg p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-white border-opacity-30">
 				<div className="text-center">
 					{/* Icon */}
 					<div className="mb-4 flex justify-center">
@@ -267,22 +267,24 @@ const LivenessChallenge = ({
 					</div>
 
 					{/* Challenge Text */}
-					<h3 className="text-2xl font-bold text-gray-800 mb-2">
+					<h3 className="text-2xl font-bold text-gray-900 mb-2 drop-shadow-lg">
 						Liveness Check
 					</h3>
-					<p className="text-lg text-gray-600 mb-4">{currentChallenge.text}</p>
+					<p className="text-lg text-gray-900 font-semibold mb-4 drop-shadow-md">
+						{currentChallenge.text}
+					</p>
 
 					{/* Progress */}
 					{currentChallenge.type === "blink" && (
 						<div className="mb-4">
-							<p className="text-sm text-gray-500 mb-2">
+							<p className="text-sm text-gray-900 font-semibold mb-2 drop-shadow-md">
 								Detected: {detectedCount} / {currentChallenge.requiredCount}
 							</p>
 						</div>
 					)}
 
 					{/* Progress Bar */}
-					<div className="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
+					<div className="w-full bg-white bg-opacity-40 rounded-full h-3 mb-4 overflow-hidden border border-white border-opacity-50">
 						<div
 							className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
 							style={{ width: `${progress}%` }}
@@ -290,7 +292,7 @@ const LivenessChallenge = ({
 					</div>
 
 					{/* Timer */}
-					<div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+					<div className="flex items-center justify-center gap-2 text-sm text-gray-900 font-semibold drop-shadow-md">
 						<svg
 							className="w-4 h-4"
 							fill="none"

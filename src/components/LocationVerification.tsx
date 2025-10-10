@@ -164,8 +164,8 @@ const LocationVerification = ({
 	if (!checking) return null;
 
 	return (
-		<div className="absolute top-0 left-0 right-0 bottom-0 bg-black bg-opacity-70 flex items-center justify-center z-10 rounded-lg">
-			<div className="bg-white p-8 rounded-lg shadow-2xl max-w-md w-full mx-4">
+		<div className="absolute top-0 left-0 right-0 bottom-0 bg-black bg-opacity-20 flex items-center justify-center z-10 rounded-lg">
+			<div className="bg-white bg-opacity-20 backdrop-blur-lg p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-white border-opacity-30">
 				<div className="text-center">
 					{/* Icon */}
 					<div className="mb-4 flex justify-center">
@@ -193,28 +193,28 @@ const LocationVerification = ({
 					</div>
 
 					{/* Text */}
-					<h3 className="text-2xl font-bold text-gray-800 mb-2">
+					<h3 className="text-2xl font-bold text-gray-900 mb-2 drop-shadow-lg">
 						Verifying Location
 					</h3>
-					<p className="text-gray-600 mb-4">
+					<p className="text-gray-900 font-semibold mb-4 drop-shadow-md">
 						Checking if you are within an allowed location...
 					</p>
 
 					{currentDistance !== null && nearestLocation && (
-						<div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-							<p className="text-sm text-blue-800">
+						<div className="bg-white bg-opacity-40 border border-white border-opacity-50 rounded-lg p-3 mb-4 backdrop-blur-sm">
+							<p className="text-sm text-gray-900 font-semibold drop-shadow-md">
 								Distance to {nearestLocation}:{" "}
-								<span className="font-semibold">{currentDistance}m</span>
+								<span className="font-bold">{currentDistance}m</span>
 							</p>
 						</div>
 					)}
 
 					{/* Spinner */}
 					<div className="flex justify-center">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 drop-shadow-lg"></div>
 					</div>
 
-					<p className="text-xs text-gray-500 mt-4">
+					<p className="text-xs text-gray-900 font-semibold mt-4 drop-shadow-md">
 						Please ensure location services are enabled
 					</p>
 				</div>
