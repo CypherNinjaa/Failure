@@ -15,7 +15,8 @@ export type FormContainerProps = {
 		| "result"
 		| "attendance"
 		| "event"
-		| "announcement";
+		| "announcement"
+		| "location";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;
@@ -148,6 +149,10 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
 					select: { id: true, name: true },
 				});
 				relatedData = { classes: announcementClasses };
+				break;
+			case "location":
+				// Locations don't need related data
+				relatedData = {};
 				break;
 
 			default:

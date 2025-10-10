@@ -190,3 +190,18 @@ export const announcementSchema = z.object({
 });
 
 export type AnnouncementSchema = z.infer<typeof announcementSchema>;
+
+export const locationSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Location name is required!" }),
+	address: z.string().optional(),
+	latitude: z.coerce.number({ message: "Latitude is required!" }),
+	longitude: z.coerce.number({ message: "Longitude is required!" }),
+	radius: z.coerce
+		.number()
+		.min(10, { message: "Radius must be at least 10 meters!" })
+		.default(100),
+	isActive: z.coerce.boolean().default(true),
+});
+
+export type LocationSchema = z.infer<typeof locationSchema>;

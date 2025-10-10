@@ -15,6 +15,7 @@ import {
 	BulkAttendanceSchema,
 	EventSchema,
 	AnnouncementSchema,
+	LocationSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -1161,5 +1162,151 @@ export const createFaceRecognitionAttendance = async (
 			error: true,
 			message: "Failed to record face recognition attendance",
 		};
+	}
+};
+
+// Teacher Attendance
+export const createTeacherAttendance = async (
+	teacherId: string,
+	date: Date,
+	locationId: number,
+	latitude: number,
+	longitude: number,
+	livenessVerified: boolean
+) => {
+	try {
+		// Normalize date to start of day
+		const attendanceDate = new Date(date);
+		attendanceDate.setHours(0, 0, 0, 0);
+
+		// Check if attendance already exists for this date
+		const existingAttendance = await prisma.teacherAttendance.findUnique({
+			where: {
+				teacherId_date: {
+					teacherId,
+					date: attendanceDate,
+				},
+			},
+		});
+
+		if (existingAttendance) {
+			// Update existing attendance
+			await prisma.teacherAttendance.update({
+				where: { id: existingAttendance.id },
+				data: {
+					present: true,
+					checkInTime: new Date(),
+					locationId,
+					latitude,
+					longitude,
+					livenessVerified,
+				},
+			});
+		} else {
+			// Create new attendance
+			await prisma.teacherAttendance.create({
+				data: {
+					teacherId,
+					date: attendanceDate,
+					present: true,
+					checkInTime: new Date(),
+					locationId,
+					latitude,
+					longitude,
+					livenessVerified,
+				},
+			});
+		}
+
+		return {
+			success: true,
+			error: false,
+			message: "Attendance marked successfully",
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			success: false,
+			error: true,
+			message: "Failed to mark teacher attendance",
+		};
+	}
+};
+
+// Location CRUD
+type LocationState = {
+	success: boolean;
+	error: boolean;
+	message?: string;
+};
+
+export const createLocation = async (
+	currentState: LocationState,
+	data: LocationSchema
+) => {
+	try {
+		await prisma.location.create({
+			data: {
+				name: data.name,
+				address: data.address || null,
+				latitude: data.latitude,
+				longitude: data.longitude,
+				radius: data.radius,
+				isActive: data.isActive,
+			},
+		});
+
+		// revalidatePath("/list/locations");
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateLocation = async (
+	currentState: LocationState,
+	data: LocationSchema
+) => {
+	try {
+		await prisma.location.update({
+			where: {
+				id: data.id,
+			},
+			data: {
+				name: data.name,
+				address: data.address || null,
+				latitude: data.latitude,
+				longitude: data.longitude,
+				radius: data.radius,
+				isActive: data.isActive,
+			},
+		});
+
+		// revalidatePath("/list/locations");
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteLocation = async (
+	currentState: LocationState,
+	data: FormData
+) => {
+	const id = data.get("id") as string;
+	try {
+		await prisma.location.delete({
+			where: {
+				id: parseInt(id),
+			},
+		});
+
+		// revalidatePath("/list/locations");
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
 	}
 };
