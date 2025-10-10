@@ -4,12 +4,12 @@ import prisma from "@/lib/prisma";
 import TestAttemptClient from "@/components/TestAttemptClient";
 
 const TestAttemptPage = async ({ params }: { params: { testId: string } }) => {
-	const { sessionClaims } = auth();
+	const { sessionClaims, userId } = auth();
 	const role = (sessionClaims?.metadata as { role?: string })?.role;
-	const studentId = sessionClaims?.userId as string;
+	const studentId = userId as string;
 
 	// Only students can attempt tests
-	if (role !== "student") {
+	if (role !== "student" || !studentId) {
 		redirect("/");
 	}
 

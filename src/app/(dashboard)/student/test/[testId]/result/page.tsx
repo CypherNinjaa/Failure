@@ -5,11 +5,11 @@ import Link from "next/link";
 import Confetti from "@/components/Confetti";
 
 const TestResultPage = async ({ params }: { params: { testId: string } }) => {
-	const { sessionClaims } = auth();
+	const { sessionClaims, userId } = auth();
 	const role = (sessionClaims?.metadata as { role?: string })?.role;
-	const studentId = sessionClaims?.userId as string;
+	const studentId = userId as string;
 
-	if (role !== "student") {
+	if (role !== "student" || !studentId) {
 		redirect("/");
 	}
 

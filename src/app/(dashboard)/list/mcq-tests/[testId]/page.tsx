@@ -193,34 +193,49 @@ const TestDetailPage = async ({ params }: { params: { testId: string } }) => {
 										<p className="text-gray-800 font-medium mb-2">
 											{question.questionText}
 										</p>
-
 										{/* Show options preview */}
-										{question.options && (
-											<div className="ml-4 mt-2 text-sm text-gray-600">
-												{question.questionType === "MATCH_FOLLOWING" ? (
-													<div className="space-y-1">
-														{JSON.parse(question.options as string).map(
-															(pair: any, i: number) => (
-																<div key={i} className="flex gap-2">
-																	<span>
-																		{pair.left} ↔ {pair.right}
-																	</span>
-																</div>
-															)
-														)}
-													</div>
-												) : (
-													<ul className="list-disc ml-5 space-y-1">
-														{JSON.parse(question.options as string).map(
-															(opt: string, i: number) => (
-																<li key={i}>{opt}</li>
-															)
-														)}
-													</ul>
-												)}
-											</div>
-										)}
+										{question.options &&
+											(() => {
+												try {
+													const options =
+														typeof question.options === "string"
+															? JSON.parse(question.options)
+															: question.options;
 
+													return (
+														<div className="ml-4 mt-2 text-sm text-gray-600">
+															{question.questionType === "MATCH_FOLLOWING" ? (
+																<div className="space-y-1">
+																	{options.map((pair: any, i: number) => (
+																		<div key={i} className="flex gap-2">
+																			<span>
+																				{pair.left} ↔ {pair.right}
+																			</span>
+																		</div>
+																	))}
+																</div>
+															) : (
+																<ul className="list-disc ml-5 space-y-1">
+																	{options.map((opt: string, i: number) => (
+																		<li key={i}>{opt}</li>
+																	))}
+																</ul>
+															)}
+														</div>
+													);
+												} catch (error) {
+													console.error(
+														"Error parsing options:",
+														error,
+														question.options
+													);
+													return (
+														<div className="ml-4 mt-2 text-sm text-red-600">
+															Invalid options format
+														</div>
+													);
+												}
+											})()}{" "}
 										{question.explanation && (
 											<div className="mt-2 text-sm text-gray-600 italic">
 												💡 {question.explanation}

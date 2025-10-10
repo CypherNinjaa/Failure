@@ -28,6 +28,13 @@ const TestAttemptClient = ({
 	const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
 	const startTime = useRef(Date.now());
 
+	// Shuffle questions ONCE on mount and store in state
+	const [shuffledQuestions] = useState(() => {
+		return test.shuffleQuestions
+			? [...test.questions].sort(() => Math.random() - 0.5)
+			: test.questions;
+	});
+
 	// Request fullscreen on mount
 	useEffect(() => {
 		const requestFullscreen = () => {
@@ -122,18 +129,55 @@ const TestAttemptClient = ({
 		};
 	}, []);
 
-	// Shuffle questions if enabled
-	const shuffledQuestions = test.shuffleQuestions
-		? [...test.questions].sort(() => Math.random() - 0.5)
-		: test.questions;
-
 	const currentQuestion = shuffledQuestions[currentQuestionIndex];
 
-	// Shuffle options if enabled
+	// Memoize shuffled options for each question (only shuffle once)
+	const [shuffledOptionsCache] = useState<{ [key: string | number]: any }>(
+		() => {
+			const cache: { [key: string | number]: any } = {};
+			if (test.shuffleOptions) {
+				shuffledQuestions.forEach((question: any) => {
+					if (question.options) {
+						try {
+							const options = JSON.parse(question.options);
+							if (
+								question.questionType === "MATCH_FOLLOWING" &&
+								Array.isArray(options)
+							) {
+								// For MATCH_FOLLOWING, shuffle right-side items and store mapping
+								const rightItems = options.map((p: any) => p.right);
+								const shuffledRight = [...rightItems].sort(
+									() => Math.random() - 0.5
+								);
+								// Store the shuffled right items
+								cache[`match_${question.id}`] = shuffledRight;
+							} else {
+								// For other question types, shuffle options normally
+								cache[question.id] = options.sort(() => Math.random() - 0.5);
+							}
+						} catch (error) {
+							console.error("Error parsing question options:", error);
+							cache[question.id] = question.options;
+						}
+					}
+				});
+			}
+			return cache;
+		}
+	);
+
+	// Get shuffled options for a question (from cache or original)
 	const getShuffledOptions = (question: any) => {
-		if (!test.shuffleOptions || !question.options) return question.options;
-		const options = JSON.parse(question.options);
-		return options.sort(() => Math.random() - 0.5);
+		if (!test.shuffleOptions || !question.options) {
+			try {
+				return typeof question.options === "string"
+					? JSON.parse(question.options)
+					: question.options;
+			} catch {
+				return question.options;
+			}
+		}
+		return shuffledOptionsCache[question.id] || question.options;
 	};
 
 	const handleAnswer = (questionId: number, answer: any) => {
@@ -157,12 +201,49 @@ const TestAttemptClient = ({
 		const timeSpent = Math.floor((Date.now() - startTime.current) / 1000);
 
 		try {
+			// Convert MATCH_FOLLOWING answers from shuffled positions back to original indices
+			const processedAnswers = { ...answers };
+
+			shuffledQuestions.forEach((question: any) => {
+				if (
+					question.questionType === "MATCH_FOLLOWING" &&
+					test.shuffleOptions
+				) {
+					const studentAnswer = processedAnswers[question.id];
+					if (Array.isArray(studentAnswer)) {
+						// Get the shuffled right items
+						const pairs =
+							typeof question.options === "string"
+								? JSON.parse(question.options)
+								: question.options;
+						const originalRightItems = pairs.map((p: any) => p.right);
+						const shuffledRightItems =
+							shuffledOptionsCache[`match_${question.id}`] ||
+							originalRightItems;
+
+						// Convert student answers from shuffled positions to original positions
+						const convertedAnswers = studentAnswer.map((answer: string) => {
+							if (!answer) return answer;
+							const shuffledPosition = parseInt(answer) - 1; // Convert to 0-indexed
+							const selectedRightItem = shuffledRightItems[shuffledPosition];
+
+							// Find original position of this item
+							const originalPosition =
+								originalRightItems.indexOf(selectedRightItem);
+							return (originalPosition + 1).toString(); // Convert back to 1-indexed
+						});
+
+						processedAnswers[question.id] = convertedAnswers;
+					}
+				}
+			});
+
 			const result = await submitMCQAttempt(
 				{ success: false, error: false, message: "" },
 				{
 					testId: test.id,
 					studentId,
-					answers: JSON.stringify(answers),
+					answers: JSON.stringify(processedAnswers),
 					timeSpent,
 					tabSwitches,
 					copyPasteAttempts,
@@ -286,36 +367,117 @@ const TestAttemptClient = ({
 				);
 
 			case "MATCH_FOLLOWING":
-				const pairs = JSON.parse(question.options);
-				return (
-					<div className="flex flex-col gap-3">
-						<p className="text-sm text-gray-600 mb-2">
-							Match the items by entering the corresponding number:
-						</p>
-						{pairs.map((pair: any, index: number) => (
-							<div key={index} className="flex items-center gap-4">
-								<span className="w-1/2 p-3 bg-gray-100 rounded-lg">
-									{pair.left}
-								</span>
-								<span>↔</span>
-								<input
-									type="text"
-									value={(answers[questionId] || [])[index] || ""}
-									onChange={(e) => {
-										const current = answers[questionId] || [];
-										current[index] = e.target.value;
-										handleAnswer(questionId, [...current]);
-									}}
-									className="w-20 p-2 border rounded text-center"
-									placeholder="?"
-								/>
-								<span className="w-1/2 p-3 bg-gray-100 rounded-lg">
-									{index + 1}. {pair.right}
-								</span>
+				try {
+					console.log("MATCH_FOLLOWING question:", question);
+					console.log("MATCH_FOLLOWING options:", question.options);
+					console.log("MATCH_FOLLOWING options type:", typeof question.options);
+
+					if (!question.options) {
+						throw new Error("No options provided for MATCH_FOLLOWING question");
+					}
+
+					const pairs =
+						typeof question.options === "string"
+							? JSON.parse(question.options)
+							: question.options;
+
+					console.log("Parsed pairs:", pairs);
+
+					if (!Array.isArray(pairs) || pairs.length === 0) {
+						throw new Error("Invalid pairs format");
+					}
+
+					// Shuffle right-side items if test.shuffleOptions is enabled
+					const getShuffledRightItems = () => {
+						if (!test.shuffleOptions) {
+							return pairs.map((p: any) => p.right);
+						}
+						// Use cached shuffle if available
+						const cacheKey = `match_${question.id}`;
+						if (shuffledOptionsCache[cacheKey]) {
+							return shuffledOptionsCache[cacheKey];
+						}
+						// Shuffle and cache
+						const rightItems = pairs.map((p: any) => p.right);
+						const shuffled = [...rightItems].sort(() => Math.random() - 0.5);
+						return shuffled;
+					};
+
+					const rightItems = getShuffledRightItems();
+
+					return (
+						<div className="flex flex-col gap-3">
+							<p className="text-sm text-gray-600 mb-2">
+								Match the items by entering the corresponding number:
+							</p>
+							{pairs.map((pair: any, index: number) => (
+								<div key={index} className="flex items-center gap-4">
+									<span className="w-1/2 p-3 bg-gray-100 rounded-lg">
+										{pair.left}
+									</span>
+									<span>↔</span>
+									<input
+										type="text"
+										value={(answers[questionId] || [])[index] || ""}
+										onChange={(e) => {
+											const current = answers[questionId] || [];
+											current[index] = e.target.value;
+											handleAnswer(questionId, [...current]);
+										}}
+										className="w-20 p-2 border rounded text-center"
+										placeholder="?"
+									/>
+								</div>
+							))}
+							<div className="mt-4 border-t pt-4">
+								<p className="text-sm text-gray-600 mb-2 font-semibold">
+									Options:
+								</p>
+								<div className="flex flex-col gap-2">
+									{rightItems.map((item: string, idx: number) => (
+										<span
+											key={idx}
+											className="p-2 bg-blue-50 rounded-lg text-sm"
+										>
+											{idx + 1}. {item}
+										</span>
+									))}
+								</div>
 							</div>
-						))}
-					</div>
-				);
+						</div>
+					);
+				} catch (error) {
+					console.error("Error loading match pairs:", error);
+					console.error("Question data:", question);
+					return (
+						<div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+							<p className="text-red-600 font-semibold mb-2">
+								Error loading match pairs
+							</p>
+							<p className="text-sm text-red-500">
+								This question has invalid data. Please contact the teacher to
+								fix this question.
+							</p>
+							<details className="mt-2">
+								<summary className="text-xs text-red-400 cursor-pointer">
+									Technical details
+								</summary>
+								<pre className="text-xs mt-2 p-2 bg-white rounded">
+									{JSON.stringify(
+										{
+											questionId: question.id,
+											options: question.options,
+											error:
+												error instanceof Error ? error.message : String(error),
+										},
+										null,
+										2
+									)}
+								</pre>
+							</details>
+						</div>
+					);
+				}
 
 			default:
 				return <p>Unsupported question type</p>;

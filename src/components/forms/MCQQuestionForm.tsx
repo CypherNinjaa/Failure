@@ -40,6 +40,12 @@ const MCQQuestionForm = ({
 		formState: { errors },
 	} = useForm<MCQQuestionSchema>({
 		resolver: zodResolver(mcqQuestionSchema),
+		defaultValues: {
+			questionType: data?.questionType || "MULTIPLE_CHOICE",
+			points: data?.points || 1,
+			negativeMarking: data?.negativeMarking || 0,
+			order: data?.order || 1,
+		},
 	});
 
 	const [state, formAction] = useFormState(
@@ -66,30 +72,139 @@ const MCQQuestionForm = ({
 					{ left: "", right: "" },
 			  ]
 	);
+	const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+	const [selectedAnswer, setSelectedAnswer] = useState<string>(""); // For MULTIPLE_CHOICE radio buttons
 
-	const onSubmit = handleSubmit((formData) => {
-		// Serialize options and correct answer based on question type
-		if (selectedType === "MATCH_FOLLOWING") {
-			formData.options = JSON.stringify(matchPairs);
-			formData.correctAnswer = JSON.stringify(matchPairs); // Correct matching
-		} else if (
-			selectedType === "MULTIPLE_CHOICE" ||
-			selectedType === "MULTI_SELECT" ||
-			selectedType === "TRUE_FALSE"
-		) {
-			formData.options = JSON.stringify(options.filter((o) => o.trim()));
+	// Log validation errors
+	useEffect(() => {
+		if (Object.keys(errors).length > 0) {
+			console.log("=== FORM VALIDATION ERRORS ===");
+			console.log(errors);
 		}
+	}, [errors]);
 
-		formAction(formData as any);
-	});
+	// Set dummy correctAnswer for MATCH_FOLLOWING to pass validation
+	useEffect(() => {
+		if (selectedType === "MATCH_FOLLOWING") {
+			setValue("correctAnswer", "MATCH_PAIRS"); // Dummy value, will be replaced in onSubmit
+		}
+	}, [selectedType, setValue]);
+
+	const onSubmit = handleSubmit(
+		(formData) => {
+			console.log("=== FORM SUBMIT STARTED ===");
+			console.log("selectedType:", selectedType);
+			console.log("Raw formData:", formData);
+
+			// Serialize options and correct answer based on question type
+			if (selectedType === "MATCH_FOLLOWING") {
+				formData.options = JSON.stringify(matchPairs);
+				formData.correctAnswer = JSON.stringify(matchPairs); // Correct matching
+			} else if (
+				selectedType === "MULTIPLE_CHOICE" ||
+				selectedType === "MULTI_SELECT"
+			) {
+				const filteredOptions = options.filter((o) => o.trim());
+				formData.options = JSON.stringify(filteredOptions);
+
+				// For MULTIPLE_CHOICE: correctAnswer is the option text
+				// For MULTI_SELECT: correctAnswer is array of option texts
+				if (selectedType === "MULTIPLE_CHOICE") {
+					// Get the selected radio button index and convert to option text
+					console.log("MULTIPLE_CHOICE - selectedAnswer:", selectedAnswer);
+					console.log("MULTIPLE_CHOICE - filteredOptions:", filteredOptions);
+
+					if (selectedAnswer === "") {
+						toast.error("Please select the correct answer!");
+						return;
+					}
+
+					const selectedIndex = parseInt(selectedAnswer);
+					if (!isNaN(selectedIndex) && filteredOptions[selectedIndex]) {
+						formData.correctAnswer = JSON.stringify([
+							filteredOptions[selectedIndex],
+						]);
+						console.log(
+							"MULTIPLE_CHOICE - correctAnswer JSON:",
+							formData.correctAnswer
+						);
+					} else {
+						toast.error("Please select a valid option!");
+						return;
+					}
+				} else if (selectedType === "MULTI_SELECT") {
+					// correctAnswer should already be an array from checkboxes
+					// Convert to array of option texts
+					console.log("MULTI_SELECT - selectedAnswers:", selectedAnswers);
+					console.log("MULTI_SELECT - filteredOptions:", filteredOptions);
+
+					if (selectedAnswers.length === 0) {
+						toast.error("Please select at least one correct answer!");
+						return;
+					}
+					const selectedOptions = selectedAnswers
+						.map((idx) => filteredOptions[parseInt(idx)])
+						.filter(Boolean);
+
+					console.log("MULTI_SELECT - selectedOptions:", selectedOptions);
+					formData.correctAnswer = JSON.stringify(selectedOptions);
+					console.log(
+						"MULTI_SELECT - correctAnswer JSON:",
+						formData.correctAnswer
+					);
+				}
+			} else if (selectedType === "TRUE_FALSE") {
+				// TRUE_FALSE: No options needed, just correctAnswer
+				// correctAnswer is "true" or "false" from radio button
+				if (!formData.correctAnswer) {
+					toast.error("Please select True or False!");
+					return;
+				}
+				formData.correctAnswer = JSON.stringify([formData.correctAnswer]);
+				// Don't set options for TRUE_FALSE
+				formData.options = undefined;
+			} else if (selectedType === "FILL_BLANK") {
+				// For FILL_BLANK, wrap single answer in array, no options needed
+				if (!formData.correctAnswer || !formData.correctAnswer.trim()) {
+					toast.error("Please enter the correct answer!");
+					return;
+				}
+				formData.correctAnswer = JSON.stringify([formData.correctAnswer]);
+				// Don't set options for FILL_BLANK
+				formData.options = undefined;
+			}
+
+			console.log("=== FINAL FORM DATA ===");
+			console.log("questionType:", formData.questionType);
+			console.log("questionText:", formData.questionText);
+			console.log("options:", formData.options);
+			console.log("correctAnswer:", formData.correctAnswer);
+			console.log("points:", formData.points);
+			console.log("negativeMarking:", formData.negativeMarking);
+			console.log("========================");
+
+			formAction(formData as any);
+		},
+		(errors) => {
+			console.log("=== FORM VALIDATION FAILED ===");
+			console.log("Validation errors:", errors);
+			console.log("Error details:");
+			Object.keys(errors).forEach((key) => {
+				console.log(`  ${key}:`, (errors as any)[key]?.message);
+			});
+			toast.error("Please fill in all required fields correctly!");
+		}
+	);
 
 	useEffect(() => {
 		if (state.success) {
-			toast(
+			toast.success(
 				`MCQ Question has been ${type === "create" ? "created" : "updated"}!`
 			);
 			setOpen(false);
 			router.refresh();
+		} else if (state.error) {
+			toast.error(state.message || "Failed to save question!");
 		}
 	}, [state, router, type, setOpen]);
 
@@ -121,6 +236,15 @@ const MCQQuestionForm = ({
 					defaultValue={data?.testId || relatedData?.testId}
 					register={register}
 					error={errors?.testId}
+					type="number"
+					hidden
+				/>
+				<InputField
+					label="Order"
+					name="order"
+					defaultValue={data?.order || 1}
+					register={register}
+					error={errors?.order}
 					type="number"
 					hidden
 				/>
@@ -183,17 +307,48 @@ const MCQQuestionForm = ({
 						) : (
 							options.map((option, index) => (
 								<div key={index} className="flex items-center gap-2">
-									<input
-										type={
-											selectedType === "MULTI_SELECT" ? "checkbox" : "radio"
-										}
-										value={index}
-										{...register("correctAnswer")}
-										defaultChecked={
-											data?.correctAnswer &&
-											JSON.parse(data.correctAnswer).includes(index)
-										}
-									/>
+									{selectedType === "MULTI_SELECT" ? (
+										<input
+											type="checkbox"
+											value={index}
+											checked={selectedAnswers.includes(index.toString())}
+											onChange={(e) => {
+												let newSelectedAnswers;
+												if (e.target.checked) {
+													newSelectedAnswers = [
+														...selectedAnswers,
+														index.toString(),
+													];
+												} else {
+													newSelectedAnswers = selectedAnswers.filter(
+														(a) => a !== index.toString()
+													);
+												}
+												setSelectedAnswers(newSelectedAnswers);
+												// Update react-hook-form with comma-separated values
+												setValue("correctAnswer", newSelectedAnswers.join(","));
+											}}
+										/>
+									) : (
+										<input
+											type="radio"
+											name="correctAnswer"
+											value={index}
+											checked={selectedAnswer === index.toString()}
+											onChange={(e) => {
+												console.log(
+													"Radio button clicked, value:",
+													e.target.value
+												);
+												setSelectedAnswer(e.target.value);
+												setValue("correctAnswer", e.target.value);
+												console.log(
+													"selectedAnswer state updated to:",
+													e.target.value
+												);
+											}}
+										/>
+									)}
 									<input
 										type="text"
 										className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm flex-1"

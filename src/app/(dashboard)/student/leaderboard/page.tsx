@@ -2,41 +2,59 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
+import { Prisma } from "@prisma/client";
+
+type StudentPointsWithStudent = Prisma.StudentPointsGetPayload<{
+	include: {
+		student: {
+			select: {
+				name: true;
+				surname: true;
+				img: true;
+				class: {
+					select: {
+						name: true;
+					};
+				};
+			};
+		};
+	};
+}>;
 
 const LeaderboardPage = async () => {
-	const { sessionClaims } = auth();
+	const { sessionClaims, userId } = auth();
 	const role = (sessionClaims?.metadata as { role?: string })?.role;
-	const userId = sessionClaims?.userId as string;
 
 	if (role !== "student" && role !== "teacher" && role !== "admin") {
 		redirect("/");
 	}
 
 	// Fetch top students
-	const topStudents = await prisma.studentPoints.findMany({
-		include: {
-			student: {
-				select: {
-					name: true,
-					surname: true,
-					img: true,
-					class: {
-						select: {
-							name: true,
+	const topStudents: StudentPointsWithStudent[] =
+		await prisma.studentPoints.findMany({
+			include: {
+				student: {
+					select: {
+						name: true,
+						surname: true,
+						img: true,
+						class: {
+							select: {
+								name: true,
+							},
 						},
 					},
 				},
 			},
-		},
-		orderBy: {
-			totalPoints: "desc",
-		},
-		take: 50, // Top 50 students
-	});
+			orderBy: {
+				totalPoints: "desc",
+			},
+			take: 50, // Top 50 students
+		});
 
 	// Find current student's position if they are a student
-	const currentStudentPoints =
-		role === "student"
+	const currentStudentPoints: StudentPointsWithStudent | null =
+		role === "student" && userId
 			? await prisma.studentPoints.findUnique({
 					where: { studentId: userId },
 					include: {

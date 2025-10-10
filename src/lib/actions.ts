@@ -1725,9 +1725,15 @@ export const createMCQQuestion = async (
 	data: MCQQuestionSchema
 ) => {
 	try {
+		console.log("=== SERVER: createMCQQuestion ===");
+		console.log("Received data:", data);
+
 		// Parse JSON strings for options and correctAnswer
 		const options = data.options ? JSON.parse(data.options) : null;
+		console.log("Parsed options:", options);
+
 		const correctAnswer = JSON.parse(data.correctAnswer);
+		console.log("Parsed correctAnswer:", correctAnswer);
 
 		await prisma.mCQQuestion.create({
 			data: {
@@ -1743,6 +1749,8 @@ export const createMCQQuestion = async (
 				imageUrl: data.imageUrl,
 			},
 		});
+
+		console.log("Question created successfully!");
 
 		// Update total points for the test
 		const test = await prisma.mCQTest.findUnique({
@@ -1768,8 +1776,13 @@ export const createMCQQuestion = async (
 			message: "Question added successfully!",
 		};
 	} catch (err) {
-		console.log(err);
-		return { success: false, error: true, message: "Failed to add question!" };
+		console.error("=== SERVER ERROR: createMCQQuestion ===");
+		console.error(err);
+		return {
+			success: false,
+			error: true,
+			message: err instanceof Error ? err.message : "Failed to add question!",
+		};
 	}
 };
 
@@ -1989,10 +2002,41 @@ export const submitMCQAttempt = async (
 				return;
 			}
 
-			// Compare answers (handle different question types)
-			const correct =
-				JSON.stringify(question.correctAnswer) ===
-				JSON.stringify(studentAnswer);
+			let correct = false;
+
+			// Compare answers based on question type
+			if (question.questionType === "MATCH_FOLLOWING") {
+				// For MATCH_FOLLOWING, student answers are indices matching pairs
+				// correctAnswer is the array of pairs: [{"left":"A","right":"1"}, ...]
+				// studentAnswer is array of numbers: ["1", "2", "3"] (already converted from shuffled positions)
+				try {
+					const pairs =
+						typeof question.correctAnswer === "string"
+							? JSON.parse(question.correctAnswer as any)
+							: question.correctAnswer;
+
+					const studentMatches = Array.isArray(studentAnswer)
+						? studentAnswer
+						: [];
+
+					// Check if all matches are correct
+					// Student should enter the correct position numbers (1-indexed)
+					correct = pairs.every((pair: any, index: number) => {
+						const studentInput = studentMatches[index];
+						// Student enters "1" for first item, "2" for second, etc.
+						// (These have been converted from shuffled positions on the client side)
+						return studentInput === (index + 1).toString();
+					});
+				} catch (error) {
+					console.error("Error checking MATCH_FOLLOWING answer:", error);
+					correct = false;
+				}
+			} else {
+				// For other question types, compare JSON strings directly
+				correct =
+					JSON.stringify(question.correctAnswer) ===
+					JSON.stringify(studentAnswer);
+			}
 
 			if (correct) {
 				score += question.points;
