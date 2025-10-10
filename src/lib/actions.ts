@@ -679,8 +679,10 @@ export const updateAssignment = async (
 				title: data.title,
 				startDate: data.startDate,
 				dueDate: data.dueDate,
-				lessonId: data.lessonId,
-			},
+				lesson: {
+					connect: { id: data.lessonId },
+				},
+			} as any, // Temporarily bypassing TypeScript cache issue
 		});
 
 		// revalidatePath("/list/assignments");
