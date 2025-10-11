@@ -1,6 +1,7 @@
 import Announcements from "@/components/Announcements";
 import BigCalendarContainer from "@/components/BigCalendarContainer";
 import EventCalendar from "@/components/EventCalendar";
+import TeacherRatingWidget from "@/components/TeacherRatingWidget";
 import { auth } from "@clerk/nextjs/server";
 
 const TeacherPage = async ({
@@ -39,6 +40,7 @@ const TeacherPage = async ({
 			{/* RIGHT */}
 			<div className="w-full xl:w-1/3 flex flex-col gap-8">
 				<EventCalendar />
+				<TeacherRatingWidget teacherId={userId!} />
 				<Announcements />
 			</div>
 		</div>

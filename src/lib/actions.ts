@@ -2410,3 +2410,388 @@ export const deleteBadge = async (
 		return { success: false, error: true };
 	}
 };
+
+// ============ TEACHER RATING SYSTEM ============
+
+type TeacherRatingState = {
+	success: boolean;
+	error: boolean;
+};
+
+export const submitTeacherRating = async (
+	currentState: TeacherRatingState,
+	data: FormData
+): Promise<TeacherRatingState> => {
+	try {
+		const { userId } = auth();
+		if (!userId) {
+			return { success: false, error: true };
+		}
+
+		const teacherId = data.get("teacherId") as string;
+		const testId = data.get("testId") as string | null;
+		const subjectId = data.get("subjectId") as string | null;
+		const rating = parseInt(data.get("rating") as string);
+		const comment = data.get("comment") as string | null;
+
+		// Validate rating
+		if (rating < 1 || rating > 5) {
+			return { success: false, error: true };
+		}
+
+		// Check if already rated (only if testId is provided)
+		let existingRating = null;
+		if (testId) {
+			existingRating = await prisma.teacherRating.findUnique({
+				where: {
+					studentId_teacherId_testId: {
+						studentId: userId,
+						teacherId,
+						testId,
+					},
+				},
+			});
+		}
+
+		if (existingRating) {
+			// Update existing rating
+			await prisma.teacherRating.update({
+				where: { id: existingRating.id },
+				data: {
+					rating,
+					comment: comment || null,
+				},
+			});
+		} else {
+			// Create new rating
+			await prisma.teacherRating.create({
+				data: {
+					studentId: userId,
+					teacherId,
+					testId: testId || null,
+					subjectId: subjectId ? parseInt(subjectId) : null,
+					rating,
+					comment: comment || null,
+					isAnonymous: true,
+				},
+			});
+		}
+
+		// Recalculate teacher leaderboard
+		await calculateTeacherLeaderboard();
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error submitting teacher rating:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Calculate teacher leaderboard
+export type TeacherLeaderboardEntry = {
+	rank: number;
+	teacherId: string;
+	teacherName: string;
+	teacherSurname: string;
+	teacherImg: string | null;
+	averageRating: number;
+	totalRatings: number;
+	fiveStarCount: number;
+	fourStarCount: number;
+	threeStarCount: number;
+	twoStarCount: number;
+	oneStarCount: number;
+	badges: {
+		id: string;
+		name: string;
+		icon: string | null;
+		color: string;
+	}[];
+	subjects: string[];
+};
+
+export const calculateTeacherLeaderboard = async (filters?: {
+	subjectId?: number;
+}): Promise<TeacherLeaderboardEntry[]> => {
+	try {
+		// Get all teachers with their ratings
+		const teachers = await prisma.teacher.findMany({
+			include: {
+				ratings: {
+					where: filters?.subjectId
+						? { subjectId: filters.subjectId }
+						: undefined,
+				},
+				subjects: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+			},
+		});
+
+		// Calculate statistics for each teacher
+		const leaderboardData: Array<{
+			teacher: {
+				id: string;
+				name: string;
+				surname: string;
+				img: string | null;
+			};
+			subjects: string[];
+			averageRating: number;
+			totalRatings: number;
+			fiveStarCount: number;
+			fourStarCount: number;
+			threeStarCount: number;
+			twoStarCount: number;
+			oneStarCount: number;
+		}> = [];
+
+		for (const teacher of teachers) {
+			if (teacher.ratings.length === 0) continue;
+
+			const ratings = teacher.ratings;
+			const totalRatings = ratings.length;
+			const sumRatings = ratings.reduce((sum, r) => sum + r.rating, 0);
+			const averageRating = sumRatings / totalRatings;
+
+			const fiveStarCount = ratings.filter((r) => r.rating === 5).length;
+			const fourStarCount = ratings.filter((r) => r.rating === 4).length;
+			const threeStarCount = ratings.filter((r) => r.rating === 3).length;
+			const twoStarCount = ratings.filter((r) => r.rating === 2).length;
+			const oneStarCount = ratings.filter((r) => r.rating === 1).length;
+
+			leaderboardData.push({
+				teacher: {
+					id: teacher.id,
+					name: teacher.name,
+					surname: teacher.surname,
+					img: teacher.img,
+				},
+				subjects: teacher.subjects.map((s) => s.name),
+				averageRating: Math.round(averageRating * 100) / 100,
+				totalRatings,
+				fiveStarCount,
+				fourStarCount,
+				threeStarCount,
+				twoStarCount,
+				oneStarCount,
+			});
+
+			// Update or create leaderboard entry in database
+			await prisma.teacherLeaderboard.upsert({
+				where: { teacherId: teacher.id },
+				update: {
+					averageRating,
+					totalRatings,
+					fiveStarCount,
+					fourStarCount,
+					threeStarCount,
+					twoStarCount,
+					oneStarCount,
+					overallScore: averageRating,
+					lastCalculated: new Date(),
+				},
+				create: {
+					teacherId: teacher.id,
+					averageRating,
+					totalRatings,
+					fiveStarCount,
+					fourStarCount,
+					threeStarCount,
+					twoStarCount,
+					oneStarCount,
+					overallScore: averageRating,
+				},
+			});
+		}
+
+		// Sort by average rating (DESC), then by total ratings (DESC) as tie-breaker
+		leaderboardData.sort((a, b) => {
+			if (b.averageRating !== a.averageRating) {
+				return b.averageRating - a.averageRating;
+			}
+			return b.totalRatings - a.totalRatings;
+		});
+
+		// Assign ranks and fetch badges
+		const leaderboard: TeacherLeaderboardEntry[] = await Promise.all(
+			leaderboardData.map(async (data, index) => {
+				const rank = index + 1;
+
+				// Update rank in database
+				await prisma.teacherLeaderboard.update({
+					where: { teacherId: data.teacher.id },
+					data: { rank },
+				});
+
+				// Fetch teacher badges
+				const teacherBadges = await prisma.teacherBadge.findMany({
+					where: {
+						teacherId: data.teacher.id,
+					},
+					include: {
+						badge: {
+							select: {
+								id: true,
+								name: true,
+								icon: true,
+								color: true,
+							},
+						},
+					},
+					orderBy: {
+						badge: {
+							priority: "asc",
+						},
+					},
+					take: 3, // Show top 3 badges
+				});
+
+				return {
+					rank,
+					teacherId: data.teacher.id,
+					teacherName: data.teacher.name,
+					teacherSurname: data.teacher.surname,
+					teacherImg: data.teacher.img,
+					averageRating: data.averageRating,
+					totalRatings: data.totalRatings,
+					fiveStarCount: data.fiveStarCount,
+					fourStarCount: data.fourStarCount,
+					threeStarCount: data.threeStarCount,
+					twoStarCount: data.twoStarCount,
+					oneStarCount: data.oneStarCount,
+					badges: teacherBadges.map((tb) => tb.badge),
+					subjects: data.subjects,
+				};
+			})
+		);
+
+		// Auto-award badges based on criteria
+		await autoAwardTeacherBadges(leaderboard);
+
+		return leaderboard;
+	} catch (err) {
+		console.error("Error calculating teacher leaderboard:", err);
+		return [];
+	}
+};
+
+// Auto-award teacher badges
+const autoAwardTeacherBadges = async (
+	leaderboard: TeacherLeaderboardEntry[]
+): Promise<void> => {
+	try {
+		// Get all active badges
+		const badges = await prisma.badge.findMany({
+			where: { isActive: true },
+		});
+
+		for (const entry of leaderboard) {
+			for (const badge of badges) {
+				const criteria = badge.criteria as any;
+				let shouldAward = false;
+
+				// Check badge criteria
+				if (criteria.type === "teacherRank") {
+					if (criteria.value) {
+						shouldAward = entry.rank === criteria.value;
+					} else if (criteria.maxValue) {
+						shouldAward = entry.rank <= criteria.maxValue;
+					}
+				} else if (criteria.type === "teacherRating") {
+					if (criteria.min) {
+						shouldAward = entry.averageRating >= criteria.min;
+					}
+				} else if (criteria.type === "teacherRatings") {
+					if (criteria.min) {
+						shouldAward = entry.totalRatings >= criteria.min;
+					}
+				} else if (criteria.type === "fiveStars") {
+					if (criteria.min) {
+						shouldAward = entry.fiveStarCount >= criteria.min;
+					}
+				}
+
+				if (shouldAward) {
+					// Check if teacher already has this badge
+					const existing = await prisma.teacherBadge.findUnique({
+						where: {
+							teacherId_badgeId: {
+								teacherId: entry.teacherId,
+								badgeId: badge.id,
+							},
+						},
+					});
+
+					if (!existing) {
+						await prisma.teacherBadge.create({
+							data: {
+								teacherId: entry.teacherId,
+								badgeId: badge.id,
+								metadata: {
+									rank: entry.rank,
+									averageRating: entry.averageRating,
+									totalRatings: entry.totalRatings,
+								},
+							},
+						});
+					}
+				}
+			}
+		}
+	} catch (err) {
+		console.error("Error auto-awarding teacher badges:", err);
+	}
+};
+
+// Get teacher's own rating statistics
+export const getTeacherRatingStats = async (teacherId: string) => {
+	try {
+		const leaderboard = await prisma.teacherLeaderboard.findUnique({
+			where: { teacherId },
+			include: {
+				badges: {
+					include: {
+						badge: true,
+					},
+					orderBy: {
+						badge: {
+							priority: "asc",
+						},
+					},
+				},
+			},
+		});
+
+		const ratings = await prisma.teacherRating.findMany({
+			where: { teacherId },
+			include: {
+				test: {
+					select: {
+						title: true,
+					},
+				},
+				subject: {
+					select: {
+						name: true,
+					},
+				},
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+			take: 10, // Last 10 ratings
+		});
+
+		return {
+			leaderboard,
+			recentRatings: ratings,
+		};
+	} catch (err) {
+		console.error("Error fetching teacher rating stats:", err);
+		return null;
+	}
+};

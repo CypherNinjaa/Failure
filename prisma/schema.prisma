@@ -36,6 +36,9 @@ model Student {
   mcqAttempts MCQAttempt[]
   studentBadges StudentBadge[]
   leaderboardSnapshots LeaderboardSnapshot[]
+  
+  // Teacher rating relation
+  teacherRatings TeacherRating[]
 }
 
 model Teacher {
@@ -57,6 +60,11 @@ model Teacher {
   teacherAttendances TeacherAttendance[]
   mcqTests  MCQTest[]
   gradedAnswers StudentAnswer[] // Answers graded by this teacher
+  
+  // Teacher rating relations
+  ratings   TeacherRating[]
+  leaderboard TeacherLeaderboard?
+  badges    TeacherBadge[] @relation("TeacherBadges")
 }
 
 model Parent {
@@ -102,6 +110,7 @@ model Subject {
   teachers Teacher[]
   lessons  Lesson[]
   mcqTests MCQTest[]
+  teacherRatings TeacherRating[]
 }
 
 model Lesson {
@@ -275,6 +284,7 @@ model MCQTest {
   teacher   Teacher       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   questions MCQQuestion[]
   attempts  MCQAttempt[]
+  ratings   TeacherRating[] // Ratings given after completing this test
   
   @@index([teacherId])
   @@index([subjectId])
@@ -365,6 +375,7 @@ model Badge {
   updatedAt       DateTime  @updatedAt
   
   studentBadges   StudentBadge[]
+  teacherBadges   TeacherBadge[]  // Shared badge system for teachers too
   
   @@index([badgeType])
   @@index([isActive])
@@ -437,4 +448,76 @@ model LeaderboardSnapshot {
   @@index([classId])
   @@index([createdAt])
   @@index([rank])
+}
+
+// ===== TEACHER RATING SYSTEM =====
+
+model TeacherRating {
+  id                String   @id @default(cuid())
+  studentId         String
+  teacherId         String
+  testId            String?  // MCQ test that was completed
+  subjectId         Int?     // Subject being taught
+  
+  // Simple 5-star rating
+  rating            Int      // 1-5 stars
+  
+  // Optional feedback
+  comment           String?  @db.Text
+  
+  // Metadata
+  isAnonymous       Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  test    MCQTest? @relation(fields: [testId], references: [id], onDelete: SetNull)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  
+  @@unique([studentId, teacherId, testId])
+  @@index([teacherId])
+  @@index([subjectId])
+  @@index([rating])
+}
+
+model TeacherLeaderboard {
+  id                    String   @id @default(cuid())
+  teacherId             String   @unique
+  
+  // Rating metrics
+  averageRating         Float    @default(0)
+  totalRatings          Int      @default(0)
+  fiveStarCount         Int      @default(0)
+  fourStarCount         Int      @default(0)
+  threeStarCount        Int      @default(0)
+  twoStarCount          Int      @default(0)
+  oneStarCount          Int      @default(0)
+  
+  // Overall score (same as averageRating for simplicity)
+  overallScore          Float    @default(0)
+  rank                  Int?
+  
+  // Badges earned (links to existing Badge system)
+  badges                TeacherBadge[]
+  
+  lastCalculated        DateTime @default(now())
+  
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+}
+
+model TeacherBadge {
+  id                String   @id @default(cuid())
+  teacherId         String
+  badgeId           String   // Links to existing Badge model
+  earnedAt          DateTime @default(now())
+  metadata          Json?    // Additional context (rank, rating when earned)
+  
+  teacher           Teacher  @relation("TeacherBadges", fields: [teacherId], references: [id], onDelete: Cascade)
+  leaderboard       TeacherLeaderboard @relation(fields: [teacherId], references: [teacherId], onDelete: Cascade, map: "TeacherBadge_leaderboard_fkey")
+  badge             Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  @@unique([teacherId, badgeId])
+  @@index([teacherId])
+  @@index([badgeId])
 }

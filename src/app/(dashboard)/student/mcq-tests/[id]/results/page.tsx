@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import RatingPrompt from "@/components/RatingPrompt";
 
 const ResultsPage = async ({
 	params,
@@ -99,6 +100,17 @@ const ResultsPage = async ({
 	).length;
 	const score = latestAttempt.score || 0;
 
+	// Check if student has already rated this teacher for this test
+	const existingRating = await prisma.teacherRating.findUnique({
+		where: {
+			studentId_teacherId_testId: {
+				studentId: userId!,
+				teacherId: test.teacherId,
+				testId: params.id,
+			},
+		},
+	});
+
 	// Calculate statistics across all attempts
 	const allScores = attempts.map((a) => a.score || 0);
 	const bestScore = Math.max(...allScores);
@@ -120,6 +132,15 @@ const ResultsPage = async ({
 					</span>
 				</div>
 			</div>
+
+			{/* Teacher Rating Prompt */}
+			<RatingPrompt
+				testId={params.id}
+				teacherId={test.teacherId}
+				teacherName={`${test.teacher.name} ${test.teacher.surname}`}
+				subjectId={test.subjectId || undefined}
+				hasRated={!!existingRating}
+			/>
 
 			{/* Overall Statistics */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -22,5 +22,10 @@
 		}
 	},
 	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-	"exclude": ["node_modules", "face-api.js-master"]
+	"exclude": [
+		"node_modules",
+		"face-api.js-master",
+		"prisma/seedLeaderboard.ts",
+		"prisma/seedLeaderboardData.ts"
+	]
 }
