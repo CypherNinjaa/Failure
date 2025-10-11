@@ -41,11 +41,6 @@ const TestAnalyticsPage = async ({
 							img: true,
 						},
 					},
-					wrongAnswers: {
-						select: {
-							questionId: true,
-						},
-					},
 				},
 				orderBy: {
 					submittedAt: "desc",
@@ -57,6 +52,19 @@ const TestAnalyticsPage = async ({
 	if (!test) {
 		redirect("/list/mcq-tests");
 	}
+
+	// Fetch wrong answers separately for question difficulty analysis
+	const wrongAnswersData = await prisma.wrongAnswer.findMany({
+		where: {
+			question: {
+				testId: testId,
+			},
+		},
+		select: {
+			questionId: true,
+			attemptCount: true,
+		},
+	});
 
 	// Calculate analytics
 	const totalAttempts = test.attempts.length;
@@ -94,10 +102,11 @@ const TestAnalyticsPage = async ({
 
 	// Question difficulty analysis
 	const questionStats = test.questions.map((q) => {
-		const wrongCount = test.attempts
-			.flatMap((a) => a.wrongAnswers)
-			.filter((wa) => wa.questionId === q.id).length;
-		const correctCount = totalAttempts - wrongCount;
+		// Count wrong answers from the wrongAnswersData
+		const wrongCount = wrongAnswersData.filter(
+			(wa) => wa.questionId === q.id
+		).length;
+		const correctCount = Math.max(0, totalAttempts - wrongCount);
 		const correctPercentage =
 			totalAttempts > 0 ? (correctCount / totalAttempts) * 100 : 0;
 

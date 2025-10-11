@@ -6,6 +6,15 @@ const nextConfig = {
 			{ hostname: "res.cloudinary.com" },
 		],
 	},
+	experimental: {
+		serverActions: {
+			allowedOrigins: [
+				"localhost:3000",
+				"hgv24btw-3000.inc1.devtunnels.ms",
+				"*.devtunnels.ms",
+			],
+		},
+	},
 	webpack: (config, { isServer }) => {
 		// Fix for face-api.js trying to use Node.js modules in browser
 		if (!isServer) {

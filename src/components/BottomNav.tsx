@@ -47,14 +47,19 @@ const BottomNav = ({ role }: BottomNavProps) => {
 			return [
 				{ icon: "/home.png", label: "Home", href: "/student" },
 				{
+					icon: "/exam.png",
+					label: "Tests",
+					href: "/list/mcq-tests",
+				},
+				{
+					icon: "/announcement.png",
+					label: "Leaderboard",
+					href: "/student/leaderboard",
+				},
+				{
 					icon: "/attendance.png",
 					label: "Attendance",
 					href: "/list/attendance",
-				},
-				{
-					icon: "/assignment.png",
-					label: "Assignments",
-					href: "/list/assignments",
 				},
 			];
 		}
@@ -115,14 +120,38 @@ const BottomNav = ({ role }: BottomNavProps) => {
 			},
 			{
 				icon: "/exam.png",
-				label: "Exams",
-				href: "/list/exams",
-				visible: ["admin", "teacher", "student", "parent"],
+				label: "MCQ Tests",
+				href: "/list/mcq-tests",
+				visible: ["admin", "teacher"],
+			},
+			{
+				icon: "/exam.png",
+				label: "Tests",
+				href: "/list/mcq-tests",
+				visible: ["student"],
+			},
+			{
+				icon: "/singleLesson.png",
+				label: "Practice",
+				href: "/student/practice",
+				visible: ["student"],
+			},
+			{
+				icon: "/announcement.png",
+				label: "Leaderboard",
+				href: "/student/leaderboard",
+				visible: ["student"],
 			},
 			{
 				icon: "/assignment.png",
 				label: "Assignments",
 				href: "/list/assignments",
+				visible: ["admin", "teacher", "student", "parent"],
+			},
+			{
+				icon: "/exam.png",
+				label: "Exams",
+				href: "/list/exams",
 				visible: ["admin", "teacher", "student", "parent"],
 			},
 			{

@@ -139,7 +139,12 @@ const TestAttemptClient = ({
 				shuffledQuestions.forEach((question: any) => {
 					if (question.options) {
 						try {
-							const options = JSON.parse(question.options);
+							// Handle both string and object options
+							const options =
+								typeof question.options === "string"
+									? JSON.parse(question.options)
+									: question.options;
+
 							if (
 								question.questionType === "MATCH_FOLLOWING" &&
 								Array.isArray(options)
@@ -151,13 +156,19 @@ const TestAttemptClient = ({
 								);
 								// Store the shuffled right items
 								cache[`match_${question.id}`] = shuffledRight;
-							} else {
+							} else if (Array.isArray(options)) {
 								// For other question types, shuffle options normally
-								cache[question.id] = options.sort(() => Math.random() - 0.5);
+								cache[question.id] = [...options].sort(
+									() => Math.random() - 0.5
+								);
 							}
 						} catch (error) {
 							console.error("Error parsing question options:", error);
-							cache[question.id] = question.options;
+							// Store original if parsing fails
+							cache[question.id] =
+								typeof question.options === "string"
+									? question.options
+									: question.options;
 						}
 					}
 				});
@@ -201,49 +212,14 @@ const TestAttemptClient = ({
 		const timeSpent = Math.floor((Date.now() - startTime.current) / 1000);
 
 		try {
-			// Convert MATCH_FOLLOWING answers from shuffled positions back to original indices
-			const processedAnswers = { ...answers };
-
-			shuffledQuestions.forEach((question: any) => {
-				if (
-					question.questionType === "MATCH_FOLLOWING" &&
-					test.shuffleOptions
-				) {
-					const studentAnswer = processedAnswers[question.id];
-					if (Array.isArray(studentAnswer)) {
-						// Get the shuffled right items
-						const pairs =
-							typeof question.options === "string"
-								? JSON.parse(question.options)
-								: question.options;
-						const originalRightItems = pairs.map((p: any) => p.right);
-						const shuffledRightItems =
-							shuffledOptionsCache[`match_${question.id}`] ||
-							originalRightItems;
-
-						// Convert student answers from shuffled positions to original positions
-						const convertedAnswers = studentAnswer.map((answer: string) => {
-							if (!answer) return answer;
-							const shuffledPosition = parseInt(answer) - 1; // Convert to 0-indexed
-							const selectedRightItem = shuffledRightItems[shuffledPosition];
-
-							// Find original position of this item
-							const originalPosition =
-								originalRightItems.indexOf(selectedRightItem);
-							return (originalPosition + 1).toString(); // Convert back to 1-indexed
-						});
-
-						processedAnswers[question.id] = convertedAnswers;
-					}
-				}
-			});
-
+			// Frontend only sends the raw answers - no processing needed
+			// Backend is the single source of truth for verification
 			const result = await submitMCQAttempt(
 				{ success: false, error: false, message: "" },
 				{
 					testId: test.id,
 					studentId,
-					answers: JSON.stringify(processedAnswers),
+					answers: JSON.stringify(answers),
 					timeSpent,
 					tabSwitches,
 					copyPasteAttempts,
@@ -368,10 +344,6 @@ const TestAttemptClient = ({
 
 			case "MATCH_FOLLOWING":
 				try {
-					console.log("MATCH_FOLLOWING question:", question);
-					console.log("MATCH_FOLLOWING options:", question.options);
-					console.log("MATCH_FOLLOWING options type:", typeof question.options);
-
 					if (!question.options) {
 						throw new Error("No options provided for MATCH_FOLLOWING question");
 					}
@@ -381,29 +353,14 @@ const TestAttemptClient = ({
 							? JSON.parse(question.options)
 							: question.options;
 
-					console.log("Parsed pairs:", pairs);
-
 					if (!Array.isArray(pairs) || pairs.length === 0) {
 						throw new Error("Invalid pairs format");
 					}
 
-					// Shuffle right-side items if test.shuffleOptions is enabled
-					const getShuffledRightItems = () => {
-						if (!test.shuffleOptions) {
-							return pairs.map((p: any) => p.right);
-						}
-						// Use cached shuffle if available
-						const cacheKey = `match_${question.id}`;
-						if (shuffledOptionsCache[cacheKey]) {
-							return shuffledOptionsCache[cacheKey];
-						}
-						// Shuffle and cache
-						const rightItems = pairs.map((p: any) => p.right);
-						const shuffled = [...rightItems].sort(() => Math.random() - 0.5);
-						return shuffled;
-					};
-
-					const rightItems = getShuffledRightItems();
+					// Get shuffled right items from cache or use original order
+					const cacheKey = `match_${question.id}`;
+					const rightItems =
+						shuffledOptionsCache[cacheKey] || pairs.map((p: any) => p.right);
 
 					return (
 						<div className="flex flex-col gap-3">

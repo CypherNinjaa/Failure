@@ -1,0 +1,11 @@
+# Exclude face-api.js source folder from deployment
+
+face-api.js-master/
+
+# Exclude other unnecessary files
+
+_.md
+!README.md
+.vscode/
+.idea/
+_.log

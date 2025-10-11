@@ -1997,47 +1997,217 @@ export const submitMCQAttempt = async (
 		test.questions.forEach((question) => {
 			const studentAnswer = answers[question.id];
 
-			if (!studentAnswer || studentAnswer === null) {
+			// Check if question is unanswered
+			if (
+				studentAnswer === null ||
+				studentAnswer === undefined ||
+				studentAnswer === "" ||
+				(Array.isArray(studentAnswer) &&
+					(studentAnswer.length === 0 ||
+						studentAnswer.every((a) => !a || a === "")))
+			) {
 				unanswered++;
 				return;
 			}
 
 			let correct = false;
 
-			// Compare answers based on question type
-			if (question.questionType === "MATCH_FOLLOWING") {
-				// For MATCH_FOLLOWING, student answers are indices matching pairs
-				// correctAnswer is the array of pairs: [{"left":"A","right":"1"}, ...]
-				// studentAnswer is array of numbers: ["1", "2", "3"] (already converted from shuffled positions)
-				try {
-					const pairs =
-						typeof question.correctAnswer === "string"
-							? JSON.parse(question.correctAnswer as any)
-							: question.correctAnswer;
+			// ============================================================
+			// SECURE BACKEND VERIFICATION - SINGLE SOURCE OF TRUTH
+			// The backend is the ONLY authority on correct answers.
+			// Frontend only sends: questionId + studentAnswer (user's input)
+			// Backend verifies using the correctAnswer stored in database.
+			// ============================================================
 
-					const studentMatches = Array.isArray(studentAnswer)
-						? studentAnswer
-						: [];
+			switch (question.questionType) {
+				case "MATCH_FOLLOWING": {
+					// MATCH_FOLLOWING verification logic:
+					// The question displays pairs with shuffled right-side items
+					// Student enters numbers (1-based indices) to match left items with right items
+					// We verify by checking if their selection maps to the correct pair
 
-					// Check if all matches are correct
-					// Student should enter the correct position numbers (1-indexed)
-					correct = pairs.every((pair: any, index: number) => {
-						const studentInput = studentMatches[index];
-						// Student enters "1" for first item, "2" for second, etc.
-						// (These have been converted from shuffled positions on the client side)
-						return studentInput === (index + 1).toString();
-					});
-				} catch (error) {
-					console.error("Error checking MATCH_FOLLOWING answer:", error);
-					correct = false;
+					try {
+						// Parse options (the pairs from database)
+						const pairs =
+							typeof question.options === "string"
+								? JSON.parse(question.options)
+								: question.options;
+
+						// Parse correct answer from database
+						// Note: correctAnswer might store full pairs or indices, handle both
+						let correctAnswerDB =
+							typeof question.correctAnswer === "string"
+								? JSON.parse(question.correctAnswer)
+								: question.correctAnswer;
+
+						if (!Array.isArray(pairs)) {
+							console.error(
+								`[Q${question.id}] Invalid MATCH_FOLLOWING pairs format in database`
+							);
+							correct = false;
+							break;
+						}
+
+						const studentMatches = Array.isArray(studentAnswer)
+							? studentAnswer
+							: [];
+
+						// If correctAnswer contains pair objects (old format), convert to indices
+						// The correct answer for a properly constructed match question is always
+						// that left[i] matches with right[i], so ["1", "2", "3", ...]
+						if (
+							correctAnswerDB.length > 0 &&
+							typeof correctAnswerDB[0] === "object" &&
+							correctAnswerDB[0].left !== undefined
+						) {
+							// Database has old format with full pairs, generate correct indices
+							correctAnswerDB = pairs.map((_: any, index: number) =>
+								String(index + 1)
+							);
+						}
+
+						// Now verify: student's answer should match the correct indices
+						correct =
+							pairs.length === studentMatches.length &&
+							studentMatches.length === correctAnswerDB.length &&
+							correctAnswerDB.every((correctValue: any, index: number) => {
+								const studentValue = studentMatches[index];
+
+								// Convert both to strings for comparison
+								const studentStr = String(studentValue || "").trim();
+								const correctStr = String(correctValue || "").trim();
+
+								return studentStr === correctStr;
+							});
+
+						// Optional: Detailed logging for debugging
+						if (process.env.NODE_ENV === "development") {
+							console.log(
+								`\n=== MATCH_FOLLOWING Verification [Q${question.id}] ===`
+							);
+							console.log("Pairs:", pairs);
+							console.log("Correct Answer (normalized):", correctAnswerDB);
+							console.log("Student Answer:", studentMatches);
+
+							// Show detailed comparison
+							studentMatches.forEach((studentVal: any, idx: number) => {
+								const expected = correctAnswerDB[idx];
+								const match =
+									String(studentVal).trim() === String(expected).trim();
+								console.log(
+									`  Pair ${idx}: Student="${studentVal}" vs Expected="${expected}" → ${
+										match ? "✓" : "✗"
+									}`
+								);
+							});
+
+							console.log("Result:", correct ? "✓ CORRECT" : "✗ WRONG");
+							console.log("================================================\n");
+						}
+					} catch (error) {
+						console.error(
+							`[Q${question.id}] Error verifying MATCH_FOLLOWING:`,
+							error
+						);
+						correct = false;
+					}
+					break;
 				}
-			} else {
-				// For other question types, compare JSON strings directly
-				correct =
-					JSON.stringify(question.correctAnswer) ===
-					JSON.stringify(studentAnswer);
+
+				case "FILL_BLANK": {
+					// FILL_BLANK verification logic:
+					// correctAnswer can be a string or array of acceptable answers
+					// Normalize both student input and correct answers (lowercase, trim)
+					// Accept if student's answer matches any of the correct variations
+
+					try {
+						// Get all acceptable answers
+						const correctAnswers = Array.isArray(question.correctAnswer)
+							? question.correctAnswer
+							: [question.correctAnswer];
+
+						// Normalize student input
+						const studentText =
+							typeof studentAnswer === "string"
+								? studentAnswer.trim().toLowerCase()
+								: "";
+
+						// Check if student's answer matches any accepted answer
+						correct = correctAnswers.some((ans: any) => {
+							const acceptedAnswer =
+								typeof ans === "string"
+									? ans.trim().toLowerCase()
+									: String(ans).toLowerCase();
+							return studentText === acceptedAnswer;
+						});
+					} catch (error) {
+						console.error(
+							`[Q${question.id}] Error verifying FILL_BLANK:`,
+							error
+						);
+						correct = false;
+					}
+					break;
+				}
+
+				case "MULTIPLE_CHOICE": {
+					// MULTIPLE_CHOICE verification logic:
+					// correctAnswer is a single value (usually an index)
+					// Simple direct comparison
+
+					correct =
+						JSON.stringify(question.correctAnswer) ===
+						JSON.stringify(studentAnswer);
+					break;
+				}
+
+				case "MULTI_SELECT": {
+					// MULTI_SELECT verification logic:
+					// correctAnswer is an array of values (indices)
+					// Sort both arrays before comparing (order doesn't matter)
+
+					try {
+						const correctArray = Array.isArray(question.correctAnswer)
+							? [...question.correctAnswer].sort()
+							: [question.correctAnswer];
+						const studentArray = Array.isArray(studentAnswer)
+							? [...studentAnswer].sort()
+							: [studentAnswer];
+
+						correct =
+							JSON.stringify(correctArray) === JSON.stringify(studentArray);
+					} catch (error) {
+						console.error(
+							`[Q${question.id}] Error verifying MULTI_SELECT:`,
+							error
+						);
+						correct = false;
+					}
+					break;
+				}
+
+				case "TRUE_FALSE": {
+					// TRUE_FALSE verification logic:
+					// correctAnswer is a boolean or string ("true"/"false")
+					// Direct comparison
+
+					correct =
+						JSON.stringify(question.correctAnswer) ===
+						JSON.stringify(studentAnswer);
+					break;
+				}
+
+				default: {
+					// Fallback for any unknown question type
+					// Direct JSON comparison
+					correct =
+						JSON.stringify(question.correctAnswer) ===
+						JSON.stringify(studentAnswer);
+					break;
+				}
 			}
 
+			// Update score and statistics
 			if (correct) {
 				score += question.points;
 				correctAnswers++;
