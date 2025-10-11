@@ -16,7 +16,10 @@ export type FormContainerProps = {
 		| "attendance"
 		| "event"
 		| "announcement"
-		| "location";
+		| "location"
+		| "mcqTest"
+		| "mcqQuestion"
+		| "badge";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;
@@ -152,6 +155,26 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
 				break;
 			case "location":
 				// Locations don't need related data
+				relatedData = {};
+				break;
+			case "mcqTest":
+				const mcqTestSubjects = await prisma.subject.findMany({
+					select: { id: true, name: true },
+				});
+				const mcqTestClasses = await prisma.class.findMany({
+					select: { id: true, name: true },
+				});
+				const mcqTestTeachers = await prisma.teacher.findMany({
+					select: { id: true, name: true, surname: true },
+				});
+				relatedData = {
+					subjects: mcqTestSubjects,
+					classes: mcqTestClasses,
+					teachers: mcqTestTeachers,
+				};
+				break;
+			case "mcqQuestion":
+				// Questions get testId from data prop
 				relatedData = {};
 				break;
 

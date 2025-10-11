@@ -205,3 +205,67 @@ export const locationSchema = z.object({
 });
 
 export type LocationSchema = z.infer<typeof locationSchema>;
+
+// MCQ Validation Schemas
+export const mcqTestSchema = z.object({
+	id: z.string().optional(),
+	title: z.string().min(1, { message: "Test title is required!" }),
+	description: z.string().optional(),
+	subjectId: z.coerce.number().optional(),
+	classId: z.coerce.number().optional(),
+	teacherId: z.string().min(1, { message: "Teacher is required!" }),
+});
+
+export type MCQTestSchema = z.infer<typeof mcqTestSchema>;
+
+export const mcqQuestionSchema = z
+	.object({
+		id: z.string().optional(),
+		testId: z.string().min(1, { message: "Test is required!" }),
+		question: z.string().min(1, { message: "Question is required!" }),
+		answer: z.string().optional(), // Optional for OPEN_ENDED, used as reference answer
+		options: z.array(z.string()).optional(), // Optional for OPEN_ENDED
+		questionType: z
+			.enum(["MULTIPLE_CHOICE", "TRUE_FALSE", "OPEN_ENDED"])
+			.default("MULTIPLE_CHOICE"),
+		explanation: z.string().optional(),
+		orderIndex: z.coerce.number().default(0),
+	})
+	.refine(
+		(data) => {
+			// For MULTIPLE_CHOICE and TRUE_FALSE, require options and answer
+			if (data.questionType === "OPEN_ENDED") {
+				return true; // OPEN_ENDED doesn't require options or answer
+			}
+			return (
+				data.options &&
+				data.options.length >= 2 &&
+				data.answer &&
+				data.answer.trim().length > 0
+			);
+		},
+		{
+			message:
+				"Multiple Choice and True/False questions require at least 2 options and a correct answer",
+			path: ["options"],
+		}
+	);
+
+export type MCQQuestionSchema = z.infer<typeof mcqQuestionSchema>;
+
+export const mcqAttemptSchema = z.object({
+	id: z.string().optional(),
+	testId: z.string().min(1, { message: "Test is required!" }),
+	studentId: z.string().min(1, { message: "Student is required!" }),
+	totalQuestions: z.coerce.number().min(1),
+});
+
+export type MCQAttemptSchema = z.infer<typeof mcqAttemptSchema>;
+
+export const studentAnswerSchema = z.object({
+	attemptId: z.string().min(1, { message: "Attempt is required!" }),
+	questionId: z.string().min(1, { message: "Question is required!" }),
+	userAnswer: z.string().min(1, { message: "Answer is required!" }),
+});
+
+export type StudentAnswerSchema = z.infer<typeof studentAnswerSchema>;

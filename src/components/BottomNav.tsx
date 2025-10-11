@@ -48,8 +48,13 @@ const BottomNav = ({ role }: BottomNavProps) => {
 				{ icon: "/home.png", label: "Home", href: "/student" },
 				{
 					icon: "/exam.png",
-					label: "Exams",
-					href: "/list/exams",
+					label: "MCQ Tests",
+					href: "/student/mcq-tests",
+				},
+				{
+					icon: "/exam.png",
+					label: "Leaderboard",
+					href: "/list/leaderboard",
 				},
 				{
 					icon: "/attendance.png",
@@ -130,6 +135,30 @@ const BottomNav = ({ role }: BottomNavProps) => {
 				label: "Results",
 				href: "/list/results",
 				visible: ["admin", "teacher", "student", "parent"],
+			},
+			{
+				icon: "/test.png",
+				label: "MCQ Tests",
+				href: "/list/mcq-tests",
+				visible: ["admin", "teacher"],
+			},
+			{
+				icon: "/test.png",
+				label: "My MCQ Tests",
+				href: "/student/mcq-tests",
+				visible: ["student"],
+			},
+			{
+				icon: "/exam.png",
+				label: "Leaderboard",
+				href: "/list/leaderboard",
+				visible: ["admin", "teacher", "student"],
+			},
+			{
+				icon: "/exam.png",
+				label: "Badges",
+				href: "/list/badges",
+				visible: ["admin"],
 			},
 			{
 				icon: "/attendance.png",

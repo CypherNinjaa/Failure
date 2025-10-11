@@ -33,6 +33,9 @@ model Student {
   attendances Attendance[]
   results     Result[]
   birthday    DateTime
+  mcqAttempts MCQAttempt[]
+  studentBadges StudentBadge[]
+  leaderboardSnapshots LeaderboardSnapshot[]
 }
 
 model Teacher {
@@ -52,6 +55,8 @@ model Teacher {
   classes   Class[]
   birthday  DateTime
   teacherAttendances TeacherAttendance[]
+  mcqTests  MCQTest[]
+  gradedAnswers StudentAnswer[] // Answers graded by this teacher
 }
 
 model Parent {
@@ -87,6 +92,8 @@ model Class {
   grade         Grade          @relation(fields: [gradeId], references: [id])
   events        Event[]
   announcements Announcement[]
+  mcqTests      MCQTest[]
+  leaderboardSnapshots LeaderboardSnapshot[]
 }
 
 model Subject {
@@ -94,6 +101,7 @@ model Subject {
   name     String    @unique
   teachers Teacher[]
   lessons  Lesson[]
+  mcqTests MCQTest[]
 }
 
 model Lesson {
@@ -243,4 +251,190 @@ model AttendanceSettings {
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+// MCQ System Models
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  OPEN_ENDED
+}
+
+model MCQTest {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  subjectId   Int?
+  classId     Int?
+  teacherId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  subject   Subject?      @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  class     Class?        @relation(fields: [classId], references: [id], onDelete: SetNull)
+  teacher   Teacher       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  questions MCQQuestion[]
+  attempts  MCQAttempt[]
+  
+  @@index([teacherId])
+  @@index([subjectId])
+  @@index([classId])
+}
+
+model MCQQuestion {
+  id           String       @id @default(cuid())
+  testId       String
+  question     String       @db.Text
+  answer       String       // The correct answer text
+  options      Json         // Array of option strings: ["Option A", "Option B", "Option C", "Option D"]
+  questionType QuestionType @default(MULTIPLE_CHOICE)
+  explanation  String?      @db.Text
+  orderIndex   Int          // For question ordering
+  createdAt    DateTime     @default(now())
+  
+  test    MCQTest         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers StudentAnswer[]
+  
+  @@index([testId])
+}
+
+model MCQAttempt {
+  id             String    @id @default(cuid())
+  testId         String
+  studentId      String
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  score          Float?
+  totalQuestions Int
+  correctAnswers Int       @default(0)
+  
+  test    MCQTest         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  student Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers StudentAnswer[]
+  
+  @@index([testId])
+  @@index([studentId])
+}
+
+model StudentAnswer {
+  id            String    @id @default(cuid())
+  attemptId     String
+  questionId    String
+  userAnswer    String    @db.Text
+  isCorrect     Boolean?  // Nullable for open-ended questions pending grading
+  answeredAt    DateTime  @default(now())
+  gradedAt      DateTime? // When teacher graded the answer
+  gradedBy      String?   // Teacher who graded
+  teacherFeedback String? @db.Text // Optional feedback from teacher
+  pointsAwarded Float?    // For partial credit (0-1, where 1 = full credit)
+  
+  attempt  MCQAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question MCQQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  grader   Teacher?    @relation(fields: [gradedBy], references: [id], onDelete: SetNull)
+  
+  @@unique([attemptId, questionId]) // Student can only answer each question once per attempt
+  @@index([attemptId])
+  @@index([questionId])
+  @@index([gradedBy])
+}
+
+// Leaderboard & Achievement System
+enum BadgeType {
+  RANK_BASED      // Top 1, Top 3, Top 10
+  SCORE_BASED     // Perfect score, High achiever
+  ACTIVITY_BASED  // Tests taken, Streak
+  IMPROVEMENT     // Most improved
+  CUSTOM          // Admin defined
+}
+
+model Badge {
+  id              String    @id @default(cuid())
+  name            String    // "Gold Medal", "Perfect Score", "Knowledge Seeker"
+  description     String    @db.Text // "Awarded for achieving 1st rank"
+  icon            String?   // URL or emoji
+  color           String    @default("#FFD700") // Hex color code
+  badgeType       BadgeType @default(CUSTOM)
+  
+  // Criteria for earning (JSON structure)
+  criteria        Json      // { "type": "rank", "value": 1 } or { "type": "score", "min": 95 }
+  
+  // Settings
+  isActive        Boolean   @default(true)
+  priority        Int       @default(0) // Display order
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  studentBadges   StudentBadge[]
+  
+  @@index([badgeType])
+  @@index([isActive])
+}
+
+model StudentBadge {
+  id          String   @id @default(cuid())
+  studentId   String
+  badgeId     String
+  earnedAt    DateTime @default(now())
+  metadata    Json?    // Additional info like rank, score when earned
+  
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  badge   Badge   @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, badgeId]) // Each student can earn a badge once
+  @@index([studentId])
+  @@index([badgeId])
+}
+
+model LeaderboardConfig {
+  id                    Int      @id @default(autoincrement())
+  
+  // Calculation settings
+  useFirstAttemptOnly   Boolean  @default(true)
+  minimumTestsRequired  Int      @default(1)
+  includeIncomplete     Boolean  @default(false)
+  
+  // Time period settings
+  enableTimePeriod      Boolean  @default(false)
+  periodDays            Int?     // If set, only tests from last N days
+  
+  // Display settings
+  showTop               Int      @default(10) // Show top N students
+  showStudentRank       Boolean  @default(true)
+  enableClassFilter     Boolean  @default(true)
+  enableSubjectFilter   Boolean  @default(true)
+  
+  // Privacy settings
+  allowAnonymous        Boolean  @default(false)
+  showFullNames         Boolean  @default(true)
+  
+  // Achievement settings
+  autoAwardBadges       Boolean  @default(true)
+  
+  updatedAt             DateTime @updatedAt
+  createdAt             DateTime @default(now())
+}
+
+model LeaderboardSnapshot {
+  id          String   @id @default(cuid())
+  studentId   String
+  classId     Int?
+  
+  // Snapshot data
+  rank        Int
+  averageScore Float
+  totalTests  Int
+  bestScore   Float
+  
+  // Metadata
+  periodStart DateTime
+  periodEnd   DateTime
+  createdAt   DateTime @default(now())
+  
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  
+  @@index([studentId])
+  @@index([classId])
+  @@index([createdAt])
+  @@index([rank])
 }
