@@ -3,29 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function seedLeaderboard() {
-	console.log("🏆 Seeding leaderboard system...");
-
-	// Create default leaderboard configuration
-	const config = await prisma.leaderboardConfig.upsert({
-		where: { id: 1 },
-		update: {},
-		create: {
-			useFirstAttemptOnly: true,
-			minimumTestsRequired: 1,
-			includeIncomplete: false,
-			enableTimePeriod: false,
-			periodDays: null,
-			showTop: 10,
-			showStudentRank: true,
-			enableClassFilter: true,
-			enableSubjectFilter: true,
-			allowAnonymous: false,
-			showFullNames: true,
-			autoAwardBadges: true,
-		},
-	});
-
-	console.log("✅ Leaderboard config created:", config);
+	console.log("🏆 Seeding leaderboard badges...");
 
 	// Create default badges
 	const badges = [
@@ -194,7 +172,7 @@ async function seedLeaderboard() {
 
 	console.log(`✅ Created ${badges.length} default badges`);
 
-	console.log("🎉 Leaderboard system seeded successfully!");
+	console.log("🎉 Leaderboard badges seeded successfully!");
 }
 
 seedLeaderboard()
