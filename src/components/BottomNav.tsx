@@ -156,6 +156,12 @@ const BottomNav = ({ role }: BottomNavProps) => {
 			},
 			{
 				icon: "/exam.png",
+				label: "Teacher Rankings",
+				href: "/list/teacher-leaderboard",
+				visible: ["admin", "teacher"],
+			},
+			{
+				icon: "/exam.png",
 				label: "Badges",
 				href: "/list/badges",
 				visible: ["admin"],
