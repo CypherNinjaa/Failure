@@ -61,30 +61,6 @@ const menuItems = [
 				visible: ["admin", "teacher", "student", "parent"],
 			},
 			{
-				icon: "/exam.png",
-				label: "MCQ Tests",
-				href: "/list/mcq-tests",
-				visible: ["admin", "teacher", "student", "parent"],
-			},
-			{
-				icon: "/exam.png",
-				label: "Practice Mode",
-				href: "/student/practice",
-				visible: ["student"],
-			},
-			{
-				icon: "/exam.png",
-				label: "Leaderboard",
-				href: "/student/leaderboard",
-				visible: ["student", "teacher", "admin"],
-			},
-			{
-				icon: "/exam.png",
-				label: "Achievements",
-				href: "/student/achievements",
-				visible: ["student"],
-			},
-			{
 				icon: "/result.png",
 				label: "Results",
 				href: "/list/results",

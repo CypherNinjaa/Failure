@@ -16,9 +16,7 @@ export type FormContainerProps = {
 		| "attendance"
 		| "event"
 		| "announcement"
-		| "location"
-		| "mcqTest"
-		| "mcqQuestion";
+		| "location";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;
@@ -154,27 +152,6 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
 				break;
 			case "location":
 				// Locations don't need related data
-				relatedData = {};
-				break;
-			case "mcqTest":
-				const mcqSubjects = await prisma.subject.findMany({
-					select: { id: true, name: true },
-				});
-				const mcqClasses = await prisma.class.findMany({
-					select: { id: true, name: true },
-				});
-				const mcqTeachers = await prisma.teacher.findMany({
-					select: { id: true, name: true, surname: true },
-				});
-				relatedData = {
-					subjects: mcqSubjects,
-					classes: mcqClasses,
-					teachers: mcqTeachers,
-				};
-				break;
-			case "mcqQuestion":
-				// Questions are created from within test detail page
-				// testId will be passed via relatedData
 				relatedData = {};
 				break;
 
