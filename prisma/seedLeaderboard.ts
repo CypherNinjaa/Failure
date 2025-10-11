@@ -172,7 +172,7 @@ async function seedLeaderboard() {
 
 	console.log(`✅ Created ${badges.length} default badges`);
 
-	console.log("🎉 Leaderboard badges seeded successfully!");
+	console.log("🎉 Leaderboard system seeded successfully!");
 }
 
 seedLeaderboard()
