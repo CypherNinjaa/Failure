@@ -19,7 +19,13 @@ const PaymentConfigPage = async () => {
 	return (
 		<div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
 			<div className="max-w-2xl mx-auto">
-				<PaymentConfigForm existingConfig={config} />
+				<PaymentConfigForm
+					existingConfig={
+						config
+							? { upiId: config.upiId, upiQRCode: config.upiQRCode }
+							: undefined
+					}
+				/>
 			</div>
 		</div>
 	);

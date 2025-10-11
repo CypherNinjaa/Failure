@@ -246,7 +246,7 @@ const ParentOnlinePaymentForm = ({
 					<p className="text-xs text-red-400">{errors.transactionId.message}</p>
 				)}
 				<p className="text-xs text-gray-500">
-					Find this in your payment app's transaction history
+					Find this in your payment app&apos;s transaction history
 				</p>
 			</div>
 
