@@ -185,6 +185,48 @@ const BottomNav = ({ role }: BottomNavProps) => {
 				visible: ["admin"],
 			},
 			{
+				icon: "/finance.png",
+				label: "Fee Structures",
+				href: "/list/fee-structures",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Assign Fees",
+				href: "/list/assign-fees",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Student Fees",
+				href: "/list/student-fees",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Salaries",
+				href: "/list/salaries",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Income",
+				href: "/list/income",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Expenses",
+				href: "/list/expenses",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "My Fees",
+				href: "/parent/fees",
+				visible: ["parent"],
+			},
+			{
 				icon: "/calendar.png",
 				label: "Events",
 				href: "/list/events",

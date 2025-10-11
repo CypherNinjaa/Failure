@@ -126,6 +126,64 @@ const menuItems = [
 				href: "/list/events",
 				visible: ["admin", "teacher", "student", "parent"],
 			},
+		],
+	},
+	{
+		title: "FINANCE",
+		items: [
+			{
+				icon: "/finance.png",
+				label: "Fee Structures",
+				href: "/list/fee-structures",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Assign Fees",
+				href: "/list/assign-fees",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Student Fees",
+				href: "/list/student-fees",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Record Payment",
+				href: "/admin/record-payment",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Salaries",
+				href: "/list/salaries",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Income",
+				href: "/list/income",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Expenses",
+				href: "/list/expenses",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "My Fees",
+				href: "/parent/fees",
+				visible: ["parent"],
+			},
+		],
+	},
+	{
+		title: "OTHER",
+		items: [
 			{
 				icon: "/message.png",
 				label: "Messages",
@@ -138,11 +196,6 @@ const menuItems = [
 				href: "/list/announcements",
 				visible: ["admin", "teacher", "student", "parent"],
 			},
-		],
-	},
-	{
-		title: "OTHER",
-		items: [
 			{
 				icon: "/profile.png",
 				label: "Profile",
@@ -169,7 +222,7 @@ const Menu = async () => {
 	const user = await currentUser();
 	const role = user?.publicMetadata.role as string;
 	return (
-		<div className="mt-4 text-sm">
+		<div className="mt-4 text-sm overflow-y-auto h-[calc(100vh-120px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
 			{menuItems.map((i) => (
 				<div className="flex flex-col gap-2" key={i.title}>
 					<span className="hidden lg:block text-gray-400 font-light my-4">

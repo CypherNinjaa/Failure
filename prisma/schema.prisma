@@ -39,6 +39,9 @@ model Student {
   
   // Teacher rating relation
   teacherRatings TeacherRating[]
+  
+  // Finance relations
+  studentFees StudentFee[]
 }
 
 model Teacher {
@@ -65,6 +68,9 @@ model Teacher {
   ratings   TeacherRating[]
   leaderboard TeacherLeaderboard?
   badges    TeacherBadge[] @relation("TeacherBadges")
+  
+  // Finance relations
+  salaries  Salary[]
 }
 
 model Parent {
@@ -85,6 +91,9 @@ model Grade {
 
   students Student[]
   classess Class[]
+  
+  // Finance relations
+  feeStructures FeeStructure[]
 }
 
 model Class {
@@ -102,6 +111,9 @@ model Class {
   announcements Announcement[]
   mcqTests      MCQTest[]
   leaderboardSnapshots LeaderboardSnapshot[]
+  
+  // Finance relations
+  feeStructures FeeStructure[]
 }
 
 model Subject {
@@ -520,4 +532,329 @@ model TeacherBadge {
   @@unique([teacherId, badgeId])
   @@index([teacherId])
   @@index([badgeId])
+}
+
+// ============================================
+// FINANCE SYSTEM MODELS
+// ============================================
+
+// Fee Structure Templates (e.g., "Grade 10 Monthly Fee - ₹500")
+model FeeStructure {
+  id          String        @id @default(cuid())
+  name        String        // "Grade 10 Tuition Fee", "Transport Fee", etc.
+  description String?
+  amount      Float         // Base amount
+  frequency   FeeFrequency  // MONTHLY, QUARTERLY, ANNUAL, ONE_TIME
+  feeType     FeeType       // TUITION, TRANSPORT, LIBRARY, EXAM, etc.
+  
+  // Optional: Link to specific class/grade
+  classId     Int?
+  gradeId     Int?
+  
+  isActive    Boolean       @default(true)
+  
+  // Relations
+  class       Class?        @relation(fields: [classId], references: [id], onDelete: SetNull)
+  grade       Grade?        @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  studentFees StudentFee[]
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@index([classId])
+  @@index([gradeId])
+  @@index([feeType])
+}
+
+// Individual student fee assignments (monthly/quarterly/annual)
+model StudentFee {
+  id              String        @id @default(cuid())
+  studentId       String
+  feeStructureId  String
+  
+  // Amount details
+  totalAmount     Float         // Total amount for this period
+  paidAmount      Float         @default(0)
+  pendingAmount   Float         // Calculated: totalAmount - paidAmount
+  
+  // Due date and period
+  dueDate         DateTime
+  month           Int?          // 1-12 (for monthly fees)
+  year            Int           // 2025, 2026, etc.
+  
+  // Status: PAID (green), PARTIAL (yellow), PENDING (red), OVERDUE (dark red)
+  status          FeeStatus     @default(PENDING)
+  
+  // Carried forward from previous month (if partial payment)
+  carriedForward  Float         @default(0)
+  
+  // Payment tracking
+  payments        Payment[]
+  
+  // Relations
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeStructure    FeeStructure  @relation(fields: [feeStructureId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@unique([studentId, feeStructureId, month, year])
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// Payment records (both online and offline)
+model Payment {
+  id              String          @id @default(cuid())
+  studentFeeId    String
+  
+  amount          Float
+  paymentMethod   PaymentMethod   // CASH, CARD, BANK_TRANSFER, ONLINE_UPI, CHEQUE
+  paymentDate     DateTime        @default(now())
+  
+  // Receipt details
+  receiptNumber   String          @unique
+  notes           String?
+  
+  // For online payments (UPI/screenshot based)
+  transactionId   String?         // User-entered transaction ID
+  screenshot      String?         // Cloudinary URL of payment screenshot
+  paymentApp      String?         // PhonePe, GPay, Paytm, BHIM, etc.
+  
+  // Approval workflow for online payments
+  approvalStatus  ApprovalStatus  @default(PENDING)
+  approvedBy      String?         // Admin userId who approved
+  approvedAt      DateTime?
+  rejectionReason String?
+  
+  // Who processed (for offline payments)
+  processedBy     String?         // Admin/staff userId
+  
+  // Relations
+  studentFee      StudentFee      @relation(fields: [studentFeeId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([receiptNumber])
+  @@index([approvalStatus])
+  @@index([studentFeeId])
+}
+
+// Teacher/Staff Salary Records
+model Salary {
+  id          String        @id @default(cuid())
+  teacherId   String?
+  staffName   String?       // For non-teacher staff
+  
+  amount      Float
+  month       Int           // 1-12
+  year        Int
+  
+  status      PaymentStatus @default(PENDING)
+  paidDate    DateTime?
+  
+  paymentMethod PaymentMethod?
+  notes       String?
+  processedBy String?       // Admin userId
+  
+  teacher     Teacher?      @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@index([teacherId])
+  @@index([status])
+}
+
+// General Income tracking (non-fee income)
+model Income {
+  id          String          @id @default(cuid())
+  title       String
+  source      String          // "Donation from Mr. X", "Annual Day Event", etc.
+  amount      Float
+  category    IncomeCategory
+  date        DateTime
+  description String?
+  
+  // Who recorded this
+  recordedBy  String?         // Admin userId
+  
+  createdAt   DateTime        @default(now())
+  
+  @@index([category])
+  @@index([date])
+}
+
+// General Expense tracking
+model Expense {
+  id          String            @id @default(cuid())
+  title       String            // "Electricity Bill", "Stationery Purchase"
+  amount      Float
+  category    ExpenseCategory
+  date        DateTime
+  description String?
+  receipt     String?           // Receipt image URL (Cloudinary)
+  
+  // Approval workflow
+  status      ApprovalStatus    @default(APPROVED)
+  approvedBy  String?           // Admin userId
+  
+  // Who recorded
+  recordedBy  String?           // Admin userId
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  @@index([category])
+  @@index([date])
+  @@index([status])
+}
+
+// Payment Configuration (UPI ID, QR Code for online payments)
+model PaymentConfig {
+  id          Int       @id @default(1)
+  
+  // UPI details
+  upiId       String?
+  upiQRCode   String?   // Cloudinary URL
+  
+  // Bank details (for reference)
+  bankName    String?
+  accountNumber String?
+  ifscCode    String?
+  
+  // Instructions for parents
+  instructions String?  @db.Text
+  
+  isActive    Boolean   @default(true)
+  
+  updatedAt   DateTime  @updatedAt
+}
+
+// Notification System
+model Notification {
+  id          String            @id @default(cuid())
+  
+  // Target audience
+  recipientType NotificationRecipient // STUDENT, PARENT, TEACHER, ALL
+  recipientId   String?         // Specific user ID (null = broadcast)
+  
+  // Message content
+  title       String
+  message     String            @db.Text
+  type        NotificationType  // FEE_REMINDER, PAYMENT_APPROVED, PAYMENT_REJECTED, GENERAL
+  
+  // Delivery channels
+  sendEmail   Boolean           @default(false)
+  sendWebPush Boolean           @default(true)
+  
+  // Status
+  status      NotificationStatus @default(PENDING)
+  sentAt      DateTime?
+  
+  // Related entities
+  relatedFeeId String?
+  relatedPaymentId String?
+  
+  // Who created
+  createdBy   String?           // Admin userId
+  
+  createdAt   DateTime          @default(now())
+  
+  @@index([recipientId])
+  @@index([status])
+  @@index([type])
+}
+
+// ============================================
+// ENUMS FOR FINANCE SYSTEM
+// ============================================
+
+enum FeeFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+  ONE_TIME
+}
+
+enum FeeType {
+  TUITION
+  TRANSPORT
+  LIBRARY
+  EXAM
+  SPORTS
+  LAB
+  ADMISSION
+  HOSTEL
+  OTHER
+}
+
+enum FeeStatus {
+  PAID      // Fully paid (GREEN)
+  PARTIAL   // Partially paid (YELLOW)
+  PENDING   // Not paid yet (RED)
+  OVERDUE   // Past due date (DARK RED)
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  ONLINE_UPI
+  CHEQUE
+  OTHER
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+}
+
+enum IncomeCategory {
+  DONATION
+  EVENT
+  SPONSORSHIP
+  ADMISSION_FEE
+  OTHER
+}
+
+enum ExpenseCategory {
+  SALARY
+  UTILITIES
+  SUPPLIES
+  MAINTENANCE
+  TRANSPORT
+  FOOD
+  INFRASTRUCTURE
+  OTHER
+}
+
+enum NotificationRecipient {
+  STUDENT
+  PARENT
+  TEACHER
+  ALL
+}
+
+enum NotificationType {
+  FEE_REMINDER
+  PAYMENT_APPROVED
+  PAYMENT_REJECTED
+  FEE_DUE
+  GENERAL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
 }

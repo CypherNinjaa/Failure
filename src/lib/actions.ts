@@ -2795,3 +2795,810 @@ export const getTeacherRatingStats = async (teacherId: string) => {
 		return null;
 	}
 };
+
+// ============================================
+// FINANCE SYSTEM ACTIONS
+// ============================================
+
+// -------------------- FEE STRUCTURE MANAGEMENT --------------------
+
+export const createFeeStructure = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const data = {
+			name: formData.get("name") as string,
+			description: formData.get("description") as string,
+			amount: parseFloat(formData.get("amount") as string),
+			frequency: formData.get("frequency") as any,
+			feeType: formData.get("feeType") as any,
+			classId:
+				formData.get("classId") && formData.get("classId") !== ""
+					? parseInt(formData.get("classId") as string)
+					: null,
+			gradeId:
+				formData.get("gradeId") && formData.get("gradeId") !== ""
+					? parseInt(formData.get("gradeId") as string)
+					: null,
+		};
+
+		await prisma.feeStructure.create({
+			data: {
+				...data,
+			},
+		});
+
+		// revalidatePath("/list/fee-structures");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating fee structure:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateFeeStructure = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const id = formData.get("id") as string;
+		const data = {
+			name: formData.get("name") as string,
+			description: formData.get("description") as string,
+			amount: parseFloat(formData.get("amount") as string),
+			frequency: formData.get("frequency") as any,
+			feeType: formData.get("feeType") as any,
+			classId:
+				formData.get("classId") && formData.get("classId") !== ""
+					? parseInt(formData.get("classId") as string)
+					: null,
+			gradeId:
+				formData.get("gradeId") && formData.get("gradeId") !== ""
+					? parseInt(formData.get("gradeId") as string)
+					: null,
+		};
+
+		await prisma.feeStructure.update({
+			where: { id },
+			data,
+		});
+
+		// revalidatePath("/list/fee-structures");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating fee structure:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteFeeStructure = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const id = formData.get("id") as string;
+
+		await prisma.feeStructure.delete({
+			where: { id },
+		});
+
+		// revalidatePath("/list/fee-structures");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting fee structure:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- STUDENT FEE ASSIGNMENT --------------------
+
+export const assignFeesToStudents = async (
+	feeStructureId: string,
+	studentIds: string[],
+	dueDate: Date,
+	month: number,
+	year: number
+) => {
+	try {
+		const feeStructure = await prisma.feeStructure.findUnique({
+			where: { id: feeStructureId },
+		});
+
+		if (!feeStructure) {
+			throw new Error("Fee structure not found");
+		}
+
+		const studentFees = studentIds.map((studentId) => ({
+			studentId,
+			feeStructureId,
+			totalAmount: feeStructure.amount,
+			pendingAmount: feeStructure.amount,
+			dueDate,
+			month,
+			year,
+			status: "PENDING" as const,
+		}));
+
+		await prisma.studentFee.createMany({
+			data: studentFees,
+			skipDuplicates: true,
+		});
+
+		return { success: true, count: studentFees.length };
+	} catch (err) {
+		console.error("Error assigning fees:", err);
+		return { success: false, error: err };
+	}
+};
+
+// Bulk assign fees to all students in a class
+export const assignFeesToClass = async (
+	feeStructureId: string,
+	classId: number,
+	dueDate: Date,
+	month: number,
+	year: number
+) => {
+	try {
+		const students = await prisma.student.findMany({
+			where: { classId },
+			select: { id: true },
+		});
+
+		const studentIds = students.map((s) => s.id);
+		return await assignFeesToStudents(
+			feeStructureId,
+			studentIds,
+			dueDate,
+			month,
+			year
+		);
+	} catch (err) {
+		console.error("Error assigning fees to class:", err);
+		return { success: false, error: err };
+	}
+};
+
+// -------------------- PAYMENT RECORDING (OFFLINE) --------------------
+
+export const recordOfflinePayment = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const studentFeeId = formData.get("studentFeeId") as string;
+		const amount = parseFloat(formData.get("amount") as string);
+		const paymentMethod = formData.get("paymentMethod") as string;
+		const notes = formData.get("notes") as string;
+
+		// Get student fee details
+		const studentFee = await prisma.studentFee.findUnique({
+			where: { id: studentFeeId },
+		});
+
+		if (!studentFee) {
+			return { success: false, error: true };
+		}
+
+		// Generate receipt number
+		const receiptNumber = `REC-${Date.now()}-${Math.random()
+			.toString(36)
+			.substr(2, 9)}`;
+
+		// Create payment record
+		await prisma.payment.create({
+			data: {
+				studentFeeId,
+				amount,
+				paymentMethod: paymentMethod as any,
+				notes,
+				receiptNumber,
+				approvalStatus: "APPROVED", // Auto-approved for offline payments
+				approvedBy: userId,
+				approvedAt: new Date(),
+				processedBy: userId,
+			},
+		});
+
+		// Update student fee
+		const newPaidAmount = studentFee.paidAmount + amount;
+		const newPendingAmount = studentFee.totalAmount - newPaidAmount;
+
+		let newStatus: "PAID" | "PARTIAL" | "PENDING" = "PENDING";
+		if (newPendingAmount <= 0) {
+			newStatus = "PAID"; // GREEN
+		} else if (newPaidAmount > 0) {
+			newStatus = "PARTIAL"; // YELLOW
+		}
+
+		await prisma.studentFee.update({
+			where: { id: studentFeeId },
+			data: {
+				paidAmount: newPaidAmount,
+				pendingAmount: Math.max(0, newPendingAmount),
+				status: newStatus,
+			},
+		});
+
+		// Send notification to parent
+		await prisma.notification.create({
+			data: {
+				recipientType: "PARENT",
+				recipientId: (
+					await prisma.student.findUnique({
+						where: { id: studentFee.studentId },
+						select: { parentId: true },
+					})
+				)?.parentId,
+				title: "Payment Received",
+				message: `Payment of ₹${amount} received successfully. Receipt: ${receiptNumber}`,
+				type: "PAYMENT_APPROVED",
+				relatedPaymentId: studentFeeId,
+				createdBy: userId,
+			},
+		});
+
+		// revalidatePath("/list/student-fees");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error recording payment:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- ONLINE PAYMENT (UPI SCREENSHOT) --------------------
+
+export const submitOnlinePayment = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId } = auth();
+
+		if (!userId) {
+			return { success: false, error: true };
+		}
+
+		const studentFeeId = formData.get("studentFeeId") as string;
+		const amount = parseFloat(formData.get("amount") as string);
+		const transactionId = formData.get("transactionId") as string;
+		const screenshot = formData.get("screenshot") as string; // Cloudinary URL
+
+		// Get student fee details
+		const studentFee = await prisma.studentFee.findUnique({
+			where: { id: studentFeeId },
+			include: { student: true },
+		});
+
+		if (!studentFee) {
+			return { success: false, error: true };
+		}
+
+		// Generate receipt number
+		const receiptNumber = `REC-${Date.now()}-${Math.random()
+			.toString(36)
+			.substr(2, 9)}`;
+
+		// Create payment record (PENDING approval)
+		await prisma.payment.create({
+			data: {
+				studentFeeId,
+				amount,
+				paymentMethod: "ONLINE_UPI",
+				transactionId,
+				screenshot,
+				receiptNumber,
+				approvalStatus: "PENDING", // Needs admin approval
+			},
+		});
+
+		// Send notification to admin
+		await prisma.notification.create({
+			data: {
+				recipientType: "ALL",
+				title: "New Payment Awaiting Approval",
+				message: `Online payment of ₹${amount} from ${studentFee.student.name} needs verification. Transaction ID: ${transactionId}`,
+				type: "GENERAL",
+				relatedPaymentId: studentFeeId,
+			},
+		});
+
+		// revalidatePath("/parent/fees");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error submitting online payment:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- PAYMENT APPROVAL/REJECTION --------------------
+
+export const approvePayment = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const paymentId = formData.get("paymentId") as string;
+
+		const payment = await prisma.payment.findUnique({
+			where: { id: paymentId },
+			include: {
+				studentFee: {
+					include: {
+						student: true,
+					},
+				},
+			},
+		});
+
+		if (!payment) {
+			return { success: false, error: true };
+		}
+
+		// Update payment status
+		await prisma.payment.update({
+			where: { id: paymentId },
+			data: {
+				approvalStatus: "APPROVED",
+				approvedBy: userId,
+				approvedAt: new Date(),
+			},
+		});
+
+		// Update student fee
+		const newPaidAmount = payment.studentFee.paidAmount + payment.amount;
+		const newPendingAmount = payment.studentFee.totalAmount - newPaidAmount;
+
+		let newStatus: "PAID" | "PARTIAL" | "PENDING" = "PENDING";
+		if (newPendingAmount <= 0) {
+			newStatus = "PAID"; // GREEN
+		} else if (newPaidAmount > 0) {
+			newStatus = "PARTIAL"; // YELLOW
+		}
+
+		await prisma.studentFee.update({
+			where: { id: payment.studentFeeId },
+			data: {
+				paidAmount: newPaidAmount,
+				pendingAmount: Math.max(0, newPendingAmount),
+				status: newStatus,
+			},
+		});
+
+		// Send notification to parent
+		await prisma.notification.create({
+			data: {
+				recipientType: "PARENT",
+				recipientId: payment.studentFee.student.parentId,
+				title: "Payment Approved ✅",
+				message: `Your payment of ₹${payment.amount} has been verified and approved. Receipt: ${payment.receiptNumber}`,
+				type: "PAYMENT_APPROVED",
+				relatedPaymentId: paymentId,
+				createdBy: userId,
+			},
+		});
+
+		// revalidatePath("/list/payments");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error approving payment:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const rejectPayment = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const paymentId = formData.get("paymentId") as string;
+		const rejectionReason = formData.get("rejectionReason") as string;
+
+		const payment = await prisma.payment.findUnique({
+			where: { id: paymentId },
+			include: {
+				studentFee: {
+					include: {
+						student: true,
+					},
+				},
+			},
+		});
+
+		if (!payment) {
+			return { success: false, error: true };
+		}
+
+		// Update payment status
+		await prisma.payment.update({
+			where: { id: paymentId },
+			data: {
+				approvalStatus: "REJECTED",
+				rejectionReason,
+				approvedBy: userId,
+				approvedAt: new Date(),
+			},
+		});
+
+		// Send notification to parent
+		await prisma.notification.create({
+			data: {
+				recipientType: "PARENT",
+				recipientId: payment.studentFee.student.parentId,
+				title: "Payment Rejected ❌",
+				message: `Your payment of ₹${payment.amount} was rejected. Reason: ${rejectionReason}. Please contact admin.`,
+				type: "PAYMENT_REJECTED",
+				relatedPaymentId: paymentId,
+				createdBy: userId,
+			},
+		});
+
+		// revalidatePath("/list/payments");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error rejecting payment:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- SALARY MANAGEMENT --------------------
+
+export const recordSalary = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const teacherId = formData.get("teacherId") as string;
+		const staffName = formData.get("staffName") as string;
+		const amount = parseFloat(formData.get("amount") as string);
+		const month = parseInt(formData.get("month") as string);
+		const year = parseInt(formData.get("year") as string);
+		const status = formData.get("status") as string;
+		const notes = formData.get("notes") as string;
+
+		await prisma.salary.create({
+			data: {
+				teacherId: teacherId || null,
+				staffName: staffName || null,
+				amount,
+				month,
+				year,
+				status: status as any,
+				paidDate: status === "PAID" ? new Date() : null,
+				notes,
+				processedBy: userId,
+			},
+		});
+
+		// revalidatePath("/list/salaries");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error recording salary:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- INCOME/EXPENSE TRACKING --------------------
+
+export const recordIncome = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const data = {
+			title: formData.get("title") as string,
+			source: formData.get("source") as string,
+			amount: parseFloat(formData.get("amount") as string),
+			category: formData.get("category") as any,
+			date: new Date(formData.get("date") as string),
+			description: formData.get("description") as string,
+			recordedBy: userId,
+		};
+
+		await prisma.income.create({ data });
+
+		// revalidatePath("/list/income");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error recording income:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const recordExpense = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const data = {
+			title: formData.get("title") as string,
+			amount: parseFloat(formData.get("amount") as string),
+			category: formData.get("category") as any,
+			date: new Date(formData.get("date") as string),
+			description: formData.get("description") as string,
+			receipt: formData.get("receipt") as string, // Cloudinary URL
+			recordedBy: userId,
+		};
+
+		await prisma.expense.create({ data });
+
+		// revalidatePath("/list/expenses");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error recording expense:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- PAYMENT CONFIG --------------------
+
+export const updatePaymentConfig = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const data = {
+			upiId: formData.get("upiId") as string,
+			upiQRCode: formData.get("upiQRCode") as string, // Cloudinary URL
+			bankName: formData.get("bankName") as string,
+			accountNumber: formData.get("accountNumber") as string,
+			ifscCode: formData.get("ifscCode") as string,
+			instructions: formData.get("instructions") as string,
+		};
+
+		await prisma.paymentConfig.upsert({
+			where: { id: 1 },
+			update: data,
+			create: { id: 1, ...data },
+		});
+
+		// revalidatePath("/admin/payment-config");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating payment config:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- NOTIFICATION SYSTEM --------------------
+
+export const sendNotification = async (
+	state: { success: boolean; error: boolean },
+	formData: FormData
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true };
+		}
+
+		const data = {
+			recipientType: formData.get("recipientType") as any,
+			recipientId: formData.get("recipientId") as string,
+			title: formData.get("title") as string,
+			message: formData.get("message") as string,
+			type: formData.get("type") as any,
+			sendEmail: formData.get("sendEmail") === "true",
+			sendWebPush: formData.get("sendWebPush") === "true",
+			createdBy: userId,
+		};
+
+		await prisma.notification.create({
+			data: {
+				...data,
+				recipientId: data.recipientId || null,
+			},
+		});
+
+		// TODO: Implement actual email and web push sending
+		// For now, just mark as sent
+		// Use nodemailer for email and web-push for push notifications
+
+		// revalidatePath("/list/notifications");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error sending notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// -------------------- FINANCIAL REPORTS --------------------
+
+export const getFinancialSummary = async (month: number, year: number) => {
+	try {
+		// Total fee collection
+		const feeCollection = await prisma.payment.aggregate({
+			where: {
+				approvalStatus: "APPROVED",
+				paymentDate: {
+					gte: new Date(year, month - 1, 1),
+					lt: new Date(year, month, 1),
+				},
+			},
+			_sum: {
+				amount: true,
+			},
+		});
+
+		// Total income (non-fee)
+		const otherIncome = await prisma.income.aggregate({
+			where: {
+				date: {
+					gte: new Date(year, month - 1, 1),
+					lt: new Date(year, month, 1),
+				},
+			},
+			_sum: {
+				amount: true,
+			},
+		});
+
+		// Total expenses
+		const expenses = await prisma.expense.aggregate({
+			where: {
+				date: {
+					gte: new Date(year, month - 1, 1),
+					lt: new Date(year, month, 1),
+				},
+				status: "APPROVED",
+			},
+			_sum: {
+				amount: true,
+			},
+		});
+
+		// Total salaries
+		const salaries = await prisma.salary.aggregate({
+			where: {
+				month,
+				year,
+				status: "PAID",
+			},
+			_sum: {
+				amount: true,
+			},
+		});
+
+		const totalIncome =
+			(feeCollection._sum.amount || 0) + (otherIncome._sum.amount || 0);
+		const totalExpenses =
+			(expenses._sum.amount || 0) + (salaries._sum.amount || 0);
+		const netProfit = totalIncome - totalExpenses;
+
+		return {
+			totalIncome,
+			feeCollection: feeCollection._sum.amount || 0,
+			otherIncome: otherIncome._sum.amount || 0,
+			totalExpenses,
+			expenses: expenses._sum.amount || 0,
+			salaries: salaries._sum.amount || 0,
+			netProfit,
+		};
+	} catch (err) {
+		console.error("Error getting financial summary:", err);
+		return null;
+	}
+};
+
+// Get pending fee collections
+export const getPendingFees = async () => {
+	try {
+		const pendingFees = await prisma.studentFee.findMany({
+			where: {
+				status: {
+					in: ["PENDING", "PARTIAL", "OVERDUE"],
+				},
+			},
+			include: {
+				student: {
+					select: {
+						id: true,
+						name: true,
+						surname: true,
+						class: {
+							select: {
+								name: true,
+							},
+						},
+					},
+				},
+				feeStructure: {
+					select: {
+						name: true,
+						feeType: true,
+					},
+				},
+			},
+			orderBy: {
+				dueDate: "asc",
+			},
+		});
+
+		const totalPending = pendingFees.reduce(
+			(sum, fee) => sum + fee.pendingAmount,
+			0
+		);
+
+		return {
+			fees: pendingFees,
+			totalPending,
+			count: pendingFees.length,
+		};
+	} catch (err) {
+		console.error("Error getting pending fees:", err);
+		return null;
+	}
+};
