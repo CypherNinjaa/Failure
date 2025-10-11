@@ -16,9 +16,13 @@ import {
 	EventSchema,
 	AnnouncementSchema,
 	LocationSchema,
+	MCQTestSchema,
+	MCQQuestionSchema,
+	MCQAttemptSchema,
+	StudentAnswerSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
-import { clerkClient } from "@clerk/nextjs/server";
+import { clerkClient, auth } from "@clerk/nextjs/server";
 
 type CurrentState = { success: boolean; error: boolean; message?: string };
 
@@ -1562,6 +1566,401 @@ export const deleteLocation = async (
 
 		// revalidatePath("/list/locations");
 		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// ============================================
+// MCQ SYSTEM ACTIONS
+// ============================================
+
+type MCQState = {
+	success: boolean;
+	error: boolean;
+	message?: string;
+};
+
+// MCQ Test CRUD
+export const createMCQTest = async (
+	currentState: MCQState,
+	data: MCQTestSchema
+) => {
+	try {
+		await prisma.mCQTest.create({
+			data: {
+				title: data.title,
+				description: data.description || null,
+				subjectId: data.subjectId || null,
+				classId: data.classId || null,
+				teacherId: data.teacherId,
+			},
+		});
+
+		// revalidatePath("/list/mcq-tests");
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateMCQTest = async (
+	currentState: MCQState,
+	data: MCQTestSchema
+) => {
+	if (!data.id) {
+		return { success: false, error: true, message: "Test ID is required!" };
+	}
+
+	try {
+		await prisma.mCQTest.update({
+			where: {
+				id: data.id,
+			},
+			data: {
+				title: data.title,
+				description: data.description || null,
+				subjectId: data.subjectId || null,
+				classId: data.classId || null,
+				teacherId: data.teacherId,
+			},
+		});
+
+		// revalidatePath("/list/mcq-tests");
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteMCQTest = async (currentState: MCQState, data: FormData) => {
+	const id = data.get("id") as string;
+	try {
+		await prisma.mCQTest.delete({
+			where: {
+				id: id,
+			},
+		});
+
+		// revalidatePath("/list/mcq-tests");
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// MCQ Question CRUD
+export const createMCQQuestion = async (
+	currentState: MCQState,
+	data: MCQQuestionSchema
+) => {
+	try {
+		await prisma.mCQQuestion.create({
+			data: {
+				testId: data.testId,
+				question: data.question,
+				answer: data.answer || "",
+				options: data.options || [],
+				questionType: data.questionType,
+				explanation: data.explanation || null,
+				orderIndex: data.orderIndex,
+			},
+		});
+
+		// revalidatePath(`/teacher/mcq-tests/${data.testId}`);
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateMCQQuestion = async (
+	currentState: MCQState,
+	data: MCQQuestionSchema
+) => {
+	if (!data.id) {
+		return { success: false, error: true, message: "Question ID is required!" };
+	}
+
+	try {
+		await prisma.mCQQuestion.update({
+			where: {
+				id: data.id,
+			},
+			data: {
+				question: data.question,
+				answer: data.answer || "",
+				options: data.options || [],
+				questionType: data.questionType,
+				explanation: data.explanation || null,
+				orderIndex: data.orderIndex,
+			},
+		});
+
+		// revalidatePath(`/teacher/mcq-tests/${data.testId}`);
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteMCQQuestion = async (
+	currentState: MCQState,
+	data: FormData
+) => {
+	const id = data.get("id") as string;
+	try {
+		await prisma.mCQQuestion.delete({
+			where: {
+				id: id,
+			},
+		});
+
+		// revalidatePath route after deletion
+		return { success: true, error: false };
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// MCQ Attempt Actions
+export const startMCQAttempt = async (
+	currentState: MCQState,
+	data: MCQAttemptSchema
+) => {
+	try {
+		const attempt = await prisma.mCQAttempt.create({
+			data: {
+				testId: data.testId,
+				studentId: data.studentId,
+				totalQuestions: data.totalQuestions,
+			},
+		});
+
+		return {
+			success: true,
+			error: false,
+			message: attempt.id, // Return attempt ID for tracking
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const submitMCQAnswer = async (
+	currentState: MCQState,
+	data: StudentAnswerSchema
+) => {
+	try {
+		// Get the question to check the correct answer
+		const question = await prisma.mCQQuestion.findUnique({
+			where: { id: data.questionId },
+		});
+
+		if (!question) {
+			return {
+				success: false,
+				error: true,
+				message: "Question not found!",
+			};
+		}
+
+		// For OPEN_ENDED questions, save answer without grading (requires manual grading)
+		if (question.questionType === "OPEN_ENDED") {
+			await prisma.studentAnswer.create({
+				data: {
+					attemptId: data.attemptId,
+					questionId: data.questionId,
+					userAnswer: data.userAnswer,
+					isCorrect: null, // Will be graded manually by teacher
+				},
+			});
+
+			return {
+				success: true,
+				error: false,
+				message: "Answer submitted! Waiting for teacher review.",
+			};
+		}
+
+		// For MULTIPLE_CHOICE and TRUE_FALSE, auto-grade
+		const isCorrect =
+			data.userAnswer.trim().toLowerCase() ===
+			question.answer.trim().toLowerCase();
+
+		// Save the student's answer
+		await prisma.studentAnswer.create({
+			data: {
+				attemptId: data.attemptId,
+				questionId: data.questionId,
+				userAnswer: data.userAnswer,
+				isCorrect: isCorrect,
+			},
+		});
+
+		// Update attempt's correct answer count if correct
+		if (isCorrect) {
+			await prisma.mCQAttempt.update({
+				where: { id: data.attemptId },
+				data: {
+					correctAnswers: {
+						increment: 1,
+					},
+				},
+			});
+		}
+
+		return {
+			success: true,
+			error: false,
+			message: isCorrect ? "Correct!" : "Incorrect!",
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+export const completeMCQAttempt = async (attemptId: string) => {
+	try {
+		const attempt = await prisma.mCQAttempt.findUnique({
+			where: { id: attemptId },
+		});
+
+		if (!attempt) {
+			return {
+				success: false,
+				error: true,
+				message: "Attempt not found!",
+			};
+		}
+
+		// Calculate score percentage
+		const score = (attempt.correctAnswers / attempt.totalQuestions) * 100;
+
+		await prisma.mCQAttempt.update({
+			where: { id: attemptId },
+			data: {
+				completedAt: new Date(),
+				score: score,
+			},
+		});
+
+		// revalidatePath(`/student/mcq-tests/${attempt.testId}`);
+		return {
+			success: true,
+			error: false,
+			message: `Test completed! Score: ${score.toFixed(2)}%`,
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// Grade an open-ended answer
+export const gradeOpenEndedAnswer = async (
+	currentState: MCQState,
+	data: {
+		answerId: string;
+		isCorrect: boolean;
+		pointsAwarded?: number;
+		teacherFeedback?: string;
+	}
+) => {
+	try {
+		const { userId } = auth();
+
+		if (!userId) {
+			return {
+				success: false,
+				error: true,
+				message: "Unauthorized!",
+			};
+		}
+
+		// Get the answer with question and attempt info
+		const answer = await prisma.studentAnswer.findUnique({
+			where: { id: data.answerId },
+			include: {
+				question: true,
+				attempt: true,
+			},
+		});
+
+		if (!answer) {
+			return {
+				success: false,
+				error: true,
+				message: "Answer not found!",
+			};
+		}
+
+		// Verify this is an open-ended question
+		if (answer.question.questionType !== "OPEN_ENDED") {
+			return {
+				success: false,
+				error: true,
+				message: "This question is not open-ended!",
+			};
+		}
+
+		// Check if the user is a teacher (for foreign key constraint)
+		const teacher = await prisma.teacher.findUnique({
+			where: { id: userId! },
+		});
+
+		// Update the answer with grading info
+		await prisma.studentAnswer.update({
+			where: { id: data.answerId },
+			data: {
+				isCorrect: data.isCorrect,
+				pointsAwarded: data.pointsAwarded ?? (data.isCorrect ? 1 : 0),
+				teacherFeedback: data.teacherFeedback,
+				gradedAt: new Date(),
+				// Only set gradedBy if user is actually a teacher in the database
+				...(teacher && { gradedBy: userId }),
+			},
+		});
+
+		// If marked correct, increment the attempt's correct answers
+		if (data.isCorrect && answer.isCorrect === null) {
+			await prisma.mCQAttempt.update({
+				where: { id: answer.attemptId },
+				data: {
+					correctAnswers: {
+						increment: 1,
+					},
+				},
+			});
+
+			// Recalculate score
+			const attempt = await prisma.mCQAttempt.findUnique({
+				where: { id: answer.attemptId },
+			});
+
+			if (attempt && attempt.completedAt) {
+				const score = (attempt.correctAnswers / attempt.totalQuestions) * 100;
+				await prisma.mCQAttempt.update({
+					where: { id: answer.attemptId },
+					data: { score },
+				});
+			}
+		}
+
+		return {
+			success: true,
+			error: false,
+			message: "Answer graded successfully!",
+		};
 	} catch (err) {
 		console.log(err);
 		return { success: false, error: true };

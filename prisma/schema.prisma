@@ -33,6 +33,7 @@ model Student {
   attendances Attendance[]
   results     Result[]
   birthday    DateTime
+  mcqAttempts MCQAttempt[]
 }
 
 model Teacher {
@@ -52,6 +53,8 @@ model Teacher {
   classes   Class[]
   birthday  DateTime
   teacherAttendances TeacherAttendance[]
+  mcqTests  MCQTest[]
+  gradedAnswers StudentAnswer[] // Answers graded by this teacher
 }
 
 model Parent {
@@ -87,6 +90,7 @@ model Class {
   grade         Grade          @relation(fields: [gradeId], references: [id])
   events        Event[]
   announcements Announcement[]
+  mcqTests      MCQTest[]
 }
 
 model Subject {
@@ -94,6 +98,7 @@ model Subject {
   name     String    @unique
   teachers Teacher[]
   lessons  Lesson[]
+  mcqTests MCQTest[]
 }
 
 model Lesson {
@@ -243,4 +248,89 @@ model AttendanceSettings {
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+// MCQ System Models
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  OPEN_ENDED
+}
+
+model MCQTest {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  subjectId   Int?
+  classId     Int?
+  teacherId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  subject   Subject?      @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  class     Class?        @relation(fields: [classId], references: [id], onDelete: SetNull)
+  teacher   Teacher       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  questions MCQQuestion[]
+  attempts  MCQAttempt[]
+  
+  @@index([teacherId])
+  @@index([subjectId])
+  @@index([classId])
+}
+
+model MCQQuestion {
+  id           String       @id @default(cuid())
+  testId       String
+  question     String       @db.Text
+  answer       String       // The correct answer text
+  options      Json         // Array of option strings: ["Option A", "Option B", "Option C", "Option D"]
+  questionType QuestionType @default(MULTIPLE_CHOICE)
+  explanation  String?      @db.Text
+  orderIndex   Int          // For question ordering
+  createdAt    DateTime     @default(now())
+  
+  test    MCQTest         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers StudentAnswer[]
+  
+  @@index([testId])
+}
+
+model MCQAttempt {
+  id             String    @id @default(cuid())
+  testId         String
+  studentId      String
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  score          Float?
+  totalQuestions Int
+  correctAnswers Int       @default(0)
+  
+  test    MCQTest         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  student Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers StudentAnswer[]
+  
+  @@index([testId])
+  @@index([studentId])
+}
+
+model StudentAnswer {
+  id            String    @id @default(cuid())
+  attemptId     String
+  questionId    String
+  userAnswer    String    @db.Text
+  isCorrect     Boolean?  // Nullable for open-ended questions pending grading
+  answeredAt    DateTime  @default(now())
+  gradedAt      DateTime? // When teacher graded the answer
+  gradedBy      String?   // Teacher who graded
+  teacherFeedback String? @db.Text // Optional feedback from teacher
+  pointsAwarded Float?    // For partial credit (0-1, where 1 = full credit)
+  
+  attempt  MCQAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question MCQQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  grader   Teacher?    @relation(fields: [gradedBy], references: [id], onDelete: SetNull)
+  
+  @@unique([attemptId, questionId]) // Student can only answer each question once per attempt
+  @@index([attemptId])
+  @@index([questionId])
+  @@index([gradedBy])
 }

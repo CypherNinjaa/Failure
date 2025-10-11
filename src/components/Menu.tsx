@@ -67,6 +67,18 @@ const menuItems = [
 				visible: ["admin", "teacher", "student", "parent"],
 			},
 			{
+				icon: "/exam.png",
+				label: "MCQ Tests",
+				href: "/list/mcq-tests",
+				visible: ["admin", "teacher"],
+			},
+			{
+				icon: "/exam.png",
+				label: "MCQ Tests",
+				href: "/student/mcq-tests",
+				visible: ["student"],
+			},
+			{
 				icon: "/attendance.png",
 				label: "Attendance",
 				href: "/list/attendance",
