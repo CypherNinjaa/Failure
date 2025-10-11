@@ -18,7 +18,8 @@ export type FormContainerProps = {
 		| "announcement"
 		| "location"
 		| "mcqTest"
-		| "mcqQuestion";
+		| "mcqQuestion"
+		| "badge";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;

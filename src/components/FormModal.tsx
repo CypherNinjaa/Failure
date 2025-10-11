@@ -16,6 +16,7 @@ import {
 	deleteLocation,
 	deleteMCQTest,
 	deleteMCQQuestion,
+	deleteBadge,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -41,6 +42,7 @@ const deleteActionMap = {
 	location: deleteLocation,
 	mcqTest: deleteMCQTest,
 	mcqQuestion: deleteMCQQuestion,
+	badge: deleteBadge,
 };
 
 // USE LAZY LOADING
@@ -91,6 +93,9 @@ const MCQTestForm = dynamic(() => import("./forms/MCQTestForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 const MCQQuestionForm = dynamic(() => import("./forms/MCQQuestionForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const BadgeForm = dynamic(() => import("./forms/BadgeForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 
@@ -211,6 +216,9 @@ const forms: {
 	),
 	mcqQuestion: (setOpen, type, data, relatedData) => (
 		<MCQQuestionForm type={type} data={data} setOpen={setOpen} />
+	),
+	badge: (setOpen, type, data, relatedData) => (
+		<BadgeForm type={type} data={data} setOpen={setOpen} />
 	),
 };
 

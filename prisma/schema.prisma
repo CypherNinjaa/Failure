@@ -34,6 +34,8 @@ model Student {
   results     Result[]
   birthday    DateTime
   mcqAttempts MCQAttempt[]
+  studentBadges StudentBadge[]
+  leaderboardSnapshots LeaderboardSnapshot[]
 }
 
 model Teacher {
@@ -91,6 +93,7 @@ model Class {
   events        Event[]
   announcements Announcement[]
   mcqTests      MCQTest[]
+  leaderboardSnapshots LeaderboardSnapshot[]
 }
 
 model Subject {
@@ -333,4 +336,105 @@ model StudentAnswer {
   @@index([attemptId])
   @@index([questionId])
   @@index([gradedBy])
+}
+
+// Leaderboard & Achievement System
+enum BadgeType {
+  RANK_BASED      // Top 1, Top 3, Top 10
+  SCORE_BASED     // Perfect score, High achiever
+  ACTIVITY_BASED  // Tests taken, Streak
+  IMPROVEMENT     // Most improved
+  CUSTOM          // Admin defined
+}
+
+model Badge {
+  id              String    @id @default(cuid())
+  name            String    // "Gold Medal", "Perfect Score", "Knowledge Seeker"
+  description     String    @db.Text // "Awarded for achieving 1st rank"
+  icon            String?   // URL or emoji
+  color           String    @default("#FFD700") // Hex color code
+  badgeType       BadgeType @default(CUSTOM)
+  
+  // Criteria for earning (JSON structure)
+  criteria        Json      // { "type": "rank", "value": 1 } or { "type": "score", "min": 95 }
+  
+  // Settings
+  isActive        Boolean   @default(true)
+  priority        Int       @default(0) // Display order
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  studentBadges   StudentBadge[]
+  
+  @@index([badgeType])
+  @@index([isActive])
+}
+
+model StudentBadge {
+  id          String   @id @default(cuid())
+  studentId   String
+  badgeId     String
+  earnedAt    DateTime @default(now())
+  metadata    Json?    // Additional info like rank, score when earned
+  
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  badge   Badge   @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, badgeId]) // Each student can earn a badge once
+  @@index([studentId])
+  @@index([badgeId])
+}
+
+model LeaderboardConfig {
+  id                    Int      @id @default(autoincrement())
+  
+  // Calculation settings
+  useFirstAttemptOnly   Boolean  @default(true)
+  minimumTestsRequired  Int      @default(1)
+  includeIncomplete     Boolean  @default(false)
+  
+  // Time period settings
+  enableTimePeriod      Boolean  @default(false)
+  periodDays            Int?     // If set, only tests from last N days
+  
+  // Display settings
+  showTop               Int      @default(10) // Show top N students
+  showStudentRank       Boolean  @default(true)
+  enableClassFilter     Boolean  @default(true)
+  enableSubjectFilter   Boolean  @default(true)
+  
+  // Privacy settings
+  allowAnonymous        Boolean  @default(false)
+  showFullNames         Boolean  @default(true)
+  
+  // Achievement settings
+  autoAwardBadges       Boolean  @default(true)
+  
+  updatedAt             DateTime @updatedAt
+  createdAt             DateTime @default(now())
+}
+
+model LeaderboardSnapshot {
+  id          String   @id @default(cuid())
+  studentId   String
+  classId     Int?
+  
+  // Snapshot data
+  rank        Int
+  averageScore Float
+  totalTests  Int
+  bestScore   Float
+  
+  // Metadata
+  periodStart DateTime
+  periodEnd   DateTime
+  createdAt   DateTime @default(now())
+  
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  
+  @@index([studentId])
+  @@index([classId])
+  @@index([createdAt])
+  @@index([rank])
 }

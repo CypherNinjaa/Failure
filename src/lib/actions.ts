@@ -1966,3 +1966,447 @@ export const gradeOpenEndedAnswer = async (
 		return { success: false, error: true };
 	}
 };
+
+// ===== LEADERBOARD ACTIONS =====
+
+export type LeaderboardEntry = {
+	rank: number;
+	studentId: string;
+	studentName: string;
+	studentSurname: string;
+	studentImg: string | null;
+	className: string | null;
+	averageScore: number;
+	totalTests: number;
+	bestScore: number;
+	badges: {
+		id: string;
+		name: string;
+		icon: string | null;
+		color: string;
+	}[];
+};
+
+export const calculateLeaderboard = async (filters?: {
+	classId?: string;
+	subjectId?: string;
+	startDate?: Date;
+	endDate?: Date;
+}): Promise<LeaderboardEntry[]> => {
+	try {
+		// Get leaderboard configuration
+		const config = await prisma.leaderboardConfig.findFirst();
+
+		if (!config) {
+			throw new Error("Leaderboard configuration not found");
+		}
+
+		// Build query filters
+		const whereClause: any = {};
+
+		if (filters?.classId) {
+			whereClause.student = {
+				classId: filters.classId,
+			};
+		}
+
+		if (filters?.subjectId) {
+			whereClause.test = {
+				subjectId: filters.subjectId,
+			};
+		}
+
+		if (filters?.startDate || filters?.endDate) {
+			whereClause.completedAt = {};
+			if (filters.startDate) {
+				whereClause.completedAt.gte = filters.startDate;
+			}
+			if (filters.endDate) {
+				whereClause.completedAt.lte = filters.endDate;
+			}
+		}
+
+		// Only include completed attempts
+		whereClause.completedAt = {
+			...whereClause.completedAt,
+			not: null,
+		};
+
+		// Fetch all completed attempts with student and test info
+		const attempts = await prisma.mCQAttempt.findMany({
+			where: whereClause,
+			include: {
+				student: {
+					include: {
+						class: true,
+					},
+				},
+				test: {
+					include: {
+						subject: true,
+					},
+				},
+			},
+			orderBy: {
+				startedAt: "asc", // Order by start time to identify first attempts
+			},
+		});
+
+		// Group attempts by student and test, taking only first attempt if configured
+		const studentStats = new Map<
+			string,
+			{
+				student: {
+					id: string;
+					name: string;
+					surname: string;
+					img: string | null;
+					className: string | null;
+				};
+				scores: number[];
+				bestScore: number;
+			}
+		>();
+
+		// Group by student-test combination
+		const studentTestAttempts = new Map<string, typeof attempts>();
+
+		attempts.forEach((attempt) => {
+			const key = `${attempt.studentId}-${attempt.testId}`;
+			if (!studentTestAttempts.has(key)) {
+				studentTestAttempts.set(key, []);
+			}
+			studentTestAttempts.get(key)!.push(attempt);
+		});
+
+		// Process each student-test combination
+		studentTestAttempts.forEach((testAttempts, key) => {
+			const studentId = key.split("-")[0];
+
+			// Get the attempt to use based on configuration
+			const attemptToUse = config.useFirstAttemptOnly
+				? testAttempts[0] // First attempt (already sorted by startedAt ASC)
+				: testAttempts.reduce((best, current) =>
+						(current.score || 0) > (best.score || 0) ? current : best
+				  ); // Best attempt
+
+			// Initialize student stats if not exists
+			if (!studentStats.has(studentId)) {
+				studentStats.set(studentId, {
+					student: {
+						id: attemptToUse.student.id,
+						name: attemptToUse.student.name,
+						surname: attemptToUse.student.surname,
+						img: attemptToUse.student.img,
+						className: attemptToUse.student.class?.name || null,
+					},
+					scores: [],
+					bestScore: 0,
+				});
+			}
+
+			const stats = studentStats.get(studentId)!;
+			if (attemptToUse.score !== null) {
+				stats.scores.push(attemptToUse.score);
+				stats.bestScore = Math.max(stats.bestScore, attemptToUse.score);
+			}
+		});
+
+		// Calculate averages and filter by minimum tests
+		const leaderboardData: Array<{
+			student: {
+				id: string;
+				name: string;
+				surname: string;
+				img: string | null;
+				className: string | null;
+			};
+			averageScore: number;
+			totalTests: number;
+			bestScore: number;
+		}> = [];
+
+		studentStats.forEach((stats, studentId) => {
+			if (stats.scores.length >= config.minimumTestsRequired) {
+				const averageScore =
+					stats.scores.reduce((sum, score) => sum + score, 0) /
+					stats.scores.length;
+
+				leaderboardData.push({
+					student: stats.student,
+					averageScore: Math.round(averageScore * 100) / 100, // Round to 2 decimal places
+					totalTests: stats.scores.length,
+					bestScore: stats.bestScore,
+				});
+			}
+		});
+
+		// Sort by average score (DESC), then by total tests (DESC) as tie-breaker
+		leaderboardData.sort((a, b) => {
+			if (b.averageScore !== a.averageScore) {
+				return b.averageScore - a.averageScore;
+			}
+			return b.totalTests - a.totalTests;
+		});
+
+		// Assign ranks and fetch badges
+		const leaderboard: LeaderboardEntry[] = await Promise.all(
+			leaderboardData.map(async (data, index) => {
+				const rank = index + 1;
+
+				// Fetch student badges
+				const studentBadges = await prisma.studentBadge.findMany({
+					where: {
+						studentId: data.student.id,
+					},
+					include: {
+						badge: {
+							select: {
+								id: true,
+								name: true,
+								icon: true,
+								color: true,
+							},
+						},
+					},
+					orderBy: {
+						badge: {
+							priority: "asc",
+						},
+					},
+					take: 3, // Show top 3 badges
+				});
+
+				return {
+					rank,
+					studentId: data.student.id,
+					studentName: data.student.name,
+					studentSurname: data.student.surname,
+					studentImg: data.student.img,
+					className: data.student.className,
+					averageScore: data.averageScore,
+					totalTests: data.totalTests,
+					bestScore: data.bestScore,
+					badges: studentBadges.map((sb) => sb.badge),
+				};
+			})
+		);
+
+		// Limit to showTop if configured
+		return config.showTop ? leaderboard.slice(0, config.showTop) : leaderboard;
+	} catch (err) {
+		console.error("Error calculating leaderboard:", err);
+		return [];
+	}
+};
+
+// Auto-award badges based on leaderboard
+export const autoAwardBadges = async (): Promise<{
+	success: boolean;
+	awardedCount: number;
+}> => {
+	try {
+		const config = await prisma.leaderboardConfig.findFirst();
+
+		if (!config || !config.autoAwardBadges) {
+			return { success: false, awardedCount: 0 };
+		}
+
+		// Get full leaderboard (no limit)
+		const fullLeaderboard = await calculateLeaderboard();
+
+		// Get all active badges
+		const badges = await prisma.badge.findMany({
+			where: { isActive: true },
+		});
+
+		let awardedCount = 0;
+
+		// Check each student against each badge criteria
+		for (const entry of fullLeaderboard) {
+			for (const badge of badges) {
+				const criteria = badge.criteria as any;
+
+				let shouldAward = false;
+
+				switch (badge.badgeType) {
+					case "RANK_BASED":
+						if (criteria.type === "rank") {
+							if (criteria.value) {
+								shouldAward = entry.rank === criteria.value;
+							} else if (criteria.maxValue) {
+								shouldAward = entry.rank <= criteria.maxValue;
+							}
+						}
+						break;
+
+					case "SCORE_BASED":
+						if (criteria.type === "averageScore" && criteria.min) {
+							shouldAward = entry.averageScore >= criteria.min;
+						}
+						break;
+
+					case "ACTIVITY_BASED":
+						if (criteria.type === "testsCompleted" && criteria.min) {
+							shouldAward = entry.totalTests >= criteria.min;
+						}
+						// TODO: Implement streak logic (requires fetching attempt history)
+						break;
+
+					case "IMPROVEMENT":
+						// TODO: Implement improvement logic (requires historical snapshots)
+						break;
+				}
+
+				if (shouldAward) {
+					// Check if student already has this badge
+					const existing = await prisma.studentBadge.findUnique({
+						where: {
+							studentId_badgeId: {
+								studentId: entry.studentId,
+								badgeId: badge.id,
+							},
+						},
+					});
+
+					if (!existing) {
+						await prisma.studentBadge.create({
+							data: {
+								studentId: entry.studentId,
+								badgeId: badge.id,
+								metadata: {
+									rank: entry.rank,
+									averageScore: entry.averageScore,
+									totalTests: entry.totalTests,
+								},
+							},
+						});
+						awardedCount++;
+					}
+				}
+			}
+		}
+
+		return { success: true, awardedCount };
+	} catch (err) {
+		console.error("Error auto-awarding badges:", err);
+		return { success: false, awardedCount: 0 };
+	}
+};
+
+// ============ BADGE CRUD ACTIONS ============
+
+type BadgeState = {
+	success: boolean;
+	error: boolean;
+};
+
+export const createBadge = async (
+	currentState: BadgeState,
+	data: FormData
+): Promise<BadgeState> => {
+	try {
+		const name = data.get("name") as string;
+		const description =
+			(data.get("description") as string) || "No description provided";
+		const icon = data.get("icon") as string | null;
+		const color = data.get("color") as string;
+		const criteriaStr = data.get("criteria") as string | null;
+		const isActive = data.get("isActive") === "on";
+		const priority = parseInt(data.get("displayOrder") as string) || 0;
+
+		let criteria = {};
+		if (criteriaStr) {
+			try {
+				criteria = JSON.parse(criteriaStr);
+			} catch (e) {
+				return { success: false, error: true };
+			}
+		}
+
+		await prisma.badge.create({
+			data: {
+				name,
+				description,
+				icon: icon || null,
+				color,
+				criteria,
+				isActive,
+				priority,
+			},
+		});
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating badge:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateBadge = async (
+	currentState: BadgeState,
+	data: FormData
+): Promise<BadgeState> => {
+	try {
+		const id = data.get("id") as string;
+		const name = data.get("name") as string;
+		const description =
+			(data.get("description") as string) || "No description provided";
+		const icon = data.get("icon") as string | null;
+		const color = data.get("color") as string;
+		const criteriaStr = data.get("criteria") as string | null;
+		const isActive = data.get("isActive") === "on";
+		const priority = parseInt(data.get("displayOrder") as string) || 0;
+
+		let criteria = {};
+		if (criteriaStr) {
+			try {
+				criteria = JSON.parse(criteriaStr);
+			} catch (e) {
+				return { success: false, error: true };
+			}
+		}
+
+		await prisma.badge.update({
+			where: { id },
+			data: {
+				name,
+				description,
+				icon: icon || null,
+				color,
+				criteria,
+				isActive,
+				priority,
+			},
+		});
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating badge:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteBadge = async (
+	currentState: BadgeState,
+	data: FormData
+): Promise<BadgeState> => {
+	try {
+		const id = data.get("id") as string;
+
+		// Delete all student badge associations first
+		await prisma.studentBadge.deleteMany({
+			where: { badgeId: id },
+		});
+
+		// Delete the badge
+		await prisma.badge.delete({
+			where: { id },
+		});
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting badge:", err);
+		return { success: false, error: true };
+	}
+};
