@@ -110,7 +110,7 @@ npx prisma db seed   # Run seed file (uses ts-node with CommonJS)
 
 - Menu items defined in `src/components/Menu.tsx` with `visible` array per role
 - Dashboard layout uses percentage-based widths that adjust per breakpoint
-- Logo and app name: "SchooLama"
+- Logo and app name: "Happy Child School (HCS)"
 
 ### Tables & Lists
 
