@@ -35,6 +35,28 @@ const ParentFeeCard = ({
 		OTHER: "💰",
 	};
 
+	// Format month/year display
+	const getMonthYearDisplay = () => {
+		if (fee.month) {
+			const monthNames = [
+				"January",
+				"February",
+				"March",
+				"April",
+				"May",
+				"June",
+				"July",
+				"August",
+				"September",
+				"October",
+				"November",
+				"December",
+			];
+			return `${monthNames[fee.month - 1]} ${fee.year}`;
+		}
+		return `${fee.year}`;
+	};
+
 	return (
 		<>
 			<div
@@ -43,11 +65,14 @@ const ParentFeeCard = ({
 				}`}
 			>
 				<div className="flex justify-between items-start mb-3">
-					<div>
+					<div className="flex-1">
 						<h3 className="font-semibold text-lg">{fee.feeStructure.name}</h3>
 						<p className="text-sm text-gray-600">
 							{fee.feeStructure.feeType} •{" "}
 							{fee.feeStructure.frequency.replace("_", " ")}
+						</p>
+						<p className="text-sm font-semibold text-gray-700 mt-1">
+							📅 {getMonthYearDisplay()}
 						</p>
 					</div>
 					<span
@@ -79,7 +104,11 @@ const ParentFeeCard = ({
 					<div>
 						<p className="text-xs text-gray-600">Due Date</p>
 						<p className="text-sm font-semibold">
-							{new Intl.DateTimeFormat("en-IN").format(new Date(fee.dueDate))}
+							{new Intl.DateTimeFormat("en-IN", {
+								day: "numeric",
+								month: "short",
+								year: "numeric",
+							}).format(new Date(fee.dueDate))}
 						</p>
 					</div>
 				</div>
@@ -128,9 +157,10 @@ const ParentFeeCard = ({
 									</div>
 									<div className="text-right">
 										<div>
-											{new Intl.DateTimeFormat("en-IN").format(
-												new Date(payment.createdAt)
-											)}
+											{new Intl.DateTimeFormat("en-IN", {
+												day: "numeric",
+												month: "short",
+											}).format(new Date(payment.createdAt))}
 										</div>
 										{payment.receiptNumber && (
 											<div className="text-gray-500 font-mono text-[10px]">
@@ -155,7 +185,7 @@ const ParentFeeCard = ({
 						{upiId ? (
 							<button
 								onClick={() => setShowOnlinePayment(true)}
-								className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition-colors"
+								className="flex-1 bg-lamaPurple hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded transition-colors"
 							>
 								💳 Pay Online (UPI)
 							</button>
@@ -168,8 +198,12 @@ const ParentFeeCard = ({
 								💳 Pay Online (Unavailable)
 							</button>
 						)}
-						<button className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors">
-							🏦 Pay Offline
+						<button
+							disabled
+							className="flex-1 bg-gray-400 text-gray-100 font-semibold py-2 px-4 rounded cursor-not-allowed"
+							title="Pay at school office"
+						>
+							🏪 Pay Offline
 						</button>
 					</div>
 				)}

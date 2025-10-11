@@ -162,6 +162,12 @@ const menuItems = [
 				visible: ["admin"],
 			},
 			{
+				icon: "/finance.png",
+				label: "Transactions",
+				href: "/admin/transactions",
+				visible: ["admin"],
+			},
+			{
 				icon: "/setting.png",
 				label: "Payment Config",
 				href: "/admin/payment-config",
@@ -189,6 +195,12 @@ const menuItems = [
 				icon: "/finance.png",
 				label: "My Fees",
 				href: "/parent/fees",
+				visible: ["parent"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Payment History",
+				href: "/parent/transactions",
 				visible: ["parent"],
 			},
 		],

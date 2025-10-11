@@ -215,6 +215,12 @@ const BottomNav = ({ role }: BottomNavProps) => {
 				visible: ["admin"],
 			},
 			{
+				icon: "/finance.png",
+				label: "Transactions",
+				href: "/admin/transactions",
+				visible: ["admin"],
+			},
+			{
 				icon: "/setting.png",
 				label: "Payment Config",
 				href: "/admin/payment-config",
@@ -242,6 +248,12 @@ const BottomNav = ({ role }: BottomNavProps) => {
 				icon: "/finance.png",
 				label: "My Fees",
 				href: "/parent/fees",
+				visible: ["parent"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Payment History",
+				href: "/parent/transactions",
 				visible: ["parent"],
 			},
 			{
