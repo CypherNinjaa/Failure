@@ -157,6 +157,18 @@ const menuItems = [
 			},
 			{
 				icon: "/finance.png",
+				label: "Payment Approvals",
+				href: "/admin/payment-approvals",
+				visible: ["admin"],
+			},
+			{
+				icon: "/setting.png",
+				label: "Payment Config",
+				href: "/admin/payment-config",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
 				label: "Salaries",
 				href: "/list/salaries",
 				visible: ["admin"],

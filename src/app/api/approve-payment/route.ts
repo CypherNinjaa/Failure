@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
 		// Fetch the payment with related data
 		const payment = await prisma.payment.findUnique({
-			where: { id: paymentId },
+			where: { id: String(paymentId) },
 			include: {
 				studentFee: {
 					include: {
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 			await prisma.$transaction(async (tx) => {
 				// Update payment status
 				await tx.payment.update({
-					where: { id: paymentId },
+					where: { id: String(paymentId) },
 					data: {
 						approvalStatus: "APPROVED",
 						approvedBy: userId,
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
 
 			// Reject payment: Update payment status with reason
 			await prisma.payment.update({
-				where: { id: paymentId },
+				where: { id: String(paymentId) },
 				data: {
 					approvalStatus: "REJECTED",
 					processedBy: userId,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-const PaymentApprovalActions = ({ paymentId }: { paymentId: number }) => {
+const PaymentApprovalActions = ({ paymentId }: { paymentId: string }) => {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [showRejectModal, setShowRejectModal] = useState(false);
 	const [rejectionReason, setRejectionReason] = useState("");

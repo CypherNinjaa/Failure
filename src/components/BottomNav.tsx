@@ -204,6 +204,24 @@ const BottomNav = ({ role }: BottomNavProps) => {
 			},
 			{
 				icon: "/finance.png",
+				label: "Record Payment",
+				href: "/admin/record-payment",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
+				label: "Payment Approvals",
+				href: "/admin/payment-approvals",
+				visible: ["admin"],
+			},
+			{
+				icon: "/setting.png",
+				label: "Payment Config",
+				href: "/admin/payment-config",
+				visible: ["admin"],
+			},
+			{
+				icon: "/finance.png",
 				label: "Salaries",
 				href: "/list/salaries",
 				visible: ["admin"],
