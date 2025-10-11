@@ -17,6 +17,7 @@ import {
 	deleteMCQTest,
 	deleteMCQQuestion,
 	deleteBadge,
+	deleteFeeStructure,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -43,6 +44,8 @@ const deleteActionMap = {
 	mcqTest: deleteMCQTest,
 	mcqQuestion: deleteMCQQuestion,
 	badge: deleteBadge,
+	feeStructure: deleteFeeStructure,
+	// Note: Payments, salaries, income, expense should not be deletable
 };
 
 // USE LAZY LOADING
@@ -96,6 +99,24 @@ const MCQQuestionForm = dynamic(() => import("./forms/MCQQuestionForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 const BadgeForm = dynamic(() => import("./forms/BadgeForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const FeeStructureForm = dynamic(() => import("./forms/FeeStructureForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const OfflinePaymentForm = dynamic(() => import("./forms/OfflinePaymentForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const SalaryForm = dynamic(() => import("./forms/SalaryForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const IncomeForm = dynamic(() => import("./forms/IncomeForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const ExpenseForm = dynamic(() => import("./forms/ExpenseForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const AssignFeesForm = dynamic(() => import("./forms/AssignFeesForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 
@@ -220,6 +241,35 @@ const forms: {
 	badge: (setOpen, type, data, relatedData) => (
 		<BadgeForm type={type} data={data} setOpen={setOpen} />
 	),
+	feeStructure: (setOpen, type, data, relatedData) => (
+		<FeeStructureForm
+			type={type}
+			data={data}
+			setOpen={setOpen}
+			relatedData={relatedData}
+		/>
+	),
+	offlinePayment: (setOpen, type, data, relatedData) => (
+		<OfflinePaymentForm setOpen={setOpen} relatedData={relatedData} />
+	),
+	salary: (setOpen, type, data, relatedData) => (
+		<SalaryForm setOpen={setOpen} relatedData={relatedData} />
+	),
+	income: (setOpen, type, data, relatedData) => (
+		<IncomeForm setOpen={setOpen} />
+	),
+	expense: (setOpen, type, data, relatedData) => (
+		<ExpenseForm setOpen={setOpen} />
+	),
+	assignFees: (setOpen, type, data, relatedData) => (
+		<AssignFeesForm
+			type={type as "create"}
+			setOpen={setOpen}
+			feeStructures={relatedData?.feeStructures || []}
+			classes={relatedData?.classes || []}
+			students={relatedData?.students || []}
+		/>
+	),
 };
 
 const FormModal = ({
@@ -240,10 +290,14 @@ const FormModal = ({
 	const [open, setOpen] = useState(false);
 
 	const Form = () => {
-		const [state, formAction] = useFormState(deleteActionMap[table], {
-			success: false,
-			error: false,
-		});
+		const deleteAction = deleteActionMap[table as keyof typeof deleteActionMap];
+		const [state, formAction] = useFormState(
+			deleteAction || (async () => ({ success: false, error: true })),
+			{
+				success: false,
+				error: false,
+			}
+		);
 
 		const router = useRouter();
 

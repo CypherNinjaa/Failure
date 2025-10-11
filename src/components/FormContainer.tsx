@@ -19,7 +19,13 @@ export type FormContainerProps = {
 		| "location"
 		| "mcqTest"
 		| "mcqQuestion"
-		| "badge";
+		| "badge"
+		| "feeStructure"
+		| "offlinePayment"
+		| "salary"
+		| "income"
+		| "expense"
+		| "assignFees";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;
@@ -176,6 +182,77 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
 			case "mcqQuestion":
 				// Questions get testId from data prop
 				relatedData = {};
+				break;
+			case "feeStructure":
+				const feeClasses = await prisma.class.findMany({
+					select: { id: true, name: true },
+				});
+				const feeGrades = await prisma.grade.findMany({
+					select: { id: true, level: true },
+				});
+				relatedData = { classes: feeClasses, grades: feeGrades };
+				break;
+			case "offlinePayment":
+				const studentFees = await prisma.studentFee.findMany({
+					where: {
+						status: { in: ["PENDING", "PARTIAL", "OVERDUE"] },
+					},
+					include: {
+						student: {
+							select: {
+								id: true,
+								name: true,
+								surname: true,
+								class: {
+									select: {
+										id: true,
+										name: true,
+										grade: {
+											select: {
+												id: true,
+												level: true,
+											},
+										},
+									},
+								},
+							},
+						},
+						feeStructure: { select: { id: true, name: true } },
+					},
+					orderBy: { dueDate: "asc" },
+				});
+				relatedData = { studentFees };
+				break;
+			case "salary":
+				const salaryTeachers = await prisma.teacher.findMany({
+					select: { id: true, name: true, surname: true },
+				});
+				relatedData = { teachers: salaryTeachers };
+				break;
+			case "income":
+			case "expense":
+				// No related data needed
+				relatedData = {};
+				break;
+			case "assignFees":
+				const assignFeeStructures = await prisma.feeStructure.findMany({
+					where: { isActive: true },
+					select: { id: true, name: true, amount: true },
+					orderBy: { name: "asc" },
+				});
+				const assignClasses = await prisma.class.findMany({
+					select: { id: true, name: true },
+					orderBy: { name: "asc" },
+				});
+				const assignStudents = await prisma.student.findMany({
+					select: { id: true, name: true, surname: true, classId: true },
+					orderBy: [{ name: "asc" }, { surname: "asc" }],
+				});
+				relatedData = {
+					feeStructures: assignFeeStructures,
+					classes: assignClasses,
+					students: assignStudents,
+				};
 				break;
 
 			default:

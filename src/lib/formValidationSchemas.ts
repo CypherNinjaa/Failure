@@ -269,3 +269,156 @@ export const studentAnswerSchema = z.object({
 });
 
 export type StudentAnswerSchema = z.infer<typeof studentAnswerSchema>;
+
+// ============================================
+// FINANCE SYSTEM SCHEMAS
+// ============================================
+
+export const feeStructureSchema = z.object({
+	id: z.string().optional(),
+	name: z.string().min(1, { message: "Fee name is required!" }),
+	description: z.string().optional(),
+	amount: z.coerce.number().min(0, { message: "Amount must be positive!" }),
+	frequency: z.enum(
+		["MONTHLY", "QUARTERLY", "SEMI_ANNUAL", "ANNUAL", "ONE_TIME"],
+		{
+			message: "Frequency is required!",
+		}
+	),
+	feeType: z.enum(
+		[
+			"TUITION",
+			"TRANSPORT",
+			"LIBRARY",
+			"EXAM",
+			"SPORTS",
+			"LAB",
+			"ADMISSION",
+			"HOSTEL",
+			"OTHER",
+		],
+		{
+			message: "Fee type is required!",
+		}
+	),
+	classId: z.coerce.number().optional(),
+	gradeId: z.coerce.number().optional(),
+});
+
+export type FeeStructureSchema = z.infer<typeof feeStructureSchema>;
+
+export const offlinePaymentSchema = z.object({
+	studentFeeId: z.string().min(1, { message: "Student fee is required!" }),
+	amount: z.coerce
+		.number()
+		.min(1, { message: "Amount must be greater than 0!" }),
+	paymentMethod: z.enum(["CASH", "CARD", "BANK_TRANSFER", "CHEQUE", "OTHER"], {
+		message: "Payment method is required!",
+	}),
+	notes: z.string().optional(),
+});
+
+export type OfflinePaymentSchema = z.infer<typeof offlinePaymentSchema>;
+
+export const onlinePaymentSchema = z.object({
+	studentFeeId: z.string().min(1, { message: "Student fee is required!" }),
+	amount: z.coerce
+		.number()
+		.min(1, { message: "Amount must be greater than 0!" }),
+	transactionId: z.string().min(1, { message: "Transaction ID is required!" }),
+	screenshot: z.string().min(1, { message: "Payment screenshot is required!" }),
+});
+
+export type OnlinePaymentSchema = z.infer<typeof onlinePaymentSchema>;
+
+export const salarySchema = z.object({
+	id: z.string().optional(),
+	teacherId: z.string().optional(),
+	staffName: z.string().optional(),
+	amount: z.coerce.number().min(0, { message: "Amount must be positive!" }),
+	month: z.coerce.number().min(1).max(12, { message: "Invalid month!" }),
+	year: z.coerce.number().min(2020, { message: "Invalid year!" }),
+	status: z.enum(["PENDING", "PAID"], { message: "Status is required!" }),
+	notes: z.string().optional(),
+});
+
+export type SalarySchema = z.infer<typeof salarySchema>;
+
+export const incomeSchema = z.object({
+	id: z.string().optional(),
+	title: z.string().min(1, { message: "Title is required!" }),
+	source: z.string().min(1, { message: "Source is required!" }),
+	amount: z.coerce.number().min(0, { message: "Amount must be positive!" }),
+	category: z.enum(
+		["DONATION", "EVENT", "SPONSORSHIP", "ADMISSION_FEE", "OTHER"],
+		{
+			message: "Category is required!",
+		}
+	),
+	date: z.coerce.date({ message: "Date is required!" }),
+	description: z.string().optional(),
+});
+
+export type IncomeSchema = z.infer<typeof incomeSchema>;
+
+export const expenseSchema = z.object({
+	id: z.string().optional(),
+	title: z.string().min(1, { message: "Title is required!" }),
+	amount: z.coerce.number().min(0, { message: "Amount must be positive!" }),
+	category: z.enum(
+		[
+			"SALARY",
+			"UTILITIES",
+			"SUPPLIES",
+			"MAINTENANCE",
+			"TRANSPORT",
+			"FOOD",
+			"INFRASTRUCTURE",
+			"OTHER",
+		],
+		{
+			message: "Category is required!",
+		}
+	),
+	date: z.coerce.date({ message: "Date is required!" }),
+	description: z.string().optional(),
+	receipt: z.string().optional(),
+});
+
+export type ExpenseSchema = z.infer<typeof expenseSchema>;
+
+export const paymentConfigSchema = z.object({
+	upiId: z.string().optional(),
+	upiQRCode: z.string().optional(),
+	bankName: z.string().optional(),
+	accountNumber: z.string().optional(),
+	ifscCode: z.string().optional(),
+	instructions: z.string().optional(),
+});
+
+export type PaymentConfigSchema = z.infer<typeof paymentConfigSchema>;
+
+export const notificationSchema = z.object({
+	recipientType: z.enum(["STUDENT", "PARENT", "TEACHER", "ALL"], {
+		message: "Recipient type is required!",
+	}),
+	recipientId: z.string().optional(),
+	title: z.string().min(1, { message: "Title is required!" }),
+	message: z.string().min(1, { message: "Message is required!" }),
+	type: z.enum(
+		[
+			"FEE_REMINDER",
+			"PAYMENT_APPROVED",
+			"PAYMENT_REJECTED",
+			"FEE_DUE",
+			"GENERAL",
+		],
+		{
+			message: "Notification type is required!",
+		}
+	),
+	sendEmail: z.boolean().default(false),
+	sendWebPush: z.boolean().default(true),
+});
+
+export type NotificationSchema = z.infer<typeof notificationSchema>;
