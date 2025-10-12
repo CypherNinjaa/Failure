@@ -5,6 +5,10 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import nodemailer from "nodemailer";
 import webpush from "web-push";
+import {
+	getNotificationIcon,
+	getNotificationIconAlt,
+} from "./notificationIcons";
 
 // ============================================
 // EMAIL CONFIGURATION (Gmail SMTP)
@@ -129,11 +133,15 @@ async function sendEmailNotification(
 	email: string,
 	title: string,
 	message: string,
-	metadata?: any
+	metadata?: any,
+	categoryKey?: string
 ): Promise<boolean> {
 	try {
+		const iconUrl = getNotificationIcon(categoryKey);
+		const iconAlt = getNotificationIconAlt(categoryKey);
+
 		await emailTransporter.sendMail({
-			from: '"HCS School" <vk6938663@gmail.com>',
+			from: '"Happy Child School" <vk6938663@gmail.com>',
 			to: email,
 			subject: title,
 			html: `
@@ -141,30 +149,39 @@ async function sendEmailNotification(
         <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; }
-            .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 10px 10px; }
-            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-            .button { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; border-radius: 10px 10px 0 0; text-align: center; }
+            .header-icon { width: 40px; height: 40px; margin-bottom: 10px; }
+            .header h2 { margin: 0; font-size: 24px; font-weight: 600; }
+            .content { background: #f9f9f9; padding: 30px 20px; border-radius: 0 0 10px 10px; }
+            .message { background: white; padding: 20px; border-left: 4px solid #667eea; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; padding: 20px 0; }
+            .button { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px; }
+            .button:hover { background: #5568d3; }
+            .logo { text-align: center; margin-bottom: 10px; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h2>🔔 ${title}</h2>
+              <img src="${iconUrl}" alt="${iconAlt}" class="header-icon" />
+              <h2>${title}</h2>
             </div>
             <div class="content">
-              <p>${message}</p>
+              <div class="message">
+                <p style="margin: 0; font-size: 16px; color: #333;">${message}</p>
+              </div>
               ${
 								metadata?.actionUrl
-									? `<a href="${metadata.actionUrl}" class="button">View Details</a>`
+									? `<div style="text-align: center;"><a href="${metadata.actionUrl}" class="button">View Details</a></div>`
 									: ""
 							}
             </div>
             <div class="footer">
-              <p>HCS - Happy Child School Management System</p>
-              <p>This is an automated notification. Please do not reply to this email.</p>
+              <p style="margin: 5px 0; font-weight: 600; color: #667eea;">Happy Child School</p>
+              <p style="margin: 5px 0;">School Management System</p>
+              <p style="margin: 5px 0; font-size: 11px;">This is an automated notification. Please do not reply to this email.</p>
             </div>
           </div>
         </body>
@@ -567,7 +584,8 @@ export const sendNotificationToUser = async (
 					email,
 					title,
 					message,
-					metadata
+					metadata,
+					categoryKey
 				);
 				deliveryResults.email = emailSent ? "success" : "failed";
 				console.log(

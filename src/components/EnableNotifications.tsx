@@ -82,7 +82,7 @@ const EnableNotifications = () => {
 			setStatus("success");
 
 			await registration.showNotification("Notifications Enabled!", {
-				body: "You will now receive updates from HCS School",
+				body: "You will now receive updates from Happy Child School",
 				icon: "/logo.png",
 			});
 		} catch (error: any) {
