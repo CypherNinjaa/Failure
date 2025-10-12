@@ -1,9 +1,45 @@
 import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
+import prisma from "@/lib/prisma";
+import AnnouncementNotification from "./AnnouncementNotification";
 
 const Navbar = async () => {
 	const user = await currentUser();
+	const role = (user?.publicMetadata?.role as string) || "student";
+
+	// Fetch recent announcements (last 7 days)
+	const sevenDaysAgo = new Date();
+	sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+	const announcements = await prisma.announcement.findMany({
+		where: {
+			date: {
+				gte: sevenDaysAgo,
+			},
+		},
+		include: {
+			class: {
+				select: {
+					name: true,
+				},
+			},
+		},
+		orderBy: {
+			date: "desc",
+		},
+		take: 10, // Limit to 10 most recent
+	});
+
+	// Format announcements for the component
+	const formattedAnnouncements = announcements.map((announcement) => ({
+		id: announcement.id,
+		title: announcement.title,
+		description: announcement.description || "",
+		date: announcement.date.toISOString(),
+		className: announcement.class?.name,
+	}));
+
 	return (
 		<div className="flex items-center justify-between p-4">
 			{/* LOGO AND BRANDING - Mobile Only */}
@@ -32,14 +68,13 @@ const Navbar = async () => {
 				<div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
 					<Image src="/message.png" alt="" width={20} height={20} />
 				</div>
-				<div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative">
-					<Image src="/announcement.png" alt="" width={20} height={20} />
-					<div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-purple-500 text-white rounded-full text-xs">
-						1
-					</div>
-				</div>
+				<AnnouncementNotification announcements={formattedAnnouncements} />
 				<div className="flex flex-col">
-					<span className="text-xs leading-3 font-medium">John Doe</span>
+					<span className="text-xs leading-3 font-medium">
+						{user?.firstName && user?.lastName
+							? `${user.firstName} ${user.lastName}`
+							: user?.username || "User"}
+					</span>
 					<span className="text-[10px] text-gray-500 text-right">
 						{user?.publicMetadata?.role as string}
 					</span>

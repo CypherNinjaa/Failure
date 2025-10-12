@@ -17,6 +17,7 @@
 		"@types/nodemailer": "^7.0.2",
 		"@types/react-big-calendar": "^1.8.9",
 		"@types/web-push": "^3.6.4",
+		"encoding": "^0.1.13",
 		"face-api.js": "^0.22.2",
 		"moment": "^2.30.1",
 		"next": "14.2.5",
