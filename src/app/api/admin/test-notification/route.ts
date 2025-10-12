@@ -50,9 +50,9 @@ export async function POST(req: Request) {
 
 		// Send test email to admin (recipient)
 		await emailTransporter.sendMail({
-			from: '"HCS School Test" <vk6938663@gmail.com>',
+			from: '"Happy Child School Test" <vk6938663@gmail.com>',
 			to: email || adminEmail, // Send to provided email or admin's email
-			subject: "🧪 Test Notification - HCS School",
+			subject: "🧪 Test Notification - Happy Child School",
 			html: `
         <!DOCTYPE html>
         <html>
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
             <div class="content">
               <div class="success-badge">✅ Email System Working!</div>
               <p><strong>Congratulations!</strong></p>
-              <p>Your HCS School notification system is properly configured and working.</p>
+              <p>Your Happy Child School notification system is properly configured and working.</p>
               <p><strong>Test Details:</strong></p>
               <ul>
                 <li>✅ Gmail SMTP connection successful</li>

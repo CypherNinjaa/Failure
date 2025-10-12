@@ -55,11 +55,10 @@ export async function POST(req: NextRequest) {
 
 				const payload = JSON.stringify({
 					title: "🧪 Test Notification",
-					body: "This is a test push notification from HCS School!",
+					body: "This is a test push notification from Happy Child School!",
 					icon: "/logo.png",
 					url: "/",
 				});
-
 				console.log(
 					"  📤 Sending to endpoint:",
 					sub.endpoint.substring(0, 50) + "..."
