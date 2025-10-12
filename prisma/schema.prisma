@@ -733,39 +733,150 @@ model PaymentConfig {
   updatedAt   DateTime  @updatedAt
 }
 
-// Notification System
+// ============================================
+// DYNAMIC NOTIFICATION SYSTEM
+// ============================================
+
+// Notification Categories (Master Configuration)
+model NotificationCategory {
+  id                String   @id @default(cuid())
+  key               String   @unique // "FEE_OVERDUE", "EXAM_SCHEDULED", etc.
+  name              String   // Display name
+  description       String?  @db.Text
+  category          NotificationGroup // FINANCE, ACADEMICS, ATTENDANCE, etc.
+  icon              String?  // Emoji or icon name
+  
+  defaultEnabled    Boolean  @default(true)
+  applicableRoles   Json     // ["parent", "admin", "student", "teacher"]
+  supportedChannels Json     // { "push": true, "email": true }
+  priority          NotificationPriority @default(MEDIUM)
+  
+  isActive          Boolean  @default(true)
+  displayOrder      Int      @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  userPreferences   UserNotificationPreference[]
+  
+  @@index([category])
+  @@index([isActive])
+}
+
+// User Notification Preferences
+model UserNotificationPreference {
+  id            String   @id @default(cuid())
+  userId        String   // Clerk user ID
+  categoryKey   String   // FK to NotificationCategory.key
+  
+  isEnabled     Boolean  @default(true)
+  channels      Json     // { "push": true, "email": false }
+  frequency     NotificationFrequency @default(INSTANT)
+  
+  // Quiet hours settings
+  quietHoursEnabled Boolean @default(false)
+  quietHoursStart   String? // "22:00"
+  quietHoursEnd     String? // "08:00"
+  
+  category      NotificationCategory @relation(fields: [categoryKey], references: [key], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([userId, categoryKey])
+  @@index([userId])
+  @@index([categoryKey])
+}
+
+// Push Subscription Storage
+model PushSubscription {
+  id          String   @id @default(cuid())
+  userId      String   
+  endpoint    String   @unique
+  keys        Json     // { p256dh: string, auth: string }
+  
+  userAgent   String?
+  deviceType  String?  // "desktop", "mobile", "tablet"
+  
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([isActive])
+}
+
+// Enhanced Notification Model
 model Notification {
-  id          String            @id @default(cuid())
+  id              String   @id @default(cuid())
   
   // Target audience
-  recipientType NotificationRecipient // STUDENT, PARENT, TEACHER, ALL
-  recipientId   String?         // Specific user ID (null = broadcast)
+  recipientType   NotificationRecipient // STUDENT, PARENT, TEACHER, ALL
+  recipientId     String?  // Specific user ID (null = broadcast)
+  
+  // Notification category
+  categoryKey     String?  // Link to NotificationCategory
   
   // Message content
-  title       String
-  message     String            @db.Text
-  type        NotificationType  // FEE_REMINDER, PAYMENT_APPROVED, PAYMENT_REJECTED, GENERAL
+  title           String
+  message         String   @db.Text
+  type            NotificationType @default(GENERAL)
   
-  // Delivery channels
-  sendEmail   Boolean           @default(false)
-  sendWebPush Boolean           @default(true)
+  // Delivery tracking
+  channels        Json?    // { "push": "sent", "email": "failed" }
+  sendEmail       Boolean  @default(false)
+  sendWebPush     Boolean  @default(true)
   
   // Status
-  status      NotificationStatus @default(PENDING)
-  sentAt      DateTime?
+  status          NotificationStatus @default(UNREAD)
+  sentAt          DateTime?
+  readAt          DateTime?
+  
+  // Digest mode
+  isDigest        Boolean  @default(false)
+  digestSentAt    DateTime?
+  
+  // Admin override
+  isForced        Boolean  @default(false) // Admin force-send
   
   // Related entities
-  relatedFeeId String?
-  relatedPaymentId String?
+  metadata        Json?    // Flexible data: { feeId, examId, etc. }
   
   // Who created
-  createdBy   String?           // Admin userId
+  createdBy       String?  // Admin userId
   
-  createdAt   DateTime          @default(now())
+  createdAt       DateTime @default(now())
   
   @@index([recipientId])
   @@index([status])
   @@index([type])
+  @@index([categoryKey])
+  @@index([isDigest])
+}
+
+// Notification Delivery Log (Audit Trail)
+model NotificationLog {
+  id              String   @id @default(cuid())
+  notificationId  String?  // Link to Notification
+  userId          String
+  categoryKey     String
+  
+  title           String
+  message         String   @db.Text
+  
+  channels        Json     // { "push": "success", "email": "failed" }
+  deliveryStatus  DeliveryStatus
+  errorMessage    String?  @db.Text
+  
+  metadata        Json?    // Context data
+  
+  sentAt          DateTime @default(now())
+  
+  @@index([userId])
+  @@index([categoryKey])
+  @@index([deliveryStatus])
+  @@index([sentAt])
 }
 
 // ============================================
@@ -842,6 +953,7 @@ enum NotificationRecipient {
   STUDENT
   PARENT
   TEACHER
+  ADMIN
   ALL
 }
 
@@ -851,10 +963,48 @@ enum NotificationType {
   PAYMENT_REJECTED
   FEE_DUE
   GENERAL
+  EXAM_SCHEDULED
+  RESULT_PUBLISHED
+  ASSIGNMENT_DUE
+  ATTENDANCE_ALERT
+  BADGE_EARNED
+  ANNOUNCEMENT
+  EVENT_REMINDER
 }
 
 enum NotificationStatus {
-  PENDING
-  SENT
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum NotificationGroup {
+  FINANCE
+  ACADEMICS
+  ATTENDANCE
+  ACHIEVEMENT
+  EVENTS
+  ANNOUNCEMENTS
+  COMMUNICATION
+  SYSTEM
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NotificationFrequency {
+  INSTANT
+  DAILY_DIGEST
+  WEEKLY_DIGEST
+}
+
+enum DeliveryStatus {
+  SUCCESS
   FAILED
+  PARTIALLY_SENT
+  QUEUED
 }

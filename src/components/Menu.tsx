@@ -221,6 +221,12 @@ const menuItems = [
 				visible: ["admin", "teacher", "student", "parent"],
 			},
 			{
+				icon: "/notification.png",
+				label: "Send Notifications",
+				href: "/admin-notifications",
+				visible: ["admin"],
+			},
+			{
 				icon: "/profile.png",
 				label: "Profile",
 				href: "/profile",
