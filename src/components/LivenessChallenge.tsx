@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import * as faceapi from "face-api.js";
 
 type ChallengeType = "blink" | "turnLeft" | "turnRight" | "nodUp" | "nodDown";
@@ -34,9 +34,12 @@ const LivenessChallenge = ({
 	onChallengeComplete,
 	onChallengeFailed,
 }: LivenessChallengeProps) => {
-	const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(
-		null
+	// Use useMemo to ensure challenge is selected only once
+	const currentChallenge = useMemo(
+		() => CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)],
+		[] // Empty dependency array ensures this runs only once
 	);
+
 	const [progress, setProgress] = useState(0);
 	const [detectedCount, setDetectedCount] = useState(0);
 	const [timeRemaining, setTimeRemaining] = useState(15);
@@ -49,11 +52,8 @@ const LivenessChallenge = ({
 	const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-	// Select random challenge on mount
+	// Initialize challenge checking on mount
 	useEffect(() => {
-		const randomChallenge =
-			CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
-		setCurrentChallenge(randomChallenge);
 		challengeStartTime.current = Date.now();
 		setIsChecking(true);
 

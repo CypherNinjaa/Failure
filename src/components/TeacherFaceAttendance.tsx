@@ -6,6 +6,9 @@ import Image from "next/image";
 import LivenessChallenge from "./LivenessChallenge";
 import LocationVerification from "./LocationVerification";
 
+// Face matching threshold - minimum 75% match required
+const FACE_MATCH_THRESHOLD = 75;
+
 type Teacher = {
 	id: string;
 	name: string;
@@ -53,9 +56,11 @@ const TeacherFaceAttendance = ({
 	const [faceDetected, setFaceDetected] = useState(false);
 	const [faceMatched, setFaceMatched] = useState(false);
 	const [matchConfidence, setMatchConfidence] = useState(0);
+	const [autoSubmitting, setAutoSubmitting] = useState(false);
 
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const detectionInProgressRef = useRef(false); // Prevent overlapping detections
 
 	// Load face-api.js models
 	useEffect(() => {
@@ -142,6 +147,39 @@ const TeacherFaceAttendance = ({
 		return () => clearInterval(interval);
 	}, []);
 
+	// Request location permission on component mount
+	useEffect(() => {
+		const requestLocationPermission = async () => {
+			if ("geolocation" in navigator) {
+				try {
+					// Request permission by getting current position
+					await new Promise<GeolocationPosition>((resolve, reject) => {
+						navigator.geolocation.getCurrentPosition(
+							(position) => {
+								console.log("Location permission granted");
+								resolve(position);
+							},
+							(error) => {
+								console.error("Location permission denied:", error);
+								reject(error);
+							},
+							{
+								enableHighAccuracy: true,
+								timeout: 10000,
+								maximumAge: 0,
+							}
+						);
+					});
+				} catch (error) {
+					console.error("Failed to get location permission:", error);
+				}
+			}
+		};
+
+		// Request location permission when component loads
+		requestLocationPermission();
+	}, []);
+
 	// Load teacher's face
 	useEffect(() => {
 		if (!modelsLoaded || !teacher.img) return;
@@ -183,9 +221,39 @@ const TeacherFaceAttendance = ({
 	}, [modelsLoaded, teacher]);
 
 	// Start process: Location → Liveness → Camera
-	const startAttendanceProcess = () => {
+	const startAttendanceProcess = async () => {
 		setError("");
-		setShowLocationCheck(true);
+
+		// Request location permission before showing location check
+		if ("geolocation" in navigator) {
+			try {
+				await new Promise<GeolocationPosition>((resolve, reject) => {
+					navigator.geolocation.getCurrentPosition(
+						(position) => {
+							console.log("Location permission granted, starting verification");
+							resolve(position);
+						},
+						(error) => {
+							console.error("Location permission error:", error);
+							reject(error);
+						},
+						{
+							enableHighAccuracy: true,
+							timeout: 10000,
+							maximumAge: 0,
+						}
+					);
+				});
+				// Permission granted, show location check
+				setShowLocationCheck(true);
+			} catch (error) {
+				setError(
+					"Location permission denied. Please enable location access in your browser settings."
+				);
+			}
+		} else {
+			setError("Geolocation is not supported by your browser.");
+		}
 	};
 
 	const handleLocationVerified = async (
@@ -223,23 +291,28 @@ const TeacherFaceAttendance = ({
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
 				video: {
-					width: 720,
-					height: 560,
+					width: { ideal: 640 }, // Reduced from 720 for better performance
+					height: { ideal: 480 }, // Reduced from 560 for better performance
 					facingMode: "user", // Front camera only for self-attendance
+					frameRate: { ideal: 24, max: 30 }, // Lower framerate
 				},
 			});
 
 			if (videoRef.current) {
 				videoRef.current.srcObject = stream;
+
+				// Ensure video plays
+				await videoRef.current.play().catch((err) => {
+					console.error("Error playing video:", err);
+				});
+
 				setCameraActive(true);
 			}
 		} catch (err) {
 			console.error("Error accessing camera:", err);
 			setError("Failed to access camera. Please grant camera permissions.");
 		}
-	};
-
-	// Stop camera
+	}; // Stop camera
 	const stopCamera = () => {
 		if (videoRef.current && videoRef.current.srcObject) {
 			const stream = videoRef.current.srcObject as MediaStream;
@@ -251,84 +324,180 @@ const TeacherFaceAttendance = ({
 
 	// Detect face
 	const detectFace = async () => {
+		// Skip if detection is already in progress
+		if (detectionInProgressRef.current) return;
 		if (!videoRef.current || !canvasRef.current || !faceMatcher) return;
 
-		const video = videoRef.current;
-		const canvas = canvasRef.current;
+		// Set detection in progress flag
+		detectionInProgressRef.current = true;
 
-		const displaySize = { width: video.width, height: video.height };
-		faceapi.matchDimensions(canvas, displaySize);
+		try {
+			const video = videoRef.current;
+			const canvas = canvasRef.current;
 
-		const detection = await faceapi
-			.detectSingleFace(video)
-			.withFaceLandmarks()
-			.withFaceDescriptor();
-
-		// Clear canvas
-		const ctx = canvas.getContext("2d");
-		if (ctx) {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-		}
-
-		if (detection) {
-			setFaceDetected(true);
-
-			const resizedDetection = faceapi.resizeResults(detection, displaySize);
-
-			// Draw detection
-			faceapi.draw.drawDetections(canvas, [resizedDetection]);
-
-			// Match face
-			const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-
-			if (bestMatch.label === teacher.id) {
-				const confidence = Math.round((1 - bestMatch.distance) * 100);
-				setMatchConfidence(confidence);
-				setFaceMatched(true);
-
-				// Draw match result
-				const drawBox = new faceapi.draw.DrawBox(
-					resizedDetection.detection.box,
-					{
-						label: `${teacher.name} ${teacher.surname} (${confidence}%)`,
-						boxColor: "green",
-						lineWidth: 2,
-					}
-				);
-				drawBox.draw(canvas);
-			} else {
-				setFaceMatched(false);
-				setMatchConfidence(0);
-
-				// Draw no match
-				const drawBox = new faceapi.draw.DrawBox(
-					resizedDetection.detection.box,
-					{
-						label: "Face not recognized",
-						boxColor: "red",
-						lineWidth: 2,
-					}
-				);
-				drawBox.draw(canvas);
+			// Check if video is ready
+			if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+				detectionInProgressRef.current = false;
+				return;
 			}
-		} else {
-			setFaceDetected(false);
-			setFaceMatched(false);
-			setMatchConfidence(0);
+
+			const displaySize = { width: video.width, height: video.height };
+			faceapi.matchDimensions(canvas, displaySize);
+
+			// Use TinyFaceDetectorOptions for better performance
+			const detection = await faceapi
+				.detectSingleFace(
+					video,
+					new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+				)
+				.withFaceLandmarks()
+				.withFaceDescriptor();
+
+			// Use requestAnimationFrame for smoother canvas updates
+			requestAnimationFrame(() => {
+				// Clear canvas
+				const ctx = canvas.getContext("2d");
+				if (ctx) {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+				}
+
+				if (detection) {
+					const resizedDetection = faceapi.resizeResults(
+						detection,
+						displaySize
+					);
+
+					// Draw detection
+					faceapi.draw.drawDetections(canvas, [resizedDetection]);
+
+					// Match face
+					const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+
+					if (bestMatch.label === teacher.id) {
+						const confidence = Math.round((1 - bestMatch.distance) * 100);
+
+						// Check if confidence meets the minimum threshold
+						if (confidence >= FACE_MATCH_THRESHOLD) {
+							// Only update state if not already matched (prevent re-renders)
+							if (!faceMatched) {
+								setFaceDetected(true);
+								setFaceMatched(true);
+								setMatchConfidence(confidence);
+							}
+
+							// Draw match result
+							const drawBox = new faceapi.draw.DrawBox(
+								resizedDetection.detection.box,
+								{
+									label: `${teacher.name} ${teacher.surname} (${confidence}%)`,
+									boxColor: "green",
+									lineWidth: 2,
+								}
+							);
+							drawBox.draw(canvas);
+						} else {
+							// Face recognized but confidence too low
+							setFaceDetected(true);
+							setFaceMatched(false);
+							setMatchConfidence(confidence);
+
+							const drawBox = new faceapi.draw.DrawBox(
+								resizedDetection.detection.box,
+								{
+									label: `Low confidence: ${confidence}% (Need ${FACE_MATCH_THRESHOLD}%)`,
+									boxColor: "orange",
+									lineWidth: 2,
+								}
+							);
+							drawBox.draw(canvas);
+						}
+					} else {
+						setFaceDetected(true);
+						setFaceMatched(false);
+						setMatchConfidence(0);
+
+						// Draw no match
+						const drawBox = new faceapi.draw.DrawBox(
+							resizedDetection.detection.box,
+							{
+								label: "Face not recognized",
+								boxColor: "red",
+								lineWidth: 2,
+							}
+						);
+						drawBox.draw(canvas);
+					}
+				} else {
+					setFaceDetected(false);
+					setFaceMatched(false);
+					setMatchConfidence(0);
+				}
+			});
+		} catch (err) {
+			console.error("Error during face detection:", err);
+		} finally {
+			// Reset detection flag
+			detectionInProgressRef.current = false;
 		}
 	};
 
 	// Continuous detection
 	useEffect(() => {
-		if (cameraActive && faceMatcher) {
+		if (cameraActive && faceMatcher && !faceMatched) {
+			// Only run detection if face is not yet matched
 			const interval = setInterval(() => {
 				detectFace();
-			}, 1000);
+			}, 1500); // Reduced frequency to 1.5 seconds to prevent video freezing
 
 			return () => clearInterval(interval);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [cameraActive, faceMatcher]);
+	}, [cameraActive, faceMatcher, faceMatched]);
+
+	// Auto-submit attendance when all conditions are met
+	useEffect(() => {
+		const autoSubmitAttendance = async () => {
+			// Check if all conditions are met and not already submitting
+			if (
+				faceMatched &&
+				locationVerified &&
+				livenessVerified &&
+				isWithinTimeWindow &&
+				verifiedLocationId &&
+				verifiedCoords &&
+				cameraActive &&
+				!autoSubmitting
+			) {
+				setAutoSubmitting(true);
+
+				// Wait 2 seconds before auto-submitting to show success state
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+
+				// Double-check conditions are still met after delay
+				if (
+					faceMatched &&
+					locationVerified &&
+					livenessVerified &&
+					isWithinTimeWindow
+				) {
+					handleSubmitAttendance();
+				} else {
+					setAutoSubmitting(false);
+				}
+			}
+		};
+
+		autoSubmitAttendance();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [
+		faceMatched,
+		locationVerified,
+		livenessVerified,
+		isWithinTimeWindow,
+		verifiedLocationId,
+		verifiedCoords,
+		cameraActive,
+	]);
 
 	// Submit attendance
 	const handleSubmitAttendance = () => {
@@ -360,8 +529,27 @@ const TeacherFaceAttendance = ({
 		stopCamera();
 	};
 
-	const today = new Date().toISOString().split("T")[0];
+	// Retry verification process
+	const retryVerification = () => {
+		// Reset all states
+		setError("");
+		setLocationVerified(false);
+		setLivenessVerified(false);
+		setFaceDetected(false);
+		setFaceMatched(false);
+		setMatchConfidence(0);
+		setVerifiedLocationId(null);
+		setVerifiedCoords(null);
+		setShowLocationCheck(false);
+		setShowLivenessCheck(false);
 
+		// Stop camera if running
+		if (cameraActive) {
+			stopCamera();
+		}
+	};
+
+	const today = new Date().toISOString().split("T")[0];
 	return (
 		<div className="bg-white p-6 rounded-lg shadow-md">
 			{/* Header */}
@@ -373,7 +561,6 @@ const TeacherFaceAttendance = ({
 					Mark your attendance using face recognition
 				</p>
 			</div>
-
 			{/* Time Window Restriction Message */}
 			{!isWithinTimeWindow && timeWindowMessage && (
 				<div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -400,17 +587,13 @@ const TeacherFaceAttendance = ({
 					</div>
 				</div>
 			)}
-
-			{/* Date Selection - Today Only */}
-			<div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-				<label className="block text-sm font-medium text-gray-700 mb-2">
-					Attendance Date
-				</label>
-				<div className="flex flex-col md:flex-row gap-3">
-					<div className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-white">
-						<div className="flex items-center gap-2">
+			{/* Error Display */}
+			{error && (
+				<div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+					<div className="flex items-start justify-between gap-3">
+						<div className="flex items-start gap-3 flex-1">
 							<svg
-								className="w-5 h-5 text-gray-500"
+								className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -419,45 +602,33 @@ const TeacherFaceAttendance = ({
 									strokeLinecap="round"
 									strokeLinejoin="round"
 									strokeWidth={2}
-									d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+									d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 								/>
 							</svg>
-							<span className="font-semibold text-gray-800">
-								{new Date(today).toLocaleDateString("en-US", {
-									weekday: "long",
-									year: "numeric",
-									month: "long",
-									day: "numeric",
-								})}
-							</span>
+							<p className="text-red-800 text-sm">{error}</p>
 						</div>
+						<button
+							onClick={retryVerification}
+							className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm flex items-center gap-2 flex-shrink-0"
+						>
+							<svg
+								className="w-4 h-4"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+								/>
+							</svg>
+							Retry
+						</button>
 					</div>
 				</div>
-				<div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
-					<svg
-						className="w-4 h-4 text-blue-500"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-					<span>You can only mark attendance for today</span>
-				</div>
-			</div>
-
-			{/* Error Display */}
-			{error && (
-				<div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-					<p className="text-red-800 text-sm">{error}</p>
-				</div>
-			)}
-
+			)}{" "}
 			{/* Loading Progress */}
 			{!modelsLoaded && (
 				<div className="mb-6">
@@ -477,7 +648,6 @@ const TeacherFaceAttendance = ({
 					</div>
 				</div>
 			)}
-
 			{/* Status Cards */}
 			{modelsLoaded && (
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -588,14 +758,17 @@ const TeacherFaceAttendance = ({
 									Face Match
 								</p>
 								<p className="text-xs text-gray-500">
-									{faceMatched ? `${matchConfidence}% ✓` : "Pending"}
+									{faceMatched
+										? `${matchConfidence}% ✓ (Required: ${FACE_MATCH_THRESHOLD}%)`
+										: matchConfidence > 0
+										? `${matchConfidence}% (Need ${FACE_MATCH_THRESHOLD}%)`
+										: "Pending"}
 								</p>
 							</div>
 						</div>
 					</div>
 				</div>
 			)}
-
 			{/* Action Buttons */}
 			{modelsLoaded && faceMatcher && (
 				<div className="flex flex-wrap gap-3 mb-6">
@@ -612,6 +785,32 @@ const TeacherFaceAttendance = ({
 							{isWithinTimeWindow
 								? "Start Verification"
 								: "Outside Attendance Hours"}
+						</button>
+					)}
+
+					{locationVerified && !livenessVerified && !cameraActive && (
+						<button
+							onClick={async () => {
+								setError("");
+								await startCamera();
+								setShowLivenessCheck(true);
+							}}
+							className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2"
+						>
+							<svg
+								className="w-5 h-5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+								/>
+							</svg>
+							Retry Liveness Check
 						</button>
 					)}
 
@@ -648,16 +847,16 @@ const TeacherFaceAttendance = ({
 						</>
 					)}
 				</div>
-			)}
-
+			)}{" "}
 			{/* Video Feed */}
 			<div className="relative bg-black rounded-lg overflow-hidden">
 				<video
 					ref={videoRef}
 					autoPlay
+					playsInline
 					muted
-					width="720"
-					height="560"
+					width="640"
+					height="480"
 					className="w-full h-auto"
 				/>
 				<canvas
@@ -691,7 +890,6 @@ const TeacherFaceAttendance = ({
 					</div>
 				)}
 			</div>
-
 			{/* Instructions */}
 			{modelsLoaded && faceMatcher && (
 				<div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">

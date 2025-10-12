@@ -200,6 +200,25 @@ const TeacherAttendanceListPage = async ({
 		prisma.teacherAttendance.count({ where: query }),
 	]);
 
+	// Check if teacher has already marked attendance today
+	let hasMarkedToday = false;
+	if (role === "teacher" && userId) {
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+
+		const todayAttendance = await prisma.teacherAttendance.findFirst({
+			where: {
+				teacherId: userId,
+				date: {
+					gte: today,
+					lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+				},
+			},
+		});
+
+		hasMarkedToday = !!todayAttendance;
+	}
+
 	return (
 		<div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
 			{/* TOP */}
@@ -220,7 +239,7 @@ const TeacherAttendanceListPage = async ({
 								</button>
 							</>
 						)}
-						{role === "teacher" && (
+						{role === "teacher" && !hasMarkedToday && (
 							<Link
 								href="/teacher/attendance"
 								className="px-4 py-2 bg-lamaPurple text-white rounded-md text-sm font-medium hover:bg-opacity-90 flex items-center gap-2"
@@ -240,6 +259,24 @@ const TeacherAttendanceListPage = async ({
 								</svg>
 								Mark Attendance
 							</Link>
+						)}
+						{role === "teacher" && hasMarkedToday && (
+							<div className="px-4 py-2 bg-green-100 text-green-800 rounded-md text-sm font-medium flex items-center gap-2">
+								<svg
+									className="w-4 h-4"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								Attendance Marked Today
+							</div>
 						)}
 					</div>
 				</div>
