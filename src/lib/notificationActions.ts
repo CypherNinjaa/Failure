@@ -933,6 +933,644 @@ export const triggerExamScheduledNotification = async (examId: number) => {
 	}
 };
 
+// Trigger: Announcement created
+export const triggerAnnouncementNotification = async (
+	announcementId: number
+) => {
+	try {
+		const announcement = await prisma.announcement.findUnique({
+			where: { id: announcementId },
+			include: {
+				class: {
+					include: {
+						students: {
+							include: {
+								parent: true,
+							},
+						},
+						supervisor: true,
+					},
+				},
+			},
+		});
+
+		if (!announcement) return { success: false, error: true };
+
+		const title = `📢 ${announcement.title}`;
+		const message = announcement.description;
+
+		// Determine category based on content/class
+		const categoryKey = announcement.classId
+			? "ANNOUNCEMENT_CLASS"
+			: "ANNOUNCEMENT_GENERAL";
+
+		// Get all users to notify
+		const { clerkClient } = await import("@clerk/nextjs/server");
+		const client = clerkClient();
+
+		if (announcement.classId && announcement.class) {
+			// Send to specific class: students, parents, and class teacher
+			const notifications: Promise<any>[] = [];
+
+			// Send to all students in the class
+			for (const student of announcement.class.students) {
+				notifications.push(
+					sendNotificationToUser(student.id, categoryKey, title, message, {
+						announcementId,
+						actionUrl: `/student`,
+					})
+				);
+
+				// Send to their parents
+				notifications.push(
+					sendNotificationToUser(
+						student.parentId,
+						categoryKey,
+						title,
+						message,
+						{
+							announcementId,
+							actionUrl: `/parent`,
+						}
+					)
+				);
+			}
+
+			// Send to class supervisor/teacher
+			if (announcement.class.supervisor) {
+				notifications.push(
+					sendNotificationToUser(
+						announcement.class.supervisor.id,
+						categoryKey,
+						title,
+						message,
+						{
+							announcementId,
+							actionUrl: `/teacher`,
+						}
+					)
+				);
+			}
+
+			await Promise.all(notifications);
+		} else {
+			// Send to ALL users (school-wide announcement)
+			const roles = ["student", "parent", "teacher"];
+			const notifications: Promise<any>[] = [];
+
+			for (const role of roles) {
+				const { data: users } = await client.users.getUserList({
+					limit: 500,
+				});
+
+				const roleUsers = users.filter(
+					(user) =>
+						(user.publicMetadata as { role?: string })?.role === role && user.id
+				);
+
+				for (const user of roleUsers) {
+					notifications.push(
+						sendNotificationToUser(user.id, categoryKey, title, message, {
+							announcementId,
+							actionUrl: `/${role}`,
+						})
+					);
+				}
+			}
+
+			await Promise.all(notifications);
+		}
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger announcement notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// ============================================
+// MORE AUTOMATED TRIGGERS
+// ============================================
+
+// Trigger: Assignment created
+export const triggerAssignmentCreatedNotification = async (
+	assignmentId: number
+) => {
+	try {
+		const assignment = await prisma.assignment.findUnique({
+			where: { id: assignmentId },
+			include: {
+				lesson: {
+					include: {
+						class: {
+							include: {
+								students: {
+									include: { parent: true },
+								},
+							},
+						},
+						subject: true,
+					},
+				},
+			},
+		});
+
+		if (!assignment) return { success: false, error: true };
+
+		const title = "📚 New Assignment Posted";
+		const message = `${assignment.title} for ${
+			assignment.lesson.subject.name
+		}. Due: ${new Date(assignment.dueDate).toLocaleDateString()}`;
+
+		const notifications = assignment.lesson.class.students.flatMap(
+			(student) => [
+				sendNotificationToUser(
+					student.id,
+					"ASSIGNMENT_CREATED",
+					title,
+					message,
+					{
+						assignmentId,
+						actionUrl: `/student/assignments`,
+					}
+				),
+				sendNotificationToUser(
+					student.parentId,
+					"ASSIGNMENT_CREATED",
+					title,
+					message,
+					{
+						assignmentId,
+						actionUrl: `/parent`,
+					}
+				),
+			]
+		);
+
+		await Promise.all(notifications);
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger assignment notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: Result published
+export const triggerResultPublishedNotification = async (resultId: number) => {
+	try {
+		const result = await prisma.result.findUnique({
+			where: { id: resultId },
+			include: {
+				student: {
+					include: { parent: true },
+				},
+				exam: true,
+				assignment: true,
+			},
+		});
+
+		if (!result) return { success: false, error: true };
+
+		const title = "📊 Results Published";
+		const itemTitle =
+			result.exam?.title || result.assignment?.title || "Assessment";
+		const message = `Results for ${itemTitle} are now available. Score: ${result.score}`;
+
+		await sendNotificationToUser(
+			result.studentId,
+			"RESULT_PUBLISHED",
+			title,
+			message,
+			{
+				resultId,
+				actionUrl: `/student/results`,
+			}
+		);
+
+		await sendNotificationToUser(
+			result.student.parentId,
+			"RESULT_PUBLISHED",
+			title,
+			message,
+			{
+				resultId,
+				actionUrl: `/parent/results`,
+			}
+		);
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger result notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: Attendance marked absent
+export const triggerAttendanceAbsentNotification = async (
+	attendanceId: number
+) => {
+	try {
+		const attendance = await prisma.attendance.findUnique({
+			where: { id: attendanceId },
+			include: {
+				student: {
+					include: { parent: true },
+				},
+				lesson: {
+					include: { subject: true },
+				},
+			},
+		});
+
+		if (!attendance || attendance.present)
+			return { success: false, error: true };
+
+		const title = "❌ Absence Alert";
+		const lessonInfo = attendance.lesson
+			? ` for ${attendance.lesson.subject.name}`
+			: "";
+		const message = `${attendance.student.name} ${
+			attendance.student.surname
+		} was marked absent${lessonInfo} on ${new Date(
+			attendance.date
+		).toLocaleDateString()}`;
+
+		await sendNotificationToUser(
+			attendance.student.parentId,
+			"ATTENDANCE_ABSENT",
+			title,
+			message,
+			{
+				attendanceId,
+				actionUrl: `/parent/attendance`,
+			}
+		);
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger attendance notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: MCQ Test Available
+export const triggerMCQTestAvailableNotification = async (testId: string) => {
+	try {
+		const test = await prisma.mCQTest.findUnique({
+			where: { id: testId },
+			include: {
+				class: {
+					include: {
+						students: {
+							include: { parent: true },
+						},
+					},
+				},
+				subject: true,
+			},
+		});
+
+		if (!test || !test.class) return { success: false, error: true };
+
+		const title = "🎯 New MCQ Test Available";
+		const message = `${test.title} for ${
+			test.subject?.name || "General"
+		} is now available`;
+
+		const notifications = test.class.students.flatMap((student) => [
+			sendNotificationToUser(student.id, "MCQ_TEST_AVAILABLE", title, message, {
+				testId,
+				actionUrl: `/student/tests/${testId}`,
+			}),
+			sendNotificationToUser(
+				student.parentId,
+				"MCQ_TEST_AVAILABLE",
+				title,
+				message,
+				{
+					testId,
+					actionUrl: `/parent`,
+				}
+			),
+		]);
+
+		await Promise.all(notifications);
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger MCQ test notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: MCQ Result Ready
+export const triggerMCQResultReadyNotification = async (attemptId: string) => {
+	try {
+		const attempt = await prisma.mCQAttempt.findUnique({
+			where: { id: attemptId },
+			include: {
+				student: {
+					include: { parent: true },
+				},
+				test: true,
+			},
+		});
+
+		if (!attempt || !attempt.score) return { success: false, error: true };
+
+		const title = "📈 MCQ Results Ready";
+		const message = `Your test "${attempt.test.title}" has been graded. Score: ${attempt.score}%`;
+
+		await sendNotificationToUser(
+			attempt.studentId,
+			"MCQ_RESULT_READY",
+			title,
+			message,
+			{
+				attemptId,
+				actionUrl: `/student/tests/results/${attemptId}`,
+			}
+		);
+
+		await sendNotificationToUser(
+			attempt.student.parentId,
+			"MCQ_RESULT_READY",
+			title,
+			message,
+			{
+				attemptId,
+				actionUrl: `/parent`,
+			}
+		);
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger MCQ result notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: Badge Earned
+export const triggerBadgeEarnedNotification = async (
+	studentBadgeId: string
+) => {
+	try {
+		const studentBadge = await prisma.studentBadge.findUnique({
+			where: { id: studentBadgeId },
+			include: {
+				student: {
+					include: { parent: true },
+				},
+				badge: true,
+			},
+		});
+
+		if (!studentBadge) return { success: false, error: true };
+
+		const title = "🏅 Badge Unlocked!";
+		const message = `Congratulations! You earned the "${studentBadge.badge.name}" badge!`;
+
+		await sendNotificationToUser(
+			studentBadge.studentId,
+			"BADGE_EARNED",
+			title,
+			message,
+			{
+				badgeId: studentBadge.badgeId,
+				actionUrl: `/student/achievements`,
+			}
+		);
+
+		await sendNotificationToUser(
+			studentBadge.student.parentId,
+			"BADGE_EARNED",
+			title,
+			message,
+			{
+				badgeId: studentBadge.badgeId,
+				actionUrl: `/parent`,
+			}
+		);
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger badge notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: Event Created
+export const triggerEventCreatedNotification = async (eventId: number) => {
+	try {
+		const event = await prisma.event.findUnique({
+			where: { id: eventId },
+			include: {
+				class: {
+					include: {
+						students: {
+							include: { parent: true },
+						},
+						supervisor: true,
+					},
+				},
+			},
+		});
+
+		if (!event) return { success: false, error: true };
+
+		const title = `🎉 ${event.title}`;
+		const message = `${event.description}. Date: ${new Date(
+			event.startTime
+		).toLocaleDateString()}`;
+
+		const { clerkClient } = await import("@clerk/nextjs/server");
+		const client = clerkClient();
+
+		if (event.classId && event.class) {
+			// Class-specific event
+			const notifications: Promise<any>[] = [];
+
+			for (const student of event.class.students) {
+				notifications.push(
+					sendNotificationToUser(student.id, "EVENT_CREATED", title, message, {
+						eventId,
+						actionUrl: `/student/events`,
+					}),
+					sendNotificationToUser(
+						student.parentId,
+						"EVENT_CREATED",
+						title,
+						message,
+						{
+							eventId,
+							actionUrl: `/parent/events`,
+						}
+					)
+				);
+			}
+
+			if (event.class.supervisor) {
+				notifications.push(
+					sendNotificationToUser(
+						event.class.supervisor.id,
+						"EVENT_CREATED",
+						title,
+						message,
+						{
+							eventId,
+							actionUrl: `/teacher/events`,
+						}
+					)
+				);
+			}
+
+			await Promise.all(notifications);
+		} else {
+			// School-wide event - send to everyone
+			const roles = ["student", "parent", "teacher"];
+			const notifications: Promise<any>[] = [];
+
+			for (const role of roles) {
+				const { data: users } = await client.users.getUserList({ limit: 500 });
+				const roleUsers = users.filter(
+					(u) => (u.publicMetadata as { role?: string })?.role === role
+				);
+
+				for (const user of roleUsers) {
+					notifications.push(
+						sendNotificationToUser(user.id, "EVENT_CREATED", title, message, {
+							eventId,
+							actionUrl: `/${role}/events`,
+						})
+					);
+				}
+			}
+
+			await Promise.all(notifications);
+		}
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger event notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: Fee Assigned
+export const triggerFeeAssignedNotification = async (studentFeeId: string) => {
+	try {
+		const studentFee = await prisma.studentFee.findUnique({
+			where: { id: studentFeeId },
+			include: {
+				student: {
+					include: { parent: true },
+				},
+				feeStructure: true,
+			},
+		});
+
+		if (!studentFee) return { success: false, error: true };
+
+		const title = "📝 New Fee Assigned";
+		const message = `${studentFee.feeStructure.name} (₹${
+			studentFee.totalAmount
+		}) has been assigned. Due: ${new Date(
+			studentFee.dueDate
+		).toLocaleDateString()}`;
+
+		await sendNotificationToUser(
+			studentFee.student.parentId,
+			"FEE_ASSIGNED",
+			title,
+			message,
+			{
+				studentFeeId,
+				actionUrl: `/parent/fees`,
+			}
+		);
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger fee assigned notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: Payment Rejected
+export const triggerPaymentRejectedNotification = async (paymentId: string) => {
+	try {
+		const payment = await prisma.payment.findUnique({
+			where: { id: paymentId },
+			include: {
+				studentFee: {
+					include: {
+						student: {
+							include: { parent: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!payment) return { success: false, error: true };
+
+		const title = "❌ Payment Rejected";
+		const message = `Your payment of ₹${payment.amount} was rejected. Reason: ${
+			payment.rejectionReason || "Invalid details"
+		}`;
+
+		await sendNotificationToUser(
+			payment.studentFee.student.parentId,
+			"PAYMENT_REJECTED",
+			title,
+			message,
+			{
+				paymentId,
+				actionUrl: `/parent/transactions`,
+			}
+		);
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger payment rejected notification:", err);
+		return { success: false, error: true };
+	}
+};
+
+// Trigger: Teacher Rating Received
+export const triggerTeacherRatingNotification = async (ratingId: string) => {
+	try {
+		const rating = await prisma.teacherRating.findUnique({
+			where: { id: ratingId },
+			include: {
+				teacher: true,
+				student: true,
+			},
+		});
+
+		if (!rating) return { success: false, error: true };
+
+		const title = "⭐ New Rating Received";
+		const stars = "⭐".repeat(rating.rating);
+		const message = `You received a ${rating.rating}-star rating ${stars}`;
+
+		await sendNotificationToUser(
+			rating.teacherId,
+			"TEACHER_RATING_RECEIVED",
+			title,
+			message,
+			{
+				ratingId,
+				actionUrl: `/teacher/ratings`,
+			}
+		);
+
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Failed to trigger teacher rating notification:", err);
+		return { success: false, error: true };
+	}
+};
+
 // Get user's notification history
 export const getUserNotifications = async (limit: number = 20) => {
 	const { userId } = auth();

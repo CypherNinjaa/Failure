@@ -2,19 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import Image from "next/image";
 
 const EnableNotifications = () => {
 	const { user } = useUser();
 	const [loading, setLoading] = useState(false);
-	const [testLoading, setTestLoading] = useState(false);
 	const [status, setStatus] = useState<"idle" | "success" | "error" | "denied">(
 		"idle"
 	);
 	const [errorMessage, setErrorMessage] = useState("");
-	const [debugInfo, setDebugInfo] = useState<any>(null);
-	const [testResult, setTestResult] = useState<string>("");
 
-	// Check if already subscribed on mount
 	useEffect(() => {
 		checkExistingSubscription();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -22,114 +19,47 @@ const EnableNotifications = () => {
 
 	const checkExistingSubscription = async () => {
 		if (!user) return;
-
 		try {
 			if ("serviceWorker" in navigator && "PushManager" in window) {
 				const registration = await navigator.serviceWorker.getRegistration();
 				if (registration) {
 					const subscription = await registration.pushManager.getSubscription();
 					if (subscription) {
-						console.log("✅ Already subscribed:", subscription);
 						setStatus("success");
-						setDebugInfo({
-							endpoint: subscription.endpoint,
-							expirationTime: subscription.expirationTime,
-						});
 					}
 				}
 			}
 		} catch (error) {
-			console.log("No existing subscription found");
+			console.log("No existing subscription");
 		}
 	};
 
 	const enableNotifications = async () => {
-		if (!user) {
-			setErrorMessage("User not logged in");
-			return;
-		}
+		if (!user) return;
 
 		try {
 			setLoading(true);
 			setStatus("idle");
 			setErrorMessage("");
 
-			console.log("🚀 Starting notification setup...");
-			console.log("👤 User ID:", user.id);
-			console.log("🌐 Current URL:", window.location.href);
-			console.log(
-				"🔑 VAPID Key (first 20 chars):",
-				process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.substring(0, 20)
-			);
-
-			// Check if browser supports notifications
 			if (!("Notification" in window)) {
-				const msg = "This browser does not support notifications";
-				console.error("❌", msg);
-				setErrorMessage(msg);
-				setStatus("error");
-				return;
+				throw new Error("Browser doesn't support notifications");
 			}
 
-			// Check if service worker is supported
-			if (!("serviceWorker" in navigator)) {
-				const msg = "Service Worker not supported in this browser";
-				console.error("❌", msg);
-				setErrorMessage(msg);
-				setStatus("error");
-				return;
-			}
-
-			// Check if push is supported
-			if (!("PushManager" in window)) {
-				const msg = "Push notifications not supported in this browser";
-				console.error("❌", msg);
-				setErrorMessage(msg);
-				setStatus("error");
-				return;
-			}
-
-			// Request notification permission
-			console.log("🔔 Requesting notification permission...");
 			const permission = await Notification.requestPermission();
-			console.log("📋 Permission result:", permission);
 
 			if (permission !== "granted") {
-				const msg = "Notification permission denied";
-				console.log("⚠️", msg);
-				setErrorMessage(msg);
 				setStatus("denied");
 				return;
 			}
 
-			console.log("✅ Notification permission granted");
-
-			// Register service worker
-			console.log("📝 Registering service worker...");
 			const registration = await navigator.serviceWorker.register("/sw.js");
-			console.log("✅ Service Worker registered:", registration);
-			console.log("📍 SW scope:", registration.scope);
-			console.log("📍 SW state:", registration.active?.state);
-
-			// Wait for service worker to be ready
-			console.log("⏳ Waiting for service worker to be ready...");
 			await navigator.serviceWorker.ready;
-			console.log("✅ Service Worker ready");
 
-			// Check for existing subscription
 			let subscription = await registration.pushManager.getSubscription();
-
 			if (subscription) {
-				console.log("♻️ Found existing subscription, unsubscribing first...");
 				await subscription.unsubscribe();
 			}
-
-			// Subscribe to push notifications
-			console.log("📡 Subscribing to push notifications...");
-			console.log(
-				"🔑 Using VAPID key:",
-				process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-			);
 
 			subscription = await registration.pushManager.subscribe({
 				userVisibleOnly: true,
@@ -138,50 +68,25 @@ const EnableNotifications = () => {
 				),
 			});
 
-			console.log("✅ Push subscription created:", subscription);
-			console.log("📍 Endpoint:", subscription.endpoint);
-
-			const subscriptionJSON = subscription.toJSON();
-			console.log("📦 Subscription JSON:", subscriptionJSON);
-
-			// Save subscription to database
-			console.log("💾 Saving subscription to database...");
 			const response = await fetch("/api/push/subscribe", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					userId: user.id,
-					subscription: subscriptionJSON,
+					subscription: subscription.toJSON(),
 				}),
 			});
 
-			const responseData = await response.json();
-			console.log("📨 Server response:", responseData);
+			if (!response.ok) throw new Error("Failed to save subscription");
 
-			if (!response.ok) {
-				throw new Error(
-					`Failed to save subscription: ${JSON.stringify(responseData)}`
-				);
-			}
-
-			console.log("✅ Subscription saved successfully");
 			setStatus("success");
-			setDebugInfo({
-				endpoint: subscription.endpoint,
-				userId: user.id,
-				savedAt: new Date().toISOString(),
-			});
 
-			// Send a test notification immediately
-			console.log("🧪 Sending test notification...");
-			await registration.showNotification("🎉 Notifications Enabled!", {
-				body: "You will now receive push notifications from HCS School",
+			await registration.showNotification("Notifications Enabled!", {
+				body: "You will now receive updates from HCS School",
 				icon: "/logo.png",
-				badge: "/logo.png",
 			});
 		} catch (error: any) {
-			console.error("❌ Failed to enable notifications:", error);
-			setErrorMessage(error.message || "Unknown error occurred");
+			setErrorMessage(error.message || "Failed to enable notifications");
 			setStatus("error");
 		} finally {
 			setLoading(false);
@@ -189,193 +94,178 @@ const EnableNotifications = () => {
 	};
 
 	const sendTestNotification = async () => {
-		setTestLoading(true);
-		setTestResult("");
-
 		try {
-			console.log("🧪 Sending test notification...");
-			const response = await fetch("/api/push/test", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-			});
-
-			const data = await response.json();
-			console.log("📨 Test response:", data);
-
-			if (data.success) {
-				setTestResult(`✅ Test sent to ${data.sent} device(s)!`);
-			} else {
-				setTestResult(`❌ ${data.error || data.message}`);
-			}
-		} catch (error: any) {
-			console.error("❌ Test failed:", error);
-			setTestResult(`❌ ${error.message}`);
-		} finally {
-			setTestLoading(false);
+			await fetch("/api/push/test", { method: "POST" });
+		} catch (error) {
+			console.error("Test failed:", error);
 		}
 	};
 
-	// Helper function to convert VAPID key
+	const resetSubscription = async () => {
+		try {
+			const registration = await navigator.serviceWorker.getRegistration();
+			if (registration) {
+				const subscription = await registration.pushManager.getSubscription();
+				if (subscription) {
+					await subscription.unsubscribe();
+				}
+			}
+			setStatus("idle");
+		} catch (error) {
+			console.error("Reset failed:", error);
+		}
+	};
+
 	function urlBase64ToUint8Array(base64String: string) {
 		const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
 		const base64 = (base64String + padding)
 			.replace(/\-/g, "+")
 			.replace(/_/g, "/");
-
 		const rawData = window.atob(base64);
 		const outputArray = new Uint8Array(rawData.length);
-
 		for (let i = 0; i < rawData.length; ++i) {
 			outputArray[i] = rawData.charCodeAt(i);
 		}
 		return outputArray;
 	}
 
-	return (
-		<div className="bg-white p-6 rounded-lg border-2 border-gray-200">
-			<div className="flex items-start gap-4">
-				<div className="text-4xl">🔔</div>
-				<div className="flex-1">
-					<h3 className="text-lg font-semibold mb-2">
-						Enable Push Notifications
-					</h3>
-					<p className="text-sm text-gray-600 mb-4">
-						Get instant notifications about important updates, reminders, and
-						announcements directly in your browser.
-					</p>
+	if (status === "denied") {
+		return (
+			<div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+				<div className="flex items-start gap-3">
+					<Image
+						src="/close.png"
+						alt="Blocked"
+						width={18}
+						height={18}
+						className="mt-0.5 flex-shrink-0"
+					/>
+					<div className="flex-1 min-w-0">
+						<h3 className="font-semibold text-red-800 text-sm md:text-base mb-1">
+							Notifications Blocked
+						</h3>
+						<p className="text-xs md:text-sm text-red-700">
+							Enable notifications in your browser settings to receive updates.
+						</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
-					{status === "success" && (
-						<div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-							<p className="font-medium">✅ Notifications Enabled!</p>
-							<p className="text-sm mb-2">
-								You will now receive push notifications.
-							</p>
-							{debugInfo && (
-								<details className="text-xs">
-									<summary className="cursor-pointer font-medium">
-										Debug Info
-									</summary>
-									<pre className="mt-2 bg-white p-2 rounded overflow-x-auto">
-										{JSON.stringify(debugInfo, null, 2)}
-									</pre>
-								</details>
-							)}
+	if (status === "success") {
+		return (
+			<div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+				<div className="flex items-start gap-3">
+					<Image
+						src="/announcement.png"
+						alt="Enabled"
+						width={18}
+						height={18}
+						className="mt-0.5 flex-shrink-0"
+					/>
+					<div className="flex-1 min-w-0">
+						<h3 className="font-semibold text-green-800 text-sm md:text-base mb-1">
+							Notifications Enabled!
+						</h3>
+						<p className="text-xs md:text-sm text-green-700 mb-3">
+							You will receive push notifications.
+						</p>
+						<div className="flex flex-wrap gap-2">
+							<button
+								onClick={sendTestNotification}
+								className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs md:text-sm"
+							>
+								<Image
+									src="/message.png"
+									alt="Test"
+									width={12}
+									height={12}
+									className="brightness-0 invert"
+								/>
+								Send Test
+							</button>
+							<button
+								onClick={resetSubscription}
+								className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs md:text-sm"
+							>
+								<Image
+									src="/update.png"
+									alt="Reset"
+									width={12}
+									height={12}
+									className="brightness-0 invert"
+								/>
+								Reset
+							</button>
 						</div>
-					)}
+					</div>
+				</div>
+			</div>
+		);
+	}
 
-					{status === "denied" && (
-						<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-							<p className="font-medium">❌ Permission Denied</p>
-							<p className="text-sm mb-2">
-								Please enable notifications in your browser settings.
-							</p>
-							<p className="text-xs">
-								Chrome: Settings → Privacy → Site Settings → Notifications
-							</p>
-						</div>
-					)}
-
-					{status === "error" && (
-						<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-							<p className="font-medium">❌ Error</p>
-							<p className="text-sm mb-2">
-								{errorMessage ||
-									"Failed to enable notifications. Please try again."}
-							</p>
-							<p className="text-xs">
-								Check browser console (F12) for detailed logs
-							</p>
-						</div>
-					)}
-
-					<div className="flex gap-2 flex-wrap">
+	if (status === "error") {
+		return (
+			<div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+				<div className="flex items-start gap-3">
+					<Image
+						src="/close.png"
+						alt="Error"
+						width={18}
+						height={18}
+						className="mt-0.5 flex-shrink-0"
+					/>
+					<div className="flex-1 min-w-0">
+						<h3 className="font-semibold text-red-800 text-sm md:text-base mb-1">
+							Error
+						</h3>
+						<p className="text-xs md:text-sm text-red-700 mb-3">
+							{errorMessage || "Failed to enable notifications"}
+						</p>
 						<button
 							onClick={enableNotifications}
-							disabled={loading || status === "success"}
-							className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-								loading || status === "success"
-									? "bg-gray-300 text-gray-500 cursor-not-allowed"
-									: "bg-lamaPurple text-white hover:bg-lamaPurpleLight"
-							}`}
+							className="px-3 py-1.5 bg-lamaPurple text-white rounded-md hover:bg-lamaPurpleLight text-xs md:text-sm"
 						>
-							{loading
-								? "Enabling..."
-								: status === "success"
-								? "✅ Enabled"
-								: "Enable Notifications"}
+							Try Again
 						</button>
-
-						{status === "success" && (
-							<>
-								<button
-									onClick={sendTestNotification}
-									disabled={testLoading}
-									className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-								>
-									{testLoading ? "Sending..." : "🧪 Send Test"}
-								</button>
-
-								<button
-									onClick={() => {
-										setStatus("idle");
-										setDebugInfo(null);
-										setTestResult("");
-									}}
-									className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
-								>
-									🔄 Reset
-								</button>
-							</>
-						)}
 					</div>
+				</div>
+			</div>
+		);
+	}
 
-					{testResult && (
-						<div
-							className={`mt-3 p-3 rounded text-sm ${
-								testResult.startsWith("✅")
-									? "bg-green-50 text-green-700 border border-green-200"
-									: "bg-red-50 text-red-700 border border-red-200"
-							}`}
-						>
-							{testResult}
-						</div>
-					)}
-
-					{/* Developer Info */}
-					<details className="mt-4 text-xs text-gray-500">
-						<summary className="cursor-pointer">Developer Info</summary>
-						<div className="mt-2 space-y-1">
-							<p>
-								🌐 Browser:{" "}
-								{typeof window !== "undefined" && navigator.userAgent}
-							</p>
-							<p>
-								🔔 Notification Support:{" "}
-								{typeof window !== "undefined" && "Notification" in window
-									? "✅"
-									: "❌"}
-							</p>
-							<p>
-								👷 Service Worker Support:{" "}
-								{typeof window !== "undefined" && "serviceWorker" in navigator
-									? "✅"
-									: "❌"}
-							</p>
-							<p>
-								📡 Push Support:{" "}
-								{typeof window !== "undefined" && "PushManager" in window
-									? "✅"
-									: "❌"}
-							</p>
-							<p>
-								🔐 HTTPS:{" "}
-								{typeof window !== "undefined" &&
-								window.location.protocol === "https:"
-									? "✅"
-									: "❌"}
-							</p>
-						</div>
-					</details>
+	return (
+		<div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
+			<div className="flex items-start gap-3">
+				<Image
+					src="/notification.png"
+					alt="Enable"
+					width={18}
+					height={18}
+					className="mt-0.5 flex-shrink-0"
+				/>
+				<div className="flex-1 min-w-0">
+					<h3 className="font-semibold text-orange-800 text-sm md:text-base mb-1">
+						Enable Push Notifications
+					</h3>
+					<p className="text-xs md:text-sm text-orange-700 mb-3">
+						Get instant updates and announcements.
+					</p>
+					<button
+						onClick={enableNotifications}
+						disabled={loading}
+						className="flex items-center gap-1.5 px-4 py-2 bg-lamaPurple text-white rounded-md hover:bg-lamaPurpleLight disabled:opacity-50 text-xs md:text-sm font-medium"
+					>
+						<Image
+							src="/announcement.png"
+							alt="Enable"
+							width={12}
+							height={12}
+							className="brightness-0 invert"
+						/>
+						{loading ? "Enabling..." : "Enable Notifications"}
+					</button>
 				</div>
 			</div>
 		</div>

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { toast } from "react-toastify";
 import {
 	updateNotificationPreference,
 	bulkUpdateNotificationPreferences,
 } from "@/lib/notificationActions";
+import EnableNotifications from "./EnableNotifications";
 
 type NotificationCategory = {
 	id: string;
@@ -43,6 +45,15 @@ const NotificationSettingsClient = ({
 	const [quietHoursEnabled, setQuietHoursEnabled] = useState(false);
 	const [quietHoursStart, setQuietHoursStart] = useState("22:00");
 	const [quietHoursEnd, setQuietHoursEnd] = useState("08:00");
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	if (!mounted) {
+		return null;
+	}
 
 	// Group by category
 	const groupedSettings = settings.reduce((acc, pref) => {
@@ -53,16 +64,16 @@ const NotificationSettingsClient = ({
 		return acc;
 	}, {} as Record<string, NotificationCategory[]>);
 
-	// Category icons
-	const categoryIcons: Record<string, string> = {
-		FINANCE: "💰",
-		ACADEMICS: "📚",
-		ATTENDANCE: "📅",
-		ACHIEVEMENT: "🏆",
-		EVENTS: "🎉",
-		ANNOUNCEMENTS: "📢",
-		COMMUNICATION: "💬",
-		SYSTEM: "⚙️",
+	// Category icons mapping
+	const categoryIconMap: Record<string, string> = {
+		FINANCE: "/finance.png",
+		ACADEMICS: "/lesson.png",
+		ATTENDANCE: "/attendance.png",
+		ACHIEVEMENT: "/test.png",
+		EVENTS: "/calendar.png",
+		ANNOUNCEMENTS: "/announcement.png",
+		COMMUNICATION: "/message.png",
+		SYSTEM: "/setting.png",
 	};
 
 	const handleToggleNotification = async (
@@ -191,24 +202,34 @@ const NotificationSettingsClient = ({
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4 md:space-y-6">
+			{/* ENABLE PUSH NOTIFICATIONS - Prominent at the top */}
+			<EnableNotifications />
+
 			{/* Global Settings */}
-			<div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
-				<h2 className="text-lg font-semibold mb-4">⚙️ Global Settings</h2>
+			<div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4 md:p-6">
+				<div className="flex items-center gap-2 mb-4">
+					<Image src="/setting.png" alt="Settings" width={20} height={20} />
+					<h2 className="text-base md:text-lg font-semibold">
+						Global Settings
+					</h2>
+				</div>
 
 				<div className="space-y-4">
 					{/* Master Switch */}
-					<div className="flex items-center justify-between">
-						<div>
-							<p className="font-medium">Enable All Notifications</p>
-							<p className="text-sm text-gray-600">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+						<div className="flex-1">
+							<p className="font-medium text-sm md:text-base">
+								Enable All Notifications
+							</p>
+							<p className="text-xs md:text-sm text-gray-600">
 								Master switch to enable/disable all notifications
 							</p>
 						</div>
 						<button
 							onClick={() => handleToggleAll(!globalEnabled)}
 							disabled={loading}
-							className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+							className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors flex-shrink-0 ${
 								globalEnabled ? "bg-lamaPurple" : "bg-gray-300"
 							} ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
 						>
@@ -222,17 +243,17 @@ const NotificationSettingsClient = ({
 
 					{/* Quiet Hours */}
 					<div className="border-t pt-4">
-						<div className="flex items-center justify-between mb-3">
-							<div>
-								<p className="font-medium">Quiet Hours</p>
-								<p className="text-sm text-gray-600">
+						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+							<div className="flex-1">
+								<p className="font-medium text-sm md:text-base">Quiet Hours</p>
+								<p className="text-xs md:text-sm text-gray-600">
 									Don&apos;t send push notifications during these hours
 								</p>
 							</div>
 							<button
 								onClick={() => setQuietHoursEnabled(!quietHoursEnabled)}
 								disabled={loading}
-								className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+								className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors flex-shrink-0 ${
 									quietHoursEnabled ? "bg-lamaPurple" : "bg-gray-300"
 								} ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
 							>
@@ -245,29 +266,33 @@ const NotificationSettingsClient = ({
 						</div>
 
 						{quietHoursEnabled && (
-							<div className="flex gap-4 items-end">
+							<div className="flex flex-col sm:flex-row gap-3 sm:items-end">
 								<div className="flex-1">
-									<label className="text-sm text-gray-600">Start Time</label>
+									<label className="text-xs md:text-sm text-gray-600">
+										Start Time
+									</label>
 									<input
 										type="time"
 										value={quietHoursStart}
 										onChange={(e) => setQuietHoursStart(e.target.value)}
-										className="w-full mt-1 p-2 border rounded-md"
+										className="w-full mt-1 p-2 border rounded-md text-sm"
 									/>
 								</div>
 								<div className="flex-1">
-									<label className="text-sm text-gray-600">End Time</label>
+									<label className="text-xs md:text-sm text-gray-600">
+										End Time
+									</label>
 									<input
 										type="time"
 										value={quietHoursEnd}
 										onChange={(e) => setQuietHoursEnd(e.target.value)}
-										className="w-full mt-1 p-2 border rounded-md"
+										className="w-full mt-1 p-2 border rounded-md text-sm"
 									/>
 								</div>
 								<button
 									onClick={handleUpdateQuietHours}
 									disabled={loading}
-									className="px-4 py-2 bg-lamaPurple text-white rounded-md hover:bg-lamaPurpleLight disabled:opacity-50"
+									className="w-full sm:w-auto px-4 py-2 bg-lamaPurple text-white rounded-md hover:bg-lamaPurpleLight disabled:opacity-50 text-sm"
 								>
 									Save
 								</button>
@@ -281,41 +306,59 @@ const NotificationSettingsClient = ({
 			{Object.entries(groupedSettings).map(([category, notifications]) => (
 				<div
 					key={category}
-					className="bg-white border-2 border-gray-200 rounded-lg p-6"
+					className="bg-white border-2 border-gray-200 rounded-lg p-4 md:p-6"
 				>
-					<h2 className="text-lg font-semibold mb-4">
-						{categoryIcons[category] || "🔔"} {category.replace("_", " ")}
-					</h2>
+					<div className="flex items-center gap-2 mb-4">
+						<Image
+							src={categoryIconMap[category] || "/notification.png"}
+							alt={category}
+							width={20}
+							height={20}
+						/>
+						<h2 className="text-base md:text-lg font-semibold">
+							{category.replace("_", " ")}
+						</h2>
+					</div>
 
 					<div className="space-y-4">
 						{notifications.map((notif) => (
 							<div
 								key={notif.key}
-								className="flex items-start justify-between border-b pb-4 last:border-b-0 last:pb-0"
+								className="flex flex-col sm:flex-row sm:items-start gap-3 border-b pb-4 last:border-b-0 last:pb-0"
 							>
-								<div className="flex-1">
-									<div className="flex items-center gap-2">
-										<span className="text-xl">{notif.icon}</span>
-										<div>
-											<p className="font-medium">{notif.name}</p>
-											<p className="text-sm text-gray-600">
+								<div className="flex-1 min-w-0">
+									<div className="flex items-start gap-2">
+										{notif.icon && (
+											<span className="text-lg flex-shrink-0">
+												{notif.icon}
+											</span>
+										)}
+										<div className="min-w-0">
+											<p className="font-medium text-sm md:text-base break-words">
+												{notif.name}
+											</p>
+											<p className="text-xs md:text-sm text-gray-600 break-words">
 												{notif.description}
 											</p>
-											{notif.priority === "HIGH" && (
-												<span className="inline-block mt-1 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">
-													High Priority
-												</span>
-											)}
-											{notif.priority === "CRITICAL" && (
-												<span className="inline-block mt-1 text-xs bg-red-500 text-white px-2 py-0.5 rounded">
-													Critical
+											{(notif.priority === "HIGH" ||
+												notif.priority === "CRITICAL") && (
+												<span
+													className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${
+														notif.priority === "CRITICAL"
+															? "bg-red-500 text-white"
+															: "bg-red-100 text-red-600"
+													}`}
+												>
+													{notif.priority === "CRITICAL"
+														? "Critical"
+														: "High Priority"}
 												</span>
 											)}
 										</div>
 									</div>
 								</div>
 
-								<div className="flex items-center gap-4">
+								<div className="flex items-center gap-3 sm:gap-4 justify-between sm:justify-end">
 									{/* Channel Toggles */}
 									<div className="flex gap-2">
 										{notif.supportedChannels.push && (
@@ -331,8 +374,8 @@ const NotificationSettingsClient = ({
 												className={`p-2 rounded-md border-2 transition-colors ${
 													notif.userPreference.channels.push &&
 													notif.userPreference.isEnabled
-														? "bg-lamaPurple text-white border-lamaPurple"
-														: "bg-white text-gray-400 border-gray-300"
+														? "bg-lamaPurple border-lamaPurple"
+														: "bg-white border-gray-300"
 												} ${
 													loading || !notif.userPreference.isEnabled
 														? "opacity-50 cursor-not-allowed"
@@ -340,7 +383,18 @@ const NotificationSettingsClient = ({
 												}`}
 												title="Push Notifications"
 											>
-												🔔
+												<Image
+													src="/notification.png"
+													alt="Push"
+													width={16}
+													height={16}
+													className={
+														notif.userPreference.channels.push &&
+														notif.userPreference.isEnabled
+															? "brightness-0 invert"
+															: ""
+													}
+												/>
 											</button>
 										)}
 										{notif.supportedChannels.email && (
@@ -356,8 +410,8 @@ const NotificationSettingsClient = ({
 												className={`p-2 rounded-md border-2 transition-colors ${
 													notif.userPreference.channels.email &&
 													notif.userPreference.isEnabled
-														? "bg-blue-500 text-white border-blue-500"
-														: "bg-white text-gray-400 border-gray-300"
+														? "bg-blue-500 border-blue-500"
+														: "bg-white border-gray-300"
 												} ${
 													loading || !notif.userPreference.isEnabled
 														? "opacity-50 cursor-not-allowed"
@@ -365,7 +419,18 @@ const NotificationSettingsClient = ({
 												}`}
 												title="Email Notifications"
 											>
-												📧
+												<Image
+													src="/mail.png"
+													alt="Email"
+													width={16}
+													height={16}
+													className={
+														notif.userPreference.channels.email &&
+														notif.userPreference.isEnabled
+															? "brightness-0 invert"
+															: ""
+													}
+												/>
 											</button>
 										)}
 									</div>
@@ -379,7 +444,7 @@ const NotificationSettingsClient = ({
 											)
 										}
 										disabled={loading}
-										className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+										className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors flex-shrink-0 ${
 											notif.userPreference.isEnabled
 												? "bg-green-500"
 												: "bg-gray-300"
@@ -401,13 +466,22 @@ const NotificationSettingsClient = ({
 			))}
 
 			{/* Info Box */}
-			<div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-				<p className="text-sm text-blue-800">
-					<strong>💡 Tip:</strong> Toggle the main switch to enable/disable a
-					notification type, then choose your preferred channels (🔔 Push or 📧
-					Email). Critical notifications may bypass your preferences for
-					important updates.
-				</p>
+			<div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 md:p-4">
+				<div className="flex items-start gap-2">
+					<Image
+						src="/message.png"
+						alt="Info"
+						width={16}
+						height={16}
+						className="mt-0.5 flex-shrink-0"
+					/>
+					<p className="text-xs md:text-sm text-blue-800">
+						<strong>Tip:</strong> Toggle the main switch to enable/disable a
+						notification type, then choose your preferred channels (Push or
+						Email). Critical notifications may bypass your preferences for
+						important updates.
+					</p>
+				</div>
 			</div>
 		</div>
 	);
