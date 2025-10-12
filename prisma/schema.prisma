@@ -42,6 +42,9 @@ model Student {
   
   // Finance relations
   studentFees StudentFee[]
+  
+  // Anti-cheating relations
+  cheatingSuspensions CheatingSuspension[]
 }
 
 model Teacher {
@@ -321,14 +324,20 @@ model MCQQuestion {
 }
 
 model MCQAttempt {
-  id             String    @id @default(cuid())
-  testId         String
-  studentId      String
-  startedAt      DateTime  @default(now())
-  completedAt    DateTime?
-  score          Float?
-  totalQuestions Int
-  correctAnswers Int       @default(0)
+  id                      String    @id @default(cuid())
+  testId                  String
+  studentId               String
+  startedAt               DateTime  @default(now())
+  completedAt             DateTime?
+  score                   Float?
+  totalQuestions          Int
+  correctAnswers          Int       @default(0)
+  
+  // Anti-Cheating System
+  cheatingViolations      Int       @default(0)
+  violationDetails        Json?     // Array of violation events with timestamps
+  isTerminatedForCheating Boolean   @default(false)
+  finalPenaltyPercentage  Float     @default(0) // Total penalty applied
   
   test    MCQTest         @relation(fields: [testId], references: [id], onDelete: Cascade)
   student Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -491,6 +500,50 @@ model TeacherRating {
   @@index([teacherId])
   @@index([subjectId])
   @@index([rating])
+}
+
+// ===== ANTI-CHEATING SYSTEM =====
+
+model CheatingSuspension {
+  id             String   @id @default(cuid())
+  studentId      String
+  reason         String   @db.Text // "Multiple tab switches during MCQ Test"
+  violationCount Int      // Total lifetime violations for this student
+  suspendedAt    DateTime @default(now())
+  suspendedUntil DateTime // When the suspension ends
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  
+  // Penalty removal tracking
+  wasReduced     Boolean  @default(false) // If penalty was reduced due to good behavior
+  reducedAt      DateTime? // When penalty was reduced
+  reducedBy      String?  // Admin ID who reduced the penalty
+  reductionReason String? @db.Text // Reason for reduction
+  
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@index([studentId])
+  @@index([isActive])
+  @@index([suspendedUntil])
+}
+
+// Track penalty removal/reduction history
+model PenaltyReduction {
+  id                   String   @id @default(cuid())
+  studentId            String
+  originalSuspensionId String?  // If linked to a suspension
+  violationsRemoved    Int      @default(0) // Number of violations forgiven
+  reason               String   @db.Text
+  reducedBy            String   // Admin ID who approved reduction
+  reducedAt            DateTime @default(now())
+  
+  // Criteria that triggered reduction
+  cleanTestsCompleted  Int      @default(0) // Clean tests without violations
+  daysWithoutViolation Int      @default(0) // Days since last violation
+  goodBehaviorScore    Float    @default(0) // Calculated good behavior metric
+  
+  @@index([studentId])
+  @@index([reducedAt])
 }
 
 model TeacherLeaderboard {

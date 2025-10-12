@@ -3,6 +3,14 @@
 		{
 			"path": "/api/cron/mark-absent-teachers",
 			"schedule": "0 9 * * *"
+		},
+		{
+			"path": "/api/cron/process-badges",
+			"schedule": "0 2 * * *"
+		},
+		{
+			"path": "/api/cron/expire-suspensions",
+			"schedule": "0 */6 * * *"
 		}
 	]
 }

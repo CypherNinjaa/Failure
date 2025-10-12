@@ -167,6 +167,12 @@ const BottomNav = ({ role }: BottomNavProps) => {
 				visible: ["admin"],
 			},
 			{
+				icon: "/warning.png",
+				label: "Penalty Management",
+				href: "/admin/penalty-management",
+				visible: ["admin"],
+			},
+			{
 				icon: "/attendance.png",
 				label: "Teacher Attendance",
 				href: "/list/teacher-attendance",
