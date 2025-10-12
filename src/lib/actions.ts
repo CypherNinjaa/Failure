@@ -1878,8 +1878,19 @@ export const completeMCQAttempt = async (attemptId: string) => {
 			};
 		}
 
-		// Calculate score percentage
-		const score = (attempt.correctAnswers / attempt.totalQuestions) * 100;
+		// Calculate base score percentage
+		let score = (attempt.correctAnswers / attempt.totalQuestions) * 100;
+
+		// Apply cheating penalty if any violations occurred
+		if (attempt.finalPenaltyPercentage > 0) {
+			const penaltyAmount = (score * attempt.finalPenaltyPercentage) / 100;
+			score = Math.max(0, score - penaltyAmount); // Ensure score doesn't go negative
+		}
+
+		// If terminated for cheating, cap maximum score at 50%
+		if (attempt.isTerminatedForCheating) {
+			score = Math.min(score, 50);
+		}
 
 		await prisma.mCQAttempt.update({
 			where: { id: attemptId },
@@ -1892,6 +1903,14 @@ export const completeMCQAttempt = async (attemptId: string) => {
 		// 🔔 Trigger automatic notification
 		await triggerMCQResultReadyNotification(attemptId);
 
+		// 🎖️ Auto-award/remove badges based on new performance
+		try {
+			await autoAwardBadges();
+		} catch (badgeError) {
+			console.error("Error auto-awarding badges:", badgeError);
+			// Don't fail test completion if badge award fails
+		}
+
 		// revalidatePath(`/student/mcq-tests/${attempt.testId}`);
 		return {
 			success: true,
@@ -1903,6 +1922,472 @@ export const completeMCQAttempt = async (attemptId: string) => {
 		return { success: false, error: true };
 	}
 };
+
+// ===== ANTI-CHEATING SYSTEM =====
+
+type ViolationType =
+	| "TAB_SWITCH"
+	| "WINDOW_BLUR"
+	| "RIGHT_CLICK"
+	| "COPY_PASTE"
+	| "DEVTOOLS"
+	| "EXIT_FULLSCREEN";
+
+export const recordCheatingViolation = async (
+	currentState: MCQState,
+	data: {
+		attemptId: string;
+		violationType: ViolationType;
+		timestamp: string;
+	}
+) => {
+	try {
+		const attempt = await prisma.mCQAttempt.findUnique({
+			where: { id: data.attemptId },
+			include: {
+				student: {
+					select: {
+						id: true,
+						cheatingSuspensions: {
+							where: { isActive: true },
+							select: { id: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!attempt) {
+			return { success: false, error: true, message: "Attempt not found!" };
+		}
+
+		// Get current violations from JSON
+		const currentViolations = (attempt.violationDetails as any[]) || [];
+		const newViolationCount = attempt.cheatingViolations + 1;
+
+		// Add new violation
+		currentViolations.push({
+			type: data.violationType,
+			timestamp: data.timestamp,
+			violationNumber: newViolationCount,
+		});
+
+		// Calculate penalty based on violation count
+		let penalty = 0;
+		if (newViolationCount === 1) penalty = 10;
+		else if (newViolationCount === 2) penalty = 25;
+		else if (newViolationCount >= 3) penalty = 50;
+
+		// Update attempt with violation data
+		await prisma.mCQAttempt.update({
+			where: { id: data.attemptId },
+			data: {
+				cheatingViolations: newViolationCount,
+				violationDetails: currentViolations,
+				finalPenaltyPercentage: penalty,
+				isTerminatedForCheating: newViolationCount >= 3,
+			},
+		});
+
+		// Apply suspension for 4+ total violations across all tests
+		if (newViolationCount >= 3) {
+			// Check student's total violation history
+			const allAttempts = await prisma.mCQAttempt.findMany({
+				where: { studentId: attempt.studentId },
+				select: { cheatingViolations: true },
+			});
+
+			const totalLifetimeViolations = allAttempts.reduce(
+				(sum, a) => sum + a.cheatingViolations,
+				0
+			);
+
+			// Issue 7-day suspension for 4+ total violations
+			if (totalLifetimeViolations >= 4) {
+				const suspendedUntil = new Date();
+				suspendedUntil.setDate(suspendedUntil.getDate() + 7);
+
+				await prisma.cheatingSuspension.create({
+					data: {
+						studentId: attempt.studentId,
+						reason: `Repeated cheating violations detected across multiple tests (${totalLifetimeViolations} total violations)`,
+						violationCount: totalLifetimeViolations,
+						suspendedUntil,
+					},
+				});
+
+				// Remove from leaderboard
+				await prisma.leaderboardSnapshot.deleteMany({
+					where: { studentId: attempt.studentId },
+				});
+			}
+		}
+
+		return {
+			success: true,
+			error: false,
+			message: `Violation recorded. Count: ${newViolationCount}`,
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// Check if student is suspended
+export const checkStudentSuspension = async (studentId: string) => {
+	try {
+		const activeSuspension = await prisma.cheatingSuspension.findFirst({
+			where: {
+				studentId,
+				isActive: true,
+				suspendedUntil: { gte: new Date() },
+			},
+		});
+
+		return {
+			isSuspended: !!activeSuspension,
+			suspension: activeSuspension,
+		};
+	} catch (err) {
+		console.log(err);
+		return { isSuspended: false, suspension: null };
+	}
+};
+
+// ============= PENALTY REMOVAL SYSTEM =============
+
+// Automatically check if student qualifies for penalty reduction
+export const checkPenaltyReductionEligibility = async (studentId: string) => {
+	try {
+		// Get student's violation history
+		const allAttempts = await prisma.mCQAttempt.findMany({
+			where: { studentId },
+			orderBy: { completedAt: "desc" },
+			select: {
+				cheatingViolations: true,
+				completedAt: true,
+			},
+		});
+
+		const totalViolations = allAttempts.reduce(
+			(sum, a) => sum + a.cheatingViolations,
+			0
+		);
+
+		// Find last violation date
+		const attemptsWithViolations = allAttempts.filter(
+			(a) => a.cheatingViolations > 0
+		);
+		const lastViolationDate = attemptsWithViolations[0]?.completedAt;
+
+		// Count clean tests (after last violation)
+		const cleanTests = allAttempts.filter(
+			(a) =>
+				a.cheatingViolations === 0 &&
+				(!lastViolationDate ||
+					(a.completedAt && a.completedAt > lastViolationDate))
+		);
+
+		// Calculate days without violation
+		const daysWithoutViolation = lastViolationDate
+			? Math.floor(
+					(new Date().getTime() - new Date(lastViolationDate).getTime()) /
+						(1000 * 60 * 60 * 24)
+			  )
+			: 999; // Very high if no violations
+
+		// Calculate good behavior score (0-100)
+		const goodBehaviorScore =
+			Math.min(cleanTests.length * 10, 50) + // Up to 50 points for clean tests
+			Math.min(daysWithoutViolation * 2, 50); // Up to 50 points for days
+
+		// Eligibility criteria:
+		// Option 1: 5+ clean tests AND 30+ days without violation
+		// Option 2: 10+ clean tests
+		// Option 3: 60+ days without violation
+		const isEligible =
+			(cleanTests.length >= 5 && daysWithoutViolation >= 30) ||
+			cleanTests.length >= 10 ||
+			daysWithoutViolation >= 60;
+
+		return {
+			isEligible,
+			totalViolations,
+			cleanTestsCompleted: cleanTests.length,
+			daysWithoutViolation,
+			goodBehaviorScore,
+			lastViolationDate,
+			canReduceBy: isEligible
+				? Math.min(Math.floor(totalViolations / 2), 2)
+				: 0, // Reduce by half, max 2
+		};
+	} catch (err) {
+		console.log(err);
+		return {
+			isEligible: false,
+			totalViolations: 0,
+			cleanTestsCompleted: 0,
+			daysWithoutViolation: 0,
+			goodBehaviorScore: 0,
+			canReduceBy: 0,
+		};
+	}
+};
+
+// Apply automatic penalty reduction for good behavior
+export const applyPenaltyReduction = async (
+	currentState: { success: boolean; error: boolean },
+	data: {
+		studentId: string;
+		adminId: string;
+		reason: string;
+		violationsToRemove: number;
+	}
+) => {
+	try {
+		// Verify eligibility
+		const eligibility = await checkPenaltyReductionEligibility(data.studentId);
+
+		if (!eligibility.isEligible) {
+			return {
+				success: false,
+				error: true,
+				message: "Student does not qualify for penalty reduction yet!",
+			};
+		}
+
+		// Get active suspension if any
+		const activeSuspension = await prisma.cheatingSuspension.findFirst({
+			where: {
+				studentId: data.studentId,
+				isActive: true,
+			},
+			orderBy: { createdAt: "desc" },
+		});
+
+		// Record the penalty reduction
+		await prisma.penaltyReduction.create({
+			data: {
+				studentId: data.studentId,
+				originalSuspensionId: activeSuspension?.id,
+				violationsRemoved: data.violationsToRemove,
+				reason: data.reason,
+				reducedBy: data.adminId,
+				cleanTestsCompleted: eligibility.cleanTestsCompleted,
+				daysWithoutViolation: eligibility.daysWithoutViolation,
+				goodBehaviorScore: eligibility.goodBehaviorScore,
+			},
+		});
+
+		// Lift active suspension if exists
+		if (activeSuspension) {
+			await prisma.cheatingSuspension.update({
+				where: { id: activeSuspension.id },
+				data: {
+					isActive: false,
+					wasReduced: true,
+					reducedAt: new Date(),
+					reducedBy: data.adminId,
+					reductionReason: data.reason,
+				},
+			});
+		}
+
+		// Create notification for student
+		await prisma.notification.create({
+			data: {
+				recipientType: "STUDENT",
+				recipientId: data.studentId,
+				title: "🎉 Penalty Reduced - Good Behavior!",
+				message: `Your penalty has been reduced due to your good behavior! ${eligibility.cleanTestsCompleted} clean tests completed. Keep up the great work!`,
+				type: "GENERAL",
+			},
+		});
+
+		console.log(
+			`✅ Penalty reduced for student ${data.studentId}: ${data.violationsToRemove} violations removed`
+		);
+
+		return {
+			success: true,
+			error: false,
+			message: `Penalty reduced! ${data.violationsToRemove} violations removed.`,
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// Manual penalty forgiveness (admin action)
+export const forgivePenalty = async (
+	currentState: { success: boolean; error: boolean },
+	data: {
+		studentId: string;
+		adminId: string;
+		reason: string;
+		fullForgiveness: boolean; // true = clear all, false = reduce by half
+	}
+) => {
+	try {
+		const { userId, sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return {
+				success: false,
+				error: true,
+				message: "Only admins can forgive penalties!",
+			};
+		}
+
+		// Get student's violation count
+		const allAttempts = await prisma.mCQAttempt.findMany({
+			where: { studentId: data.studentId },
+			select: { cheatingViolations: true },
+		});
+
+		const totalViolations = allAttempts.reduce(
+			(sum, a) => sum + a.cheatingViolations,
+			0
+		);
+
+		const violationsToRemove = data.fullForgiveness
+			? totalViolations
+			: Math.floor(totalViolations / 2);
+
+		// Deactivate all active suspensions
+		await prisma.cheatingSuspension.updateMany({
+			where: {
+				studentId: data.studentId,
+				isActive: true,
+			},
+			data: {
+				isActive: false,
+				wasReduced: true,
+				reducedAt: new Date(),
+				reducedBy: data.adminId,
+				reductionReason: data.reason,
+			},
+		});
+
+		// Record the forgiveness
+		await prisma.penaltyReduction.create({
+			data: {
+				studentId: data.studentId,
+				violationsRemoved: violationsToRemove,
+				reason: `ADMIN FORGIVENESS: ${data.reason}`,
+				reducedBy: data.adminId,
+				cleanTestsCompleted: 0,
+				daysWithoutViolation: 0,
+				goodBehaviorScore: 0,
+			},
+		});
+
+		// Send notification to student
+		await prisma.notification.create({
+			data: {
+				recipientType: "STUDENT",
+				recipientId: data.studentId,
+				title: data.fullForgiveness
+					? "🎊 All Penalties Forgiven!"
+					: "✨ Penalty Reduced",
+				message: data.fullForgiveness
+					? `All your penalties have been forgiven! You have a fresh start. Reason: ${data.reason}`
+					: `Your penalty has been reduced by 50%. Reason: ${data.reason}`,
+				type: "GENERAL",
+			},
+		});
+
+		console.log(
+			`✅ Admin ${data.adminId} ${
+				data.fullForgiveness ? "fully forgave" : "reduced"
+			} penalties for student ${data.studentId}`
+		);
+
+		return {
+			success: true,
+			error: false,
+			message: data.fullForgiveness
+				? "All penalties forgiven!"
+				: "Penalty reduced by 50%!",
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, error: true };
+	}
+};
+
+// Auto-expire suspensions (runs on cron)
+export const expireOldSuspensions = async () => {
+	try {
+		const now = new Date();
+
+		// Find all active suspensions that have expired
+		const expiredSuspensions = await prisma.cheatingSuspension.findMany({
+			where: {
+				isActive: true,
+				suspendedUntil: { lt: now },
+			},
+		});
+
+		// Deactivate them
+		await prisma.cheatingSuspension.updateMany({
+			where: {
+				isActive: true,
+				suspendedUntil: { lt: now },
+			},
+			data: {
+				isActive: false,
+			},
+		});
+
+		// Notify students their suspension has ended
+		for (const suspension of expiredSuspensions) {
+			await prisma.notification.create({
+				data: {
+					recipientType: "STUDENT",
+					recipientId: suspension.studentId,
+					title: "✅ Suspension Ended",
+					message:
+						"Your suspension period has ended. You can now take tests again. Please maintain good behavior!",
+					type: "GENERAL",
+				},
+			});
+		}
+
+		console.log(`✅ Expired ${expiredSuspensions.length} old suspensions`);
+
+		return {
+			success: true,
+			expiredCount: expiredSuspensions.length,
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, expiredCount: 0 };
+	}
+};
+
+// Get penalty reduction history for a student
+export const getPenaltyReductionHistory = async (studentId: string) => {
+	try {
+		const reductions = await prisma.penaltyReduction.findMany({
+			where: { studentId },
+			orderBy: { reducedAt: "desc" },
+		});
+
+		return {
+			success: true,
+			reductions,
+		};
+	} catch (err) {
+		console.log(err);
+		return { success: false, reductions: [] };
+	}
+};
+
+// ============= END PENALTY REMOVAL SYSTEM =============
 
 // Grade an open-ended answer
 export const gradeOpenEndedAnswer = async (
@@ -2242,12 +2727,13 @@ export const calculateLeaderboard = async (filters?: {
 export const autoAwardBadges = async (): Promise<{
 	success: boolean;
 	awardedCount: number;
+	removedCount: number;
 }> => {
 	try {
 		const config = await prisma.leaderboardConfig.findFirst();
 
 		if (!config || !config.autoAwardBadges) {
-			return { success: false, awardedCount: 0 };
+			return { success: false, awardedCount: 0, removedCount: 0 };
 		}
 
 		// Get full leaderboard (no limit)
@@ -2259,20 +2745,29 @@ export const autoAwardBadges = async (): Promise<{
 		});
 
 		let awardedCount = 0;
+		let removedCount = 0;
 
-		// Check each student against each badge criteria
+		// Track which students should have which badges
+		const shouldHaveBadges = new Map<string, Set<string>>(); // studentId -> Set of badgeIds
+
+		// First pass: Determine which students SHOULD have which badges
 		for (const entry of fullLeaderboard) {
+			if (!shouldHaveBadges.has(entry.studentId)) {
+				shouldHaveBadges.set(entry.studentId, new Set());
+			}
+
 			for (const badge of badges) {
 				const criteria = badge.criteria as any;
-
 				let shouldAward = false;
 
 				switch (badge.badgeType) {
 					case "RANK_BASED":
 						if (criteria.type === "rank") {
 							if (criteria.value) {
+								// Exact rank match (e.g., rank === 1)
 								shouldAward = entry.rank === criteria.value;
 							} else if (criteria.maxValue) {
+								// Range match (e.g., rank <= 5 for "Top 5")
 								shouldAward = entry.rank <= criteria.maxValue;
 							}
 						}
@@ -2281,6 +2776,8 @@ export const autoAwardBadges = async (): Promise<{
 					case "SCORE_BASED":
 						if (criteria.type === "averageScore" && criteria.min) {
 							shouldAward = entry.averageScore >= criteria.min;
+						} else if (criteria.type === "perfectScore") {
+							shouldAward = entry.bestScore === 100;
 						}
 						break;
 
@@ -2288,7 +2785,6 @@ export const autoAwardBadges = async (): Promise<{
 						if (criteria.type === "testsCompleted" && criteria.min) {
 							shouldAward = entry.totalTests >= criteria.min;
 						}
-						// TODO: Implement streak logic (requires fetching attempt history)
 						break;
 
 					case "IMPROVEMENT":
@@ -2297,42 +2793,98 @@ export const autoAwardBadges = async (): Promise<{
 				}
 
 				if (shouldAward) {
-					// Check if student already has this badge
-					const existing = await prisma.studentBadge.findUnique({
-						where: {
-							studentId_badgeId: {
-								studentId: entry.studentId,
-								badgeId: badge.id,
-							},
-						},
-					});
-
-					if (!existing) {
-						const studentBadge = await prisma.studentBadge.create({
-							data: {
-								studentId: entry.studentId,
-								badgeId: badge.id,
-								metadata: {
-									rank: entry.rank,
-									averageScore: entry.averageScore,
-									totalTests: entry.totalTests,
-								},
-							},
-						});
-
-						// 🔔 Trigger automatic notification
-						await triggerBadgeEarnedNotification(studentBadge.id);
-
-						awardedCount++;
-					}
+					shouldHaveBadges.get(entry.studentId)!.add(badge.id);
 				}
 			}
 		}
 
-		return { success: true, awardedCount };
+		// Second pass: Award new badges and remove old ones
+		for (const studentId of Array.from(shouldHaveBadges.keys())) {
+			const badgeIds = shouldHaveBadges.get(studentId)!;
+
+			// Get student's current badges
+			const currentBadges = await prisma.studentBadge.findMany({
+				where: { studentId },
+				select: { badgeId: true, id: true },
+			});
+
+			const currentBadgeIds = new Set(currentBadges.map((sb) => sb.badgeId));
+
+			// Award new badges
+			for (const badgeId of Array.from(badgeIds)) {
+				if (!currentBadgeIds.has(badgeId)) {
+					const entry = fullLeaderboard.find((e) => e.studentId === studentId)!;
+
+					const studentBadge = await prisma.studentBadge.create({
+						data: {
+							studentId,
+							badgeId,
+							metadata: {
+								rank: entry.rank,
+								averageScore: entry.averageScore,
+								totalTests: entry.totalTests,
+								awardedAt: new Date().toISOString(),
+							},
+						},
+					});
+
+					// 🔔 Trigger automatic notification for new badge
+					await triggerBadgeEarnedNotification(studentBadge.id);
+
+					awardedCount++;
+					console.log(
+						`✅ Awarded badge ${badgeId} to student ${studentId} (Rank: ${entry.rank})`
+					);
+				}
+			}
+
+			// Remove badges that are no longer deserved
+			for (const currentBadge of currentBadges) {
+				if (!badgeIds.has(currentBadge.badgeId)) {
+					// Student lost this badge (e.g., no longer rank 1)
+					await prisma.studentBadge.delete({
+						where: { id: currentBadge.id },
+					});
+
+					removedCount++;
+					console.log(
+						`🔴 Removed badge ${currentBadge.badgeId} from student ${studentId} (no longer meets criteria)`
+					);
+				}
+			}
+		}
+
+		// Third pass: Remove badges from students NOT in leaderboard
+		const leaderboardStudentIds = new Set(
+			fullLeaderboard.map((e) => e.studentId)
+		);
+
+		const allStudentBadges = await prisma.studentBadge.findMany({
+			select: { id: true, studentId: true, badgeId: true },
+		});
+
+		for (const studentBadge of allStudentBadges) {
+			if (!leaderboardStudentIds.has(studentBadge.studentId)) {
+				// Student not in leaderboard anymore, remove their badges
+				await prisma.studentBadge.delete({
+					where: { id: studentBadge.id },
+				});
+
+				removedCount++;
+				console.log(
+					`🔴 Removed badge ${studentBadge.badgeId} from student ${studentBadge.studentId} (not in leaderboard)`
+				);
+			}
+		}
+
+		console.log(
+			`\n🎖️  Badge System: Awarded ${awardedCount}, Removed ${removedCount}`
+		);
+
+		return { success: true, awardedCount, removedCount };
 	} catch (err) {
 		console.error("Error auto-awarding badges:", err);
-		return { success: false, awardedCount: 0 };
+		return { success: false, awardedCount: 0, removedCount: 0 };
 	}
 };
 

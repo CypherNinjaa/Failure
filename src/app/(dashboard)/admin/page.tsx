@@ -4,6 +4,7 @@ import CountChartContainer from "@/components/CountChartContainer";
 import EventCalendarContainer from "@/components/EventCalendarContainer";
 import FinanceChartContainer from "@/components/FinanceChartContainer";
 import UserCard from "@/components/UserCard";
+import ManualCronTriggers from "@/components/ManualCronTriggers";
 
 const AdminPage = ({
 	searchParams,
@@ -35,6 +36,10 @@ const AdminPage = ({
 				{/* BOTTOM CHART */}
 				<div className="w-full h-[500px]">
 					<FinanceChartContainer />
+				</div>
+				{/* CRON JOB TRIGGERS */}
+				<div className="w-full">
+					<ManualCronTriggers />
 				</div>
 			</div>
 			{/* RIGHT */}

@@ -1,8 +1,3 @@
 {
-	"crons": [
-		{
-			"path": "/api/cron/mark-absent-teachers",
-			"schedule": "0 9 * * *"
-		}
-	]
+	"buildCommand": "npx prisma generate && next build"
 }

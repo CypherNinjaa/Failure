@@ -97,6 +97,12 @@ const menuItems = [
 				visible: ["admin"],
 			},
 			{
+				icon: "/warning.png",
+				label: "Penalty Management",
+				href: "/admin/penalty-management",
+				visible: ["admin"],
+			},
+			{
 				icon: "/attendance.png",
 				label: "Attendance",
 				href: "/list/attendance",

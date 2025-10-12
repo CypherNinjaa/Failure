@@ -1,5 +1,5 @@
-import TakeTestClient from "@/components/TakeTestClient";
-import { startMCQAttempt } from "@/lib/actions";
+import AntiCheatingTestClient from "@/components/AntiCheatingTestClient";
+import { startMCQAttempt, checkStudentSuspension } from "@/lib/actions";
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
@@ -13,6 +13,58 @@ const TakeTestPage = async ({
 	searchParams: { attemptId?: string };
 }) => {
 	const { userId } = auth();
+
+	// Check if student is suspended
+	const suspensionCheck = await checkStudentSuspension(userId!);
+
+	if (suspensionCheck.isSuspended && suspensionCheck.suspension) {
+		const suspension = suspensionCheck.suspension;
+		const daysRemaining = Math.ceil(
+			(new Date(suspension.suspendedUntil).getTime() - Date.now()) /
+				(1000 * 60 * 60 * 24)
+		);
+
+		return (
+			<div className="bg-white p-8 rounded-md flex-1 m-4 mt-0 max-w-2xl mx-auto">
+				<div className="text-center">
+					<div className="text-6xl mb-4">🚫</div>
+					<h1 className="text-2xl font-bold text-red-600 mb-4">
+						Account Suspended
+					</h1>
+					<div className="bg-red-50 border-2 border-red-200 p-6 rounded-lg mb-6">
+						<p className="text-gray-700 mb-3">
+							<span className="font-semibold">Reason:</span> {suspension.reason}
+						</p>
+						<p className="text-gray-700 mb-3">
+							<span className="font-semibold">Total Violations:</span>{" "}
+							{suspension.violationCount}
+						</p>
+						<p className="text-gray-700">
+							<span className="font-semibold">Suspended Until:</span>{" "}
+							{new Date(suspension.suspendedUntil).toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "long",
+								day: "numeric",
+							})}
+						</p>
+						<p className="text-red-600 font-bold mt-4">
+							{daysRemaining} day{daysRemaining !== 1 ? "s" : ""} remaining
+						</p>
+					</div>
+					<p className="text-gray-600 mb-6">
+						You cannot take tests during this suspension period due to repeated
+						cheating violations.
+					</p>
+					<Link
+						href="/student"
+						className="inline-block px-6 py-3 bg-lamaPurple text-white rounded-md hover:bg-purple-600"
+					>
+						Back to Dashboard
+					</Link>
+				</div>
+			</div>
+		);
+	}
 
 	// Fetch the test with questions
 	const test = await prisma.mCQTest.findUnique({
@@ -190,13 +242,18 @@ const TakeTestPage = async ({
 					</Link>
 				</div>
 			</div>
-
 			{/* Test Content */}
-			<TakeTestClient
+			<AntiCheatingTestClient
 				testId={params.id}
 				attemptId={attemptId}
 				questions={questionsWithAnswers}
 				testTitle={test.title}
+				currentViolations={await prisma.mCQAttempt
+					.findUnique({
+						where: { id: attemptId },
+						select: { cheatingViolations: true },
+					})
+					.then((a) => a?.cheatingViolations || 0)}
 			/>
 		</div>
 	);
