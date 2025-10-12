@@ -115,9 +115,9 @@ const menuItems = [
 				visible: ["admin"],
 			},
 			{
-				icon: "/attendance.png",
-				label: "Auto-Absent",
-				href: "/admin/auto-absent",
+				icon: "/calendar.png",
+				label: "Cron Jobs",
+				href: "/admin/cron-jobs",
 				visible: ["admin"],
 			},
 			{

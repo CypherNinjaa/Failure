@@ -179,6 +179,12 @@ const BottomNav = ({ role }: BottomNavProps) => {
 				visible: ["admin"],
 			},
 			{
+				icon: "/calendar.png",
+				label: "Cron Jobs",
+				href: "/admin/cron-jobs",
+				visible: ["admin"],
+			},
+			{
 				icon: "/attendance.png",
 				label: "My Attendance",
 				href: "/teacher/attendance",
