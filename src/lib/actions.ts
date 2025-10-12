@@ -2063,10 +2063,10 @@ export const checkPenaltyReductionEligibility = async (studentId: string) => {
 		// Get student's violation history
 		const allAttempts = await prisma.mCQAttempt.findMany({
 			where: { studentId },
-			orderBy: { submittedAt: "desc" },
+			orderBy: { completedAt: "desc" },
 			select: {
 				cheatingViolations: true,
-				submittedAt: true,
+				completedAt: true,
 			},
 		});
 
@@ -2079,13 +2079,14 @@ export const checkPenaltyReductionEligibility = async (studentId: string) => {
 		const attemptsWithViolations = allAttempts.filter(
 			(a) => a.cheatingViolations > 0
 		);
-		const lastViolationDate = attemptsWithViolations[0]?.submittedAt;
+		const lastViolationDate = attemptsWithViolations[0]?.completedAt;
 
 		// Count clean tests (after last violation)
 		const cleanTests = allAttempts.filter(
 			(a) =>
 				a.cheatingViolations === 0 &&
-				(!lastViolationDate || a.submittedAt > lastViolationDate)
+				(!lastViolationDate ||
+					(a.completedAt && a.completedAt > lastViolationDate))
 		);
 
 		// Calculate days without violation
@@ -2196,11 +2197,11 @@ export const applyPenaltyReduction = async (
 		// Create notification for student
 		await prisma.notification.create({
 			data: {
+				recipientType: "STUDENT",
 				recipientId: data.studentId,
 				title: "🎉 Penalty Reduced - Good Behavior!",
 				message: `Your penalty has been reduced due to your good behavior! ${eligibility.cleanTestsCompleted} clean tests completed. Keep up the great work!`,
-				type: "achievement",
-				actionUrl: "/student",
+				type: "GENERAL",
 			},
 		});
 
@@ -2287,6 +2288,7 @@ export const forgivePenalty = async (
 		// Send notification to student
 		await prisma.notification.create({
 			data: {
+				recipientType: "STUDENT",
 				recipientId: data.studentId,
 				title: data.fullForgiveness
 					? "🎊 All Penalties Forgiven!"
@@ -2294,8 +2296,7 @@ export const forgivePenalty = async (
 				message: data.fullForgiveness
 					? `All your penalties have been forgiven! You have a fresh start. Reason: ${data.reason}`
 					: `Your penalty has been reduced by 50%. Reason: ${data.reason}`,
-				type: "achievement",
-				actionUrl: "/student",
+				type: "GENERAL",
 			},
 		});
 
@@ -2346,12 +2347,12 @@ export const expireOldSuspensions = async () => {
 		for (const suspension of expiredSuspensions) {
 			await prisma.notification.create({
 				data: {
+					recipientType: "STUDENT",
 					recipientId: suspension.studentId,
 					title: "✅ Suspension Ended",
 					message:
 						"Your suspension period has ended. You can now take tests again. Please maintain good behavior!",
-					type: "info",
-					actionUrl: "/student",
+					type: "GENERAL",
 				},
 			});
 		}
