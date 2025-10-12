@@ -110,6 +110,12 @@ const menuItems = [
 			},
 			{
 				icon: "/attendance.png",
+				label: "Auto-Absent",
+				href: "/admin/auto-absent",
+				visible: ["admin"],
+			},
+			{
+				icon: "/attendance.png",
 				label: "My Attendance",
 				href: "/teacher/attendance",
 				visible: ["teacher"],
