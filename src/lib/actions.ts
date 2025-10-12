@@ -1493,33 +1493,23 @@ export const createTeacherAttendance = async (
 		});
 
 		if (existingAttendance) {
-			// Update existing attendance
-			await prisma.teacherAttendance.update({
-				where: { id: existingAttendance.id },
-				data: {
-					present: true,
-					checkInTime: new Date(),
-					locationId,
-					latitude,
-					longitude,
-					livenessVerified,
-				},
-			});
-		} else {
-			// Create new attendance
-			await prisma.teacherAttendance.create({
-				data: {
-					teacherId,
-					date: attendanceDate,
-					present: true,
-					checkInTime: new Date(),
-					locationId,
-					latitude,
-					longitude,
-					livenessVerified,
-				},
-			});
+			// Prevent duplicate attendance marking
+			throw new Error("Attendance already marked for today");
 		}
+
+		// Create new attendance
+		await prisma.teacherAttendance.create({
+			data: {
+				teacherId,
+				date: attendanceDate,
+				present: true,
+				checkInTime: new Date(),
+				locationId,
+				latitude,
+				longitude,
+				livenessVerified,
+			},
+		});
 
 		return {
 			success: true,
