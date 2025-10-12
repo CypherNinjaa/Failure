@@ -23,6 +23,19 @@ import {
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";
+import {
+	triggerAnnouncementNotification,
+	triggerExamScheduledNotification,
+	triggerResultPublishedNotification,
+	triggerAssignmentCreatedNotification,
+	triggerAttendanceAbsentNotification,
+	triggerMCQTestAvailableNotification,
+	triggerMCQResultReadyNotification,
+	triggerBadgeEarnedNotification,
+	triggerEventCreatedNotification,
+	triggerFeeAssignedNotification,
+	triggerTeacherRatingNotification,
+} from "./notificationActions";
 
 type CurrentState = { success: boolean; error: boolean; message?: string };
 
@@ -433,7 +446,7 @@ export const createExam = async (
 		//   }
 		// }
 
-		await prisma.exam.create({
+		const exam = await prisma.exam.create({
 			data: {
 				title: data.title,
 				startTime: data.startTime,
@@ -441,6 +454,9 @@ export const createExam = async (
 				lessonId: data.lessonId,
 			},
 		});
+
+		// 🔔 Trigger automatic notification
+		await triggerExamScheduledNotification(exam.id);
 
 		// revalidatePath("/list/subjects");
 		return { success: true, error: false };
@@ -930,7 +946,7 @@ export const createAssignment = async (
 	data: AssignmentSchema
 ) => {
 	try {
-		await prisma.assignment.create({
+		const assignment = await prisma.assignment.create({
 			data: {
 				title: data.title,
 				startDate: data.startDate,
@@ -938,6 +954,9 @@ export const createAssignment = async (
 				lessonId: data.lessonId,
 			},
 		});
+
+		// 🔔 Trigger automatic notification
+		await triggerAssignmentCreatedNotification(assignment.id);
 
 		// revalidatePath("/list/assignments");
 		return { success: true, error: false };
@@ -1001,7 +1020,7 @@ export const createResult = async (
 	data: ResultSchema
 ) => {
 	try {
-		await prisma.result.create({
+		const result = await prisma.result.create({
 			data: {
 				score: data.score,
 				...(data.examId && { examId: data.examId }),
@@ -1009,6 +1028,9 @@ export const createResult = async (
 				studentId: data.studentId,
 			},
 		});
+
+		// 🔔 Trigger automatic notification
+		await triggerResultPublishedNotification(result.id);
 
 		// revalidatePath("/list/results");
 		return { success: true, error: false };
@@ -1070,7 +1092,7 @@ export const createAttendance = async (
 	data: AttendanceSchema
 ) => {
 	try {
-		await prisma.attendance.create({
+		const attendance = await prisma.attendance.create({
 			data: {
 				date: data.date,
 				present: data.present,
@@ -1078,6 +1100,11 @@ export const createAttendance = async (
 				...(data.lessonId && { lessonId: data.lessonId }),
 			} as any,
 		});
+
+		// 🔔 Trigger notification if student is absent
+		if (!data.present) {
+			await triggerAttendanceAbsentNotification(attendance.id);
+		}
 
 		// revalidatePath("/list/attendance");
 		return { success: true, error: false };
@@ -1139,7 +1166,7 @@ export const createEvent = async (
 	data: EventSchema
 ) => {
 	try {
-		await prisma.event.create({
+		const event = await prisma.event.create({
 			data: {
 				title: data.title,
 				description: data.description,
@@ -1148,6 +1175,9 @@ export const createEvent = async (
 				...(data.classId && { classId: data.classId }),
 			},
 		});
+
+		// 🔔 Trigger automatic notification
+		await triggerEventCreatedNotification(event.id);
 
 		// revalidatePath("/list/events");
 		return { success: true, error: false };
@@ -1210,7 +1240,7 @@ export const createAnnouncement = async (
 	data: AnnouncementSchema
 ) => {
 	try {
-		await prisma.announcement.create({
+		const announcement = await prisma.announcement.create({
 			data: {
 				title: data.title,
 				description: data.description,
@@ -1218,6 +1248,12 @@ export const createAnnouncement = async (
 				...(data.classId && { classId: data.classId }),
 			},
 		});
+
+		// 🔔 AUTOMATICALLY SEND NOTIFICATION (both email + web-push)
+		const { triggerAnnouncementNotification } = await import(
+			"@/lib/notificationActions"
+		);
+		await triggerAnnouncementNotification(announcement.id);
 
 		// revalidatePath("/list/announcements");
 		return { success: true, error: false };
@@ -1232,7 +1268,7 @@ export const updateAnnouncement = async (
 	data: AnnouncementSchema
 ) => {
 	try {
-		await prisma.announcement.update({
+		const announcement = await prisma.announcement.update({
 			where: {
 				id: data.id,
 			},
@@ -1243,6 +1279,12 @@ export const updateAnnouncement = async (
 				...(data.classId && { classId: data.classId }),
 			},
 		});
+
+		// 🔔 SEND NOTIFICATION FOR UPDATED ANNOUNCEMENT
+		const { triggerAnnouncementNotification } = await import(
+			"@/lib/notificationActions"
+		);
+		await triggerAnnouncementNotification(announcement.id);
 
 		// revalidatePath("/list/announcements");
 		return { success: true, error: false };
@@ -1588,7 +1630,7 @@ export const createMCQTest = async (
 	data: MCQTestSchema
 ) => {
 	try {
-		await prisma.mCQTest.create({
+		const test = await prisma.mCQTest.create({
 			data: {
 				title: data.title,
 				description: data.description || null,
@@ -1597,6 +1639,9 @@ export const createMCQTest = async (
 				teacherId: data.teacherId,
 			},
 		});
+
+		// 🔔 Trigger automatic notification
+		await triggerMCQTestAvailableNotification(test.id);
 
 		// revalidatePath("/list/mcq-tests");
 		return { success: true, error: false };
@@ -1853,6 +1898,9 @@ export const completeMCQAttempt = async (attemptId: string) => {
 				score: score,
 			},
 		});
+
+		// 🔔 Trigger automatic notification
+		await triggerMCQResultReadyNotification(attemptId);
 
 		// revalidatePath(`/student/mcq-tests/${attempt.testId}`);
 		return {
@@ -2270,7 +2318,7 @@ export const autoAwardBadges = async (): Promise<{
 					});
 
 					if (!existing) {
-						await prisma.studentBadge.create({
+						const studentBadge = await prisma.studentBadge.create({
 							data: {
 								studentId: entry.studentId,
 								badgeId: badge.id,
@@ -2281,6 +2329,10 @@ export const autoAwardBadges = async (): Promise<{
 								},
 							},
 						});
+
+						// 🔔 Trigger automatic notification
+						await triggerBadgeEarnedNotification(studentBadge.id);
+
 						awardedCount++;
 					}
 				}
@@ -2464,7 +2516,7 @@ export const submitTeacherRating = async (
 			});
 		} else {
 			// Create new rating
-			await prisma.teacherRating.create({
+			const newRating = await prisma.teacherRating.create({
 				data: {
 					studentId: userId,
 					teacherId,
@@ -2475,6 +2527,9 @@ export const submitTeacherRating = async (
 					isAnonymous: true,
 				},
 			});
+
+			// 🔔 Trigger automatic notification
+			await triggerTeacherRatingNotification(newRating.id);
 		}
 
 		// Recalculate teacher leaderboard
@@ -2930,23 +2985,41 @@ export const assignFeesToStudents = async (
 			throw new Error("Fee structure not found");
 		}
 
-		const studentFees = studentIds.map((studentId) => ({
-			studentId,
-			feeStructureId,
-			totalAmount: feeStructure.amount,
-			pendingAmount: feeStructure.amount,
-			dueDate,
-			month,
-			year,
-			status: "PENDING" as const,
-		}));
+		// Create fees individually to trigger notifications
+		const createdFees = [];
+		for (const studentId of studentIds) {
+			// Check if fee already exists for this student/month/year
+			const existing = await prisma.studentFee.findFirst({
+				where: {
+					studentId,
+					feeStructureId,
+					month,
+					year,
+				},
+			});
 
-		await prisma.studentFee.createMany({
-			data: studentFees,
-			skipDuplicates: true,
-		});
+			if (!existing) {
+				const studentFee = await prisma.studentFee.create({
+					data: {
+						studentId,
+						feeStructureId,
+						totalAmount: feeStructure.amount,
+						pendingAmount: feeStructure.amount,
+						dueDate,
+						month,
+						year,
+						status: "PENDING",
+					},
+				});
 
-		return { success: true, count: studentFees.length };
+				createdFees.push(studentFee);
+
+				// 🔔 Trigger automatic notification
+				await triggerFeeAssignedNotification(studentFee.id);
+			}
+		}
+
+		return { success: true, count: createdFees.length };
 	} catch (err) {
 		console.error("Error assigning fees:", err);
 		return { success: false, error: err };
@@ -3062,7 +3135,7 @@ export const recordOfflinePayment = async (
 				title: "Payment Received",
 				message: `Payment of ₹${amount} received successfully. Receipt: ${receiptNumber}`,
 				type: "PAYMENT_APPROVED",
-				relatedPaymentId: studentFeeId,
+				metadata: { studentFeeId },
 				createdBy: userId,
 			},
 		});
@@ -3128,7 +3201,7 @@ export const submitOnlinePayment = async (
 				title: "New Payment Awaiting Approval",
 				message: `Online payment of ₹${amount} from ${studentFee.student.name} needs verification. Transaction ID: ${transactionId}`,
 				type: "GENERAL",
-				relatedPaymentId: studentFeeId,
+				metadata: { studentFeeId },
 			},
 		});
 
@@ -3209,7 +3282,7 @@ export const approvePayment = async (
 				title: "Payment Approved ✅",
 				message: `Your payment of ₹${payment.amount} has been verified and approved. Receipt: ${payment.receiptNumber}`,
 				type: "PAYMENT_APPROVED",
-				relatedPaymentId: paymentId,
+				metadata: { paymentId },
 				createdBy: userId,
 			},
 		});
@@ -3271,7 +3344,7 @@ export const rejectPayment = async (
 				title: "Payment Rejected ❌",
 				message: `Your payment of ₹${payment.amount} was rejected. Reason: ${rejectionReason}. Please contact admin.`,
 				type: "PAYMENT_REJECTED",
-				relatedPaymentId: paymentId,
+				metadata: { paymentId },
 				createdBy: userId,
 			},
 		});

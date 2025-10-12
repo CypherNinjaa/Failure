@@ -26,6 +26,7 @@
 		"node_modules",
 		"face-api.js-master",
 		"prisma/seedLeaderboard.ts",
-		"prisma/seedLeaderboardData.ts"
+		"prisma/seedLeaderboardData.ts",
+		"prisma/seedNotifications.ts"
 	]
 }
