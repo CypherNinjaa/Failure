@@ -26,7 +26,8 @@ export async function POST(req: Request) {
 		}
 
 		const { clerkClient } = await import("@clerk/nextjs/server");
-		const user = await clerkClient.users.getUser(userId);
+		const client = clerkClient();
+		const user = await client.users.getUser(userId);
 		const adminEmail = user.emailAddresses[0]?.emailAddress;
 
 		if (!adminEmail) {

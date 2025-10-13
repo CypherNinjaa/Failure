@@ -10,14 +10,14 @@ export default function DashboardLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const { sessionClaims } = auth();
+	const { sessionClaims, userId } = auth();
 	const role =
 		(sessionClaims?.metadata as { role?: string })?.role || "student";
 
 	return (
 		<div className="h-screen flex">
 			{/* LEFT SIDEBAR - Hidden on mobile, visible on tablet+ */}
-			<div className="hidden md:block md:w-[8%] lg:w-[16%] xl:w-[14%] p-4">
+			<div className="hidden md:block md:w-[8%] lg:w-[16%] xl:w-[14%] p-4 dashboard-sidebar">
 				<Link
 					href="/"
 					className="flex items-center justify-center lg:justify-start gap-2"
@@ -34,13 +34,15 @@ export default function DashboardLayout({
 				<Menu />
 			</div>
 			{/* RIGHT - Full width on mobile, adjusted on tablet+ */}
-			<div className="w-full md:w-[92%] lg:w-[84%] xl:w-[86%] bg-[#F7F8FA] overflow-scroll flex flex-col">
-				<Navbar />
+			<div className="w-full md:w-[92%] lg:w-[84%] xl:w-[86%] bg-[#F7F8FA] overflow-scroll flex flex-col dashboard-content">
+				<div className="dashboard-navbar">
+					<Navbar />
+				</div>
 				{/* Main content with bottom padding on mobile for nav bar */}
 				<div className="pb-20 md:pb-0">{children}</div>
 			</div>
 			{/* BOTTOM NAVIGATION - Mobile only */}
-			<BottomNav role={role} />
+			<BottomNav role={role} userId={userId || null} />
 		</div>
 	);
 }
