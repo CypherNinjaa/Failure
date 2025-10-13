@@ -1061,3 +1061,133 @@ enum DeliveryStatus {
   PARTIALLY_SENT
   QUEUED
 }
+
+// ============================================
+// MESSAGING SYSTEM (Real-Time Chat)
+// ============================================
+
+model Conversation {
+  id              String    @id @default(cuid())
+  type            ConversationType @default(DIRECT) // DIRECT or GROUP
+  name            String?   // For group chats only
+  description     String?   @db.Text // Group description
+  avatar          String?   // Group avatar URL (Cloudinary)
+  
+  // Participants
+  participants    ConversationParticipant[]
+  messages        Message[]
+  
+  // Group metadata
+  isArchived      Boolean   @default(false)
+  createdBy       String?   // Creator userId
+  
+  lastMessageAt   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([lastMessageAt])
+  @@index([type])
+  @@index([createdBy])
+}
+
+model ConversationParticipant {
+  id              String    @id @default(cuid())
+  conversationId  String
+  userId          String    // Clerk user ID
+  userRole        String?   // "admin", "teacher", "student", "parent" - for display purposes
+  role            ParticipantRole @default(MEMBER) // ADMIN, MEMBER (for group management)
+  
+  // Read status
+  lastReadAt      DateTime?
+  unreadCount     Int       @default(0)
+  
+  // Settings
+  isMuted         Boolean   @default(false)
+  isPinned        Boolean   @default(false)
+  
+  // Typing indicator
+  isTyping        Boolean   @default(false)
+  lastTypingAt    DateTime?
+  
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  joinedAt        DateTime  @default(now())
+  leftAt          DateTime? // When user left group
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+  @@index([unreadCount])
+}
+
+model Message {
+  id              String    @id @default(cuid())
+  conversationId  String
+  senderId        String    // Clerk user ID
+  senderRole      String?   // "admin", "teacher", etc. - cached for display
+  
+  // Content
+  content         String    @db.Text
+  attachments     Json?     // Array of { url: string, type: string, name: string, size: number }
+  
+  // Message type
+  messageType     MessageType @default(TEXT) // TEXT, IMAGE, FILE, SYSTEM
+  
+  // Metadata
+  isEdited        Boolean   @default(false)
+  editedAt        DateTime?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+  
+  // Reply/Thread
+  replyToId       String?   // If replying to another message
+  replyTo         Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies         Message[] @relation("MessageReplies")
+  
+  // Reactions
+  reactions       MessageReaction[]
+  
+  // Read receipts (who has read this message)
+  readBy          Json?     // Array of { userId: string, readAt: timestamp }
+  
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([replyToId])
+}
+
+model MessageReaction {
+  id          String   @id @default(cuid())
+  messageId   String
+  userId      String   // Who reacted
+  emoji       String   // "👍", "❤️", "😊", "🎉", "🔥"
+  
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum ParticipantRole {
+  ADMIN   // Can add/remove members, change settings (group chats)
+  MEMBER  // Regular participant
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM  // "John joined the group", "Jane left the group"
+}

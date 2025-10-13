@@ -2,6 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Instagram-style gradient scroll effect for message bubbles */
+.message-bubble-own {
+	background: linear-gradient(
+		135deg,
+		#405de6,
+		#5b51d8,
+		#833ab4,
+		#c13584,
+		#e1306c,
+		#fd1d1d
+	);
+	background-attachment: fixed;
+	background-size: 200% 200%;
+	position: relative;
+}
+
+/* Received message bubble with subtle gradient */
+.message-bubble-received {
+	background: linear-gradient(135deg, #f0f0f0, #e8e8ff, #f5e6ff, #fff0f5);
+	background-attachment: fixed;
+	background-size: 200% 200%;
+	position: relative;
+}
+
+/* Hide sidebar and navbar on messages page */
+body.messages-page-active .dashboard-sidebar {
+	display: none !important;
+}
+
+body.messages-page-active .dashboard-navbar {
+	display: none !important;
+}
+
+/* Hide bottom navigation on messages page */
+body.messages-page-active nav[class*="bottom"] {
+	display: none !important;
+}
+
+body.messages-page-active .dashboard-content {
+	width: 100% !important;
+}
+
+body.messages-page-active .dashboard-content > div {
+	padding-bottom: 0 !important;
+}
+
+/* Custom scrollbar styles for messages */
+.scrollbar-thin::-webkit-scrollbar {
+	width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+	background: #833ab4;
+	border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+	background: #c13584;
+}
+
 .react-calendar {
 	width: 100% !important;
 	border: none !important;
@@ -140,4 +204,44 @@
 	.touch-feedback {
 		-webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
 	}
+}
+
+/* Fix for mobile keyboard viewport issue */
+@supports (-webkit-touch-callout: none) {
+	/* iOS specific fix */
+	html {
+		height: -webkit-fill-available;
+	}
+	body {
+		min-height: -webkit-fill-available;
+	}
+}
+
+/* Ensure messages page container maintains proper height */
+.messages-container {
+	height: 100vh;
+	height: 100dvh; /* Dynamic viewport height for mobile */
+}
+
+@media (max-width: 768px) {
+	/* Mobile viewport fixes */
+	.messages-container {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 100vh;
+		height: 100dvh;
+		overflow: hidden;
+	}
+}
+
+/* Safe area for notched devices */
+.safe-area-bottom {
+	padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+	padding-top: env(safe-area-inset-top);
 }

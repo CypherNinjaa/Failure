@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import prisma from "@/lib/prisma";
 import AnnouncementNotification from "./AnnouncementNotification";
+import MessageIcon from "./MessageIcon";
 
 const Navbar = async () => {
 	const user = await currentUser();
@@ -65,9 +66,7 @@ const Navbar = async () => {
 			</div>
 			{/* ICONS AND USER */}
 			<div className="flex items-center gap-6 justify-end w-full md:w-auto">
-				<div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
-					<Image src="/message.png" alt="" width={20} height={20} />
-				</div>
+				<MessageIcon userId={user?.id || ""} />
 				<AnnouncementNotification announcements={formattedAnnouncements} />
 				<div className="flex flex-col">
 					<span className="text-xs leading-3 font-medium">

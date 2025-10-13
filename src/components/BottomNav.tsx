@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
 
 type NavItem = {
 	icon: string;
@@ -13,11 +14,13 @@ type NavItem = {
 
 type BottomNavProps = {
 	role: string;
+	userId: string | null;
 };
 
-const BottomNav = ({ role }: BottomNavProps) => {
+const BottomNav = ({ role, userId }: BottomNavProps) => {
 	const pathname = usePathname();
 	const [showMore, setShowMore] = useState(false);
+	const { unreadCount } = useUnreadMessageCount(userId);
 
 	// Define main navigation items based on role
 	const getMainNavItems = (): NavItem[] => {
@@ -326,30 +329,40 @@ const BottomNav = ({ role }: BottomNavProps) => {
 			{/* Bottom Navigation Bar */}
 			<nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
 				<div className="flex justify-around items-center h-16">
-					{mainNavItems.map((item) => (
-						<Link
-							key={item.href}
-							href={item.href}
-							className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all duration-200 active:scale-90 active:bg-gray-100 ${
-								isActive(item.href)
-									? "text-lamaPurple"
-									: "text-gray-500 hover:text-gray-700"
-							}`}
-						>
-							<Image
-								src={item.icon}
-								alt={item.label}
-								width={20}
-								height={20}
-								className={`transition-transform duration-200 ${
+					{mainNavItems.map((item) => {
+						const isMessagesLink = item.href === "/list/messages";
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all duration-200 active:scale-90 active:bg-gray-100 relative ${
 									isActive(item.href)
-										? "brightness-0 saturate-100 scale-110"
-										: ""
+										? "text-lamaPurple"
+										: "text-gray-500 hover:text-gray-700"
 								}`}
-							/>
-							<span className="text-xs font-medium">{item.label}</span>
-						</Link>
-					))}
+							>
+								<div className="relative">
+									<Image
+										src={item.icon}
+										alt={item.label}
+										width={20}
+										height={20}
+										className={`transition-transform duration-200 ${
+											isActive(item.href)
+												? "brightness-0 saturate-100 scale-110"
+												: ""
+										}`}
+									/>
+									{isMessagesLink && unreadCount > 0 && (
+										<span className="absolute -top-2 -right-2 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-md animate-pulse">
+											{unreadCount > 9 ? "9+" : unreadCount}
+										</span>
+									)}
+								</div>
+								<span className="text-xs font-medium">{item.label}</span>
+							</Link>
+						);
+					})}
 					<button
 						onClick={() => setShowMore(!showMore)}
 						className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all duration-200 active:scale-90 active:bg-gray-100 ${
@@ -408,33 +421,43 @@ const BottomNav = ({ role }: BottomNavProps) => {
 							</button>
 						</div>
 						<div className="grid grid-cols-3 gap-2 p-4">
-							{moreItems.map((item) => (
-								<Link
-									key={item.href}
-									href={item.href}
-									onClick={() => setShowMore(false)}
-									className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all duration-200 active:scale-95 active:shadow-inner ${
-										isActive(item.href)
-											? "bg-lamaPurpleLight text-lamaPurple"
-											: "bg-gray-50 text-gray-700 hover:bg-gray-100 active:bg-gray-200"
-									}`}
-								>
-									<Image
-										src={item.icon}
-										alt={item.label}
-										width={24}
-										height={24}
-										className={`transition-transform duration-200 ${
+							{moreItems.map((item) => {
+								const isMessagesLink = item.href === "/list/messages";
+								return (
+									<Link
+										key={item.href}
+										href={item.href}
+										onClick={() => setShowMore(false)}
+										className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all duration-200 active:scale-95 active:shadow-inner relative ${
 											isActive(item.href)
-												? "brightness-0 saturate-100 scale-110"
-												: ""
+												? "bg-lamaPurpleLight text-lamaPurple"
+												: "bg-gray-50 text-gray-700 hover:bg-gray-100 active:bg-gray-200"
 										}`}
-									/>
-									<span className="text-xs font-medium mt-2 text-center">
-										{item.label}
-									</span>
-								</Link>
-							))}
+									>
+										<div className="relative">
+											<Image
+												src={item.icon}
+												alt={item.label}
+												width={24}
+												height={24}
+												className={`transition-transform duration-200 ${
+													isActive(item.href)
+														? "brightness-0 saturate-100 scale-110"
+														: ""
+												}`}
+											/>
+											{isMessagesLink && unreadCount > 0 && (
+												<span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shadow-md animate-pulse">
+													{unreadCount > 9 ? "9+" : unreadCount}
+												</span>
+											)}
+										</div>
+										<span className="text-xs font-medium mt-2 text-center">
+											{item.label}
+										</span>
+									</Link>
+								);
+							})}
 						</div>
 					</div>
 				</div>
