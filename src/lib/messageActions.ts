@@ -302,6 +302,60 @@ export async function sendMessage(
 			});
 		}
 
+		// Send push & email notifications to other participants
+		// Import notification function dynamically to avoid circular dependency
+		const { sendNotificationToUser } = await import("./notificationActions");
+
+		// Get conversation details for notification
+		const conversation = await prisma.conversation.findUnique({
+			where: { id: conversationId },
+			select: { name: true, type: true },
+		});
+
+		// Send notification to each participant (except sender)
+		for (const p of participants) {
+			if (p.userId !== userId) {
+				// Prepare notification content
+				const senderName = senderInfo
+					? `${senderInfo.name} ${senderInfo.surname || ""}`.trim()
+					: "Someone";
+
+				const notificationTitle =
+					conversation?.type === "GROUP" && conversation.name
+						? `New message in ${conversation.name}`
+						: `New message from ${senderName}`;
+
+				// Truncate message for preview (max 100 chars)
+				const messagePreview =
+					content.length > 100 ? content.substring(0, 100) + "..." : content;
+
+				const notificationMessage =
+					conversation?.type === "GROUP"
+						? `${senderName}: ${messagePreview}`
+						: messagePreview;
+
+				// Send notification (non-blocking)
+				sendNotificationToUser(
+					p.userId,
+					"MESSAGE_RECEIVED",
+					notificationTitle,
+					notificationMessage,
+					{
+						conversationId,
+						messageId: message.id,
+						senderId: userId,
+						senderName,
+						actionUrl: `/list/messages?conversation=${conversationId}`,
+					}
+				).catch((err) => {
+					console.error(
+						`Failed to send message notification to ${p.userId}:`,
+						err
+					);
+				});
+			}
+		}
+
 		return { success: true, message: messageWithSender };
 	} catch (error) {
 		console.error("Error sending message:", error);
@@ -364,6 +418,28 @@ export async function createDirectConversation(otherUserId: string) {
 			conversationId: conversation.id,
 		});
 
+		// Send notification to the other user about new conversation
+		const { sendNotificationToUser } = await import("./notificationActions");
+		const initiatorInfo = await getUserInfo(userId);
+		const initiatorName = initiatorInfo
+			? `${initiatorInfo.name} ${initiatorInfo.surname || ""}`.trim()
+			: "Someone";
+
+		sendNotificationToUser(
+			otherUserId,
+			"NEW_CONVERSATION",
+			`${initiatorName} started a conversation`,
+			`${initiatorName} wants to chat with you. Check your messages!`,
+			{
+				conversationId: conversation.id,
+				initiatorId: userId,
+				initiatorName,
+				actionUrl: `/list/messages?conversation=${conversation.id}`,
+			}
+		).catch((err) => {
+			console.error(`Failed to send new conversation notification:`, err);
+		});
+
 		return { success: true, conversation };
 	} catch (error) {
 		console.error("Error creating conversation:", error);
@@ -412,6 +488,33 @@ export async function createGroupConversation(
 			await triggerPusherEvent(`user-${participantId}`, "new-conversation", {
 				conversationId: conversation.id,
 			});
+		}
+
+		// Send notification to all participants (except creator) about new group
+		const { sendNotificationToUser } = await import("./notificationActions");
+		const creatorInfo = await getUserInfo(userId);
+		const creatorName = creatorInfo
+			? `${creatorInfo.name} ${creatorInfo.surname || ""}`.trim()
+			: "Someone";
+
+		for (const participantId of allParticipants) {
+			if (participantId !== userId) {
+				sendNotificationToUser(
+					participantId,
+					"NEW_CONVERSATION",
+					`Added to group: ${name}`,
+					`${creatorName} added you to a new group conversation "${name}"`,
+					{
+						conversationId: conversation.id,
+						creatorId: userId,
+						creatorName,
+						groupName: name,
+						actionUrl: `/list/messages?conversation=${conversation.id}`,
+					}
+				).catch((err) => {
+					console.error(`Failed to send group conversation notification:`, err);
+				});
+			}
 		}
 
 		return { success: true, conversation };

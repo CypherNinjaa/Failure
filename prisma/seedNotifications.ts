@@ -7,7 +7,7 @@ import {
 const prisma = new PrismaClient();
 
 async function seedNotificationCategories() {
-	console.log("🔔 Seeding notification categories...");
+	console.log("🔔 Seeding notification categories (38 total)...");
 
 	const categories: Array<{
 		key: string;
@@ -442,12 +442,12 @@ async function seedNotificationCategories() {
 		},
 
 		// ============================================
-		// COMMUNICATION CATEGORY (2 notifications)
+		// COMMUNICATION CATEGORY (3 notifications)
 		// ============================================
 		{
 			key: "MESSAGE_RECEIVED",
 			name: "New Message",
-			description: "You have a new message",
+			description: "You have a new message in your inbox",
 			category: "COMMUNICATION",
 			icon: "💬",
 			defaultEnabled: true,
@@ -455,6 +455,18 @@ async function seedNotificationCategories() {
 			supportedChannels: { push: true, email: true },
 			priority: "MEDIUM",
 			displayOrder: 60,
+		},
+		{
+			key: "NEW_CONVERSATION",
+			name: "New Conversation",
+			description: "Someone started a conversation with you",
+			category: "COMMUNICATION",
+			icon: "💭",
+			defaultEnabled: true,
+			applicableRoles: ["student", "parent", "teacher", "admin"],
+			supportedChannels: { push: true, email: true },
+			priority: "MEDIUM",
+			displayOrder: 61,
 		},
 		{
 			key: "REPLY_RECEIVED",
@@ -465,8 +477,8 @@ async function seedNotificationCategories() {
 			defaultEnabled: true,
 			applicableRoles: ["student", "parent", "teacher", "admin"],
 			supportedChannels: { push: true, email: false },
-			priority: "MEDIUM",
-			displayOrder: 61,
+			priority: "LOW",
+			displayOrder: 62,
 		},
 
 		// ============================================
