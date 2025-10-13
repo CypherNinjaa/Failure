@@ -1023,6 +1023,8 @@ enum NotificationType {
   BADGE_EARNED
   ANNOUNCEMENT
   EVENT_REMINDER
+  MESSAGE_RECEIVED
+  NEW_CONVERSATION
 }
 
 enum NotificationStatus {
