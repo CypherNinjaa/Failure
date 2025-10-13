@@ -24,11 +24,19 @@ const cronJobs: CronJob[] = [
 	},
 	{
 		endpoint: "process-badges",
-		name: "Process Badges",
+		name: "Process Student Badges",
 		description: "Awards and removes badges based on student performance",
 		icon: "BADGES",
 		schedule: "Should run at 2:00 AM daily",
 		color: "green",
+	},
+	{
+		endpoint: "update-teacher-leaderboard",
+		name: "Update Teacher Rankings",
+		description: "Calculates teacher rankings and processes teacher badges",
+		icon: "RANKING",
+		schedule: "Should run at 3:00 AM daily",
+		color: "yellow",
 	},
 	{
 		endpoint: "expire-suspensions",
@@ -48,6 +56,7 @@ export default function ManualCronTriggers() {
 		const colors: Record<string, string> = {
 			blue: "bg-blue-500 hover:bg-blue-600",
 			green: "bg-green-500 hover:bg-green-600",
+			yellow: "bg-yellow-500 hover:bg-yellow-600",
 			purple: "bg-purple-500 hover:bg-purple-600",
 		};
 		return colors[color] || "bg-gray-500 hover:bg-gray-600";
@@ -57,6 +66,7 @@ export default function ManualCronTriggers() {
 		const bgColors: Record<string, string> = {
 			blue: "bg-blue-100 text-blue-600",
 			green: "bg-green-100 text-green-600",
+			yellow: "bg-yellow-100 text-yellow-600",
 			purple: "bg-purple-100 text-purple-600",
 		};
 
