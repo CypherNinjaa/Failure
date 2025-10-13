@@ -1,0 +1,128 @@
+{
+	"name": "Happy Child School",
+	"short_name": "HCS",
+	"description": "Complete school management system with role-based dashboards for admins, teachers, students, and parents",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#2979FF",
+	"orientation": "portrait-primary",
+	"scope": "/",
+	"icons": [
+		{
+			"src": "/icons/icon-72x72.png",
+			"sizes": "72x72",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-96x96.png",
+			"sizes": "96x96",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-128x128.png",
+			"sizes": "128x128",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-144x144.png",
+			"sizes": "144x144",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-152x152.png",
+			"sizes": "152x152",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-384x384.png",
+			"sizes": "384x384",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	],
+	"categories": ["education", "productivity", "utilities"],
+	"screenshots": [
+		{
+			"src": "/screenshots/admin-dashboard.png",
+			"sizes": "1280x720",
+			"type": "image/png",
+			"platform": "wide",
+			"label": "Admin Dashboard"
+		},
+		{
+			"src": "/screenshots/student-list.png",
+			"sizes": "1280x720",
+			"type": "image/png",
+			"platform": "wide",
+			"label": "Student Management"
+		}
+	],
+	"shortcuts": [
+		{
+			"name": "Mark Attendance",
+			"short_name": "Attendance",
+			"description": "Quick access to attendance marking",
+			"url": "/list/attendances?action=mark",
+			"icons": [
+				{
+					"src": "/icons/attendance-96x96.png",
+					"sizes": "96x96"
+				}
+			]
+		},
+		{
+			"name": "View Students",
+			"short_name": "Students",
+			"description": "View all students",
+			"url": "/list/students",
+			"icons": [
+				{
+					"src": "/icons/students-96x96.png",
+					"sizes": "96x96"
+				}
+			]
+		},
+		{
+			"name": "Messages",
+			"short_name": "Messages",
+			"description": "View messages",
+			"url": "/messages",
+			"icons": [
+				{
+					"src": "/icons/messages-96x96.png",
+					"sizes": "96x96"
+				}
+			]
+		}
+	],
+	"related_applications": [],
+	"prefer_related_applications": false,
+	"share_target": {
+		"action": "/share",
+		"method": "POST",
+		"enctype": "multipart/form-data",
+		"params": {
+			"title": "title",
+			"text": "text",
+			"url": "url"
+		}
+	}
+}
