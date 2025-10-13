@@ -3098,6 +3098,7 @@ export type TeacherLeaderboardEntry = {
 	threeStarCount: number;
 	twoStarCount: number;
 	oneStarCount: number;
+	overallScore: number; // Added to match database schema
 	badges: {
 		id: string;
 		name: string;
@@ -3260,14 +3261,18 @@ export const calculateTeacherLeaderboard = async (filters?: {
 					threeStarCount: data.threeStarCount,
 					twoStarCount: data.twoStarCount,
 					oneStarCount: data.oneStarCount,
+					overallScore: data.averageRating, // Same as averageRating
 					badges: teacherBadges.map((tb) => tb.badge),
 					subjects: data.subjects,
 				};
 			})
 		);
 
-		// Auto-award badges based on criteria
-		await autoAwardTeacherBadges(leaderboard);
+		// Auto-award badges based on criteria (with auto-removal)
+		const badgeResults = await autoAwardTeacherBadges(leaderboard);
+		console.log(
+			`🎖️  Teacher badges processed: ${badgeResults.awardedCount} awarded, ${badgeResults.removedCount} removed`
+		);
 
 		return leaderboard;
 	} catch (err) {
@@ -3276,17 +3281,28 @@ export const calculateTeacherLeaderboard = async (filters?: {
 	}
 };
 
-// Auto-award teacher badges
+// Auto-award teacher badges (WITH AUTO-REMOVAL LIKE STUDENTS)
 const autoAwardTeacherBadges = async (
 	leaderboard: TeacherLeaderboardEntry[]
-): Promise<void> => {
+): Promise<{ awardedCount: number; removedCount: number }> => {
 	try {
 		// Get all active badges
 		const badges = await prisma.badge.findMany({
 			where: { isActive: true },
 		});
 
+		let awardedCount = 0;
+		let removedCount = 0;
+
+		// Track which teachers should have which badges
+		const shouldHaveBadges = new Map<string, Set<string>>(); // teacherId -> Set of badgeIds
+
+		// First pass: Determine which teachers SHOULD have which badges
 		for (const entry of leaderboard) {
+			if (!shouldHaveBadges.has(entry.teacherId)) {
+				shouldHaveBadges.set(entry.teacherId, new Set());
+			}
+
 			for (const badge of badges) {
 				const criteria = badge.criteria as any;
 				let shouldAward = false;
@@ -3310,37 +3326,101 @@ const autoAwardTeacherBadges = async (
 					if (criteria.min) {
 						shouldAward = entry.fiveStarCount >= criteria.min;
 					}
+				} else if (criteria.type === "overallScore") {
+					if (criteria.min) {
+						shouldAward = entry.overallScore >= criteria.min;
+					}
 				}
 
 				if (shouldAward) {
-					// Check if teacher already has this badge
-					const existing = await prisma.teacherBadge.findUnique({
-						where: {
-							teacherId_badgeId: {
-								teacherId: entry.teacherId,
-								badgeId: badge.id,
+					shouldHaveBadges.get(entry.teacherId)!.add(badge.id);
+				}
+			}
+		}
+
+		// Second pass: Award new badges and remove old ones
+		for (const teacherId of Array.from(shouldHaveBadges.keys())) {
+			const badgeIds = shouldHaveBadges.get(teacherId)!;
+
+			// Get teacher's current badges
+			const currentBadges = await prisma.teacherBadge.findMany({
+				where: { teacherId },
+				select: { badgeId: true, id: true },
+			});
+
+			const currentBadgeIds = new Set(currentBadges.map((tb) => tb.badgeId));
+
+			// Award new badges
+			for (const badgeId of Array.from(badgeIds)) {
+				if (!currentBadgeIds.has(badgeId)) {
+					const entry = leaderboard.find((e) => e.teacherId === teacherId)!;
+
+					await prisma.teacherBadge.create({
+						data: {
+							teacherId,
+							badgeId,
+							metadata: {
+								rank: entry.rank,
+								averageRating: entry.averageRating,
+								totalRatings: entry.totalRatings,
+								overallScore: entry.overallScore,
+								awardedAt: new Date().toISOString(),
 							},
 						},
 					});
 
-					if (!existing) {
-						await prisma.teacherBadge.create({
-							data: {
-								teacherId: entry.teacherId,
-								badgeId: badge.id,
-								metadata: {
-									rank: entry.rank,
-									averageRating: entry.averageRating,
-									totalRatings: entry.totalRatings,
-								},
-							},
-						});
-					}
+					awardedCount++;
+					console.log(
+						`✅ Awarded badge ${badgeId} to teacher ${teacherId} (Rank: ${entry.rank})`
+					);
+				}
+			}
+
+			// Remove badges that are no longer deserved
+			for (const currentBadge of currentBadges) {
+				if (!badgeIds.has(currentBadge.badgeId)) {
+					// Teacher lost this badge (e.g., no longer rank 1)
+					await prisma.teacherBadge.delete({
+						where: { id: currentBadge.id },
+					});
+
+					removedCount++;
+					console.log(
+						`🔴 Removed badge ${currentBadge.badgeId} from teacher ${teacherId} (no longer meets criteria)`
+					);
 				}
 			}
 		}
+
+		// Third pass: Remove badges from teachers NOT in leaderboard
+		const leaderboardTeacherIds = new Set(leaderboard.map((e) => e.teacherId));
+
+		const allTeacherBadges = await prisma.teacherBadge.findMany({
+			select: { id: true, teacherId: true, badgeId: true },
+		});
+
+		for (const teacherBadge of allTeacherBadges) {
+			if (!leaderboardTeacherIds.has(teacherBadge.teacherId)) {
+				// Teacher not in leaderboard anymore, remove their badges
+				await prisma.teacherBadge.delete({
+					where: { id: teacherBadge.id },
+				});
+
+				removedCount++;
+				console.log(
+					`🔴 Removed badge ${teacherBadge.badgeId} from teacher ${teacherBadge.teacherId} (not in leaderboard)`
+				);
+			}
+		}
+
+		console.log(
+			`\n🎖️  Teacher Badge System: Awarded ${awardedCount}, Removed ${removedCount}`
+		);
+
+		return { awardedCount, removedCount };
 	} catch (err) {
 		console.error("Error auto-awarding teacher badges:", err);
+		return { awardedCount: 0, removedCount: 0 };
 	}
 };
 
