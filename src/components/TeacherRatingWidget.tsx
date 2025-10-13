@@ -1,5 +1,4 @@
 import { getTeacherRatingStats } from "@/lib/actions";
-import Image from "next/image";
 import Link from "next/link";
 
 const TeacherRatingWidget = async ({ teacherId }: { teacherId: string }) => {
@@ -136,15 +135,16 @@ const TeacherRatingWidget = async ({ teacherId }: { teacherId: string }) => {
 							<div
 								key={badge.id}
 								className="flex flex-col items-center group cursor-pointer"
+								title={badge.badge.description}
 							>
-								<div className="relative">
-									<Image
-										src={badge.badge.icon || "/badge.png"}
-										alt={badge.badge.name}
-										width={56}
-										height={56}
-										className="w-14 h-14 object-cover transition-transform group-hover:scale-110"
-									/>
+								<div
+									className="w-14 h-14 rounded-full flex items-center justify-center text-3xl transition-transform group-hover:scale-110"
+									style={{
+										backgroundColor: badge.badge.color + "20",
+										border: `2px solid ${badge.badge.color}`,
+									}}
+								>
+									{badge.badge.icon || "🏅"}
 								</div>
 								<span className="text-xs text-center mt-1 max-w-[60px] truncate">
 									{badge.badge.name}
