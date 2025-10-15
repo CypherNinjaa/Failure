@@ -120,6 +120,12 @@ const menuItems = [
 				visible: ["admin"],
 			},
 			{
+				icon: "/download.png",
+				label: "Export Data",
+				href: "/admin/export-data",
+				visible: ["admin"],
+			},
+			{
 				icon: "/attendance.png",
 				label: "My Attendance",
 				href: "/teacher/attendance",
