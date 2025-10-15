@@ -7,6 +7,7 @@ const nextConfig = {
 			{ hostname: "img.clerk.com" },
 			{ hostname: "images.clerk.dev" },
 		],
+		unoptimized: false,
 	},
 	experimental: {
 		serverActions: {
