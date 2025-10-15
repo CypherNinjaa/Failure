@@ -133,13 +133,16 @@ const TeacherLeaderboardPage = async ({
 
 								{/* Teacher Info */}
 								<div className="flex items-center gap-3 flex-1">
-									<Image
-										src={entry.teacherImg || "/noAvatar.png"}
-										alt={entry.teacherName}
-										width={56}
-										height={56}
-										className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
-									/>
+									<div className="relative w-14 h-14 flex-shrink-0">
+										<Image
+											src={entry.teacherImg || "/noAvatar.png"}
+											alt={entry.teacherName}
+											width={56}
+											height={56}
+											className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
+											unoptimized={entry.teacherImg?.startsWith("http")}
+										/>
+									</div>
 
 									<div>
 										<h3 className="font-semibold text-lg text-gray-800">
@@ -230,14 +233,20 @@ const TeacherLeaderboardPage = async ({
 													key={badge.id}
 													className="relative group cursor-pointer"
 												>
-													<Image
-														src={badge.icon || "/badge.png"}
-														alt={badge.name}
-														width={40}
-														height={40}
-														className="w-10 h-10 object-cover"
-													/>
-													<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+													{badge.icon && badge.icon.startsWith("/") ? (
+														<Image
+															src={badge.icon}
+															alt={badge.name}
+															width={40}
+															height={40}
+															className="w-10 h-10 object-cover"
+														/>
+													) : (
+														<div className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full text-2xl">
+															{badge.icon || "🏆"}
+														</div>
+													)}
+													<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">
 														{badge.name}
 													</div>
 												</div>
