@@ -27,6 +27,9 @@ const FaceRecognitionAttendance = ({
 	const [detectedStudents, setDetectedStudents] = useState<Set<string>>(
 		new Set()
 	);
+	const [persistedDetectedStudents, setPersistedDetectedStudents] = useState<
+		Set<string>
+	>(new Set());
 	const [faceMatcher, setFaceMatcher] = useState<any>(null);
 	const [error, setError] = useState<string>("");
 	const [cameraActive, setCameraActive] = useState(false);
@@ -35,6 +38,9 @@ const FaceRecognitionAttendance = ({
 		new Date().toISOString().split("T")[0]
 	);
 	const [facingMode, setFacingMode] = useState<"user" | "environment">("user"); // user = front, environment = back
+	const [autoSubmitTimer, setAutoSubmitTimer] = useState<NodeJS.Timeout | null>(
+		null
+	);
 
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -208,12 +214,19 @@ const FaceRecognitionAttendance = ({
 
 		// Match faces and mark attendance
 		const newDetected = new Set(detectedStudents);
+		const newlyDetectedStudents: string[] = [];
 
 		resizedDetections.forEach((detection) => {
 			const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
 
 			if (bestMatch.label !== "unknown") {
+				// Add to current detected set (for real-time display)
 				newDetected.add(bestMatch.label);
+
+				// Add to persisted set (permanent until manual removal or submit)
+				if (!persistedDetectedStudents.has(bestMatch.label)) {
+					newlyDetectedStudents.push(bestMatch.label);
+				}
 
 				// Draw label on canvas
 				const box = detection.detection.box;
@@ -226,6 +239,34 @@ const FaceRecognitionAttendance = ({
 		});
 
 		setDetectedStudents(newDetected);
+
+		// Add newly detected students to persisted set
+		if (newlyDetectedStudents.length > 0) {
+			setPersistedDetectedStudents((prev) => {
+				const updated = new Set(prev);
+				newlyDetectedStudents.forEach((id) => updated.add(id));
+				return updated;
+			});
+
+			// Clear any existing auto-submit timer
+			if (autoSubmitTimer) {
+				clearTimeout(autoSubmitTimer);
+			}
+
+			// Set new auto-submit timer (1 second after detection)
+			const timer = setTimeout(() => {
+				// Auto-submit if we have detected students
+				const currentPersisted = new Set(persistedDetectedStudents);
+				newlyDetectedStudents.forEach((id) => currentPersisted.add(id));
+
+				if (currentPersisted.size > 0) {
+					handleAutoSubmitAttendance(currentPersisted);
+				}
+			}, 1000);
+
+			setAutoSubmitTimer(timer);
+		}
+
 		setIsProcessing(false);
 	};
 
@@ -249,10 +290,40 @@ const FaceRecognitionAttendance = ({
 
 	// Submit attendance
 	const handleSubmitAttendance = () => {
-		const studentIds = Array.from(detectedStudents);
+		const studentIds = Array.from(persistedDetectedStudents);
 		const attendanceDate = new Date(selectedDate);
 		onAttendanceMarked(studentIds, attendanceDate);
 		stopCamera();
+		// Clear persisted students after submission
+		setPersistedDetectedStudents(new Set());
+	};
+
+	// Auto-submit attendance (called by timer)
+	const handleAutoSubmitAttendance = (studentsSet: Set<string>) => {
+		const studentIds = Array.from(studentsSet);
+		const attendanceDate = new Date(selectedDate);
+		onAttendanceMarked(studentIds, attendanceDate);
+		stopCamera();
+		// Clear persisted students after submission
+		setPersistedDetectedStudents(new Set());
+	};
+
+	// Remove a student from detected list
+	const removeDetectedStudent = (studentId: string) => {
+		setPersistedDetectedStudents((prev) => {
+			const updated = new Set(prev);
+			updated.delete(studentId);
+			return updated;
+		});
+	};
+
+	// Clear all detected students
+	const clearAllDetected = () => {
+		setPersistedDetectedStudents(new Set());
+		if (autoSubmitTimer) {
+			clearTimeout(autoSubmitTimer);
+			setAutoSubmitTimer(null);
+		}
 	};
 
 	return (
@@ -342,7 +413,7 @@ const FaceRecognitionAttendance = ({
 
 			{/* Camera Controls */}
 			{modelsLoaded && faceMatcher && (
-				<div className="flex gap-2">
+				<div className="flex gap-2 flex-wrap">
 					{!cameraActive ? (
 						<button
 							onClick={startCamera}
@@ -399,13 +470,50 @@ const FaceRecognitionAttendance = ({
 						</>
 					)}
 
-					{detectedStudents.size > 0 && (
-						<button
-							onClick={handleSubmitAttendance}
-							className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-						>
-							Submit Attendance ({detectedStudents.size} students)
-						</button>
+					{persistedDetectedStudents.size > 0 && (
+						<>
+							<button
+								onClick={handleSubmitAttendance}
+								className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors font-semibold flex items-center gap-2"
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									className="h-5 w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+								Submit Attendance ({persistedDetectedStudents.size} students)
+							</button>
+							<button
+								onClick={clearAllDetected}
+								className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors flex items-center gap-2"
+								title="Clear all detected students"
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									className="h-5 w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+								Clear All
+							</button>
+						</>
 					)}
 				</div>
 			)}
@@ -439,32 +547,59 @@ const FaceRecognitionAttendance = ({
 			</div>
 
 			{/* Detected Students List */}
-			{detectedStudents.size > 0 && (
-				<div className="bg-white p-4 rounded-lg border">
-					<h3 className="font-semibold mb-2">
-						Detected Students ({detectedStudents.size})
-					</h3>
-					<div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-						{Array.from(detectedStudents).map((studentId) => {
+			{persistedDetectedStudents.size > 0 && (
+				<div className="bg-white p-4 rounded-lg border border-green-200">
+					<div className="flex items-center justify-between mb-3">
+						<h3 className="font-semibold text-green-700">
+							✓ Detected Students ({persistedDetectedStudents.size})
+						</h3>
+						<span className="text-xs text-gray-500">
+							Auto-submitting in 1 second after detection...
+						</span>
+					</div>
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+						{Array.from(persistedDetectedStudents).map((studentId) => {
 							const student = students.find((s) => s.id === studentId);
 							return (
 								student && (
 									<div
 										key={studentId}
-										className="flex items-center gap-2 p-2 bg-green-50 rounded"
+										className="flex items-center justify-between gap-2 p-2 bg-green-50 rounded border border-green-200"
 									>
-										{student.img && (
-											<Image
-												src={student.img}
-												alt={student.name}
-												width={32}
-												height={32}
-												className="rounded-full"
-											/>
-										)}
-										<span className="text-sm">
-											{student.name} {student.surname}
-										</span>
+										<div className="flex items-center gap-2 flex-1">
+											{student.img && (
+												<Image
+													src={student.img}
+													alt={student.name}
+													width={32}
+													height={32}
+													className="rounded-full"
+												/>
+											)}
+											<span className="text-sm font-medium">
+												{student.name} {student.surname}
+											</span>
+										</div>
+										<button
+											onClick={() => removeDetectedStudent(studentId)}
+											className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-100"
+											title="Remove from attendance"
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												className="h-4 w-4"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M6 18L18 6M6 6l12 12"
+												/>
+											</svg>
+										</button>
 									</div>
 								)
 							);
