@@ -133,6 +133,13 @@ export const assignmentSchema = z.object({
 	startDate: z.coerce.date({ message: "Start date is required!" }),
 	dueDate: z.coerce.date({ message: "Due date is required!" }),
 	lessonId: z.coerce.number({ message: "Lesson is required!" }),
+	description: z.string().optional(),
+	pdfLink: z
+		.string()
+		.url({ message: "Must be a valid URL" })
+		.optional()
+		.or(z.literal("")),
+	imageUrl: z.string().optional(),
 });
 
 export type AssignmentSchema = z.infer<typeof assignmentSchema>;

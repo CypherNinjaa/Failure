@@ -952,6 +952,9 @@ export const createAssignment = async (
 				startDate: data.startDate,
 				dueDate: data.dueDate,
 				lessonId: data.lessonId,
+				description: data.description || null,
+				pdfLink: data.pdfLink || null,
+				imageUrl: data.imageUrl || null,
 			},
 		});
 
@@ -979,6 +982,9 @@ export const updateAssignment = async (
 				title: data.title,
 				startDate: data.startDate,
 				dueDate: data.dueDate,
+				description: data.description || null,
+				pdfLink: data.pdfLink || null,
+				imageUrl: data.imageUrl || null,
 				lesson: {
 					connect: { id: data.lessonId },
 				},
