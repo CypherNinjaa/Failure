@@ -166,10 +166,15 @@ model Exam {
 }
 
 model Assignment {
-  id        Int      @id @default(autoincrement())
-  title     String
-  startDate DateTime
-  dueDate   DateTime
+  id          Int      @id @default(autoincrement())
+  title       String
+  startDate   DateTime
+  dueDate     DateTime
+  
+  // Resources
+  description String?  @db.Text // Long text description/instructions
+  pdfLink     String?  // PDF resource link
+  imageUrl    String?  // Image attachment URL
 
   lessonId Int
   lesson   Lesson   @relation(fields: [lessonId], references: [id])
