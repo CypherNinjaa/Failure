@@ -3,12 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import webpush from "web-push";
 
-// Configure VAPID
-webpush.setVapidDetails(
-	"mailto:vk6938663@gmail.com",
-	process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-	process.env.VAPID_PRIVATE_KEY!
-);
+// Configure VAPID (only if keys are available)
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+	webpush.setVapidDetails(
+		"mailto:vk6938663@gmail.com",
+		process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+		process.env.VAPID_PRIVATE_KEY
+	);
+}
 
 export async function POST(req: NextRequest) {
 	try {

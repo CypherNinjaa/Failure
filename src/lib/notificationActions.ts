@@ -26,11 +26,14 @@ const emailTransporter = nodemailer.createTransport({
 // WEB PUSH CONFIGURATION
 // ============================================
 
-webpush.setVapidDetails(
-	"mailto:vk6938663@gmail.com",
-	process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-	process.env.VAPID_PRIVATE_KEY!
-);
+// Configure VAPID (only if keys are available)
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+	webpush.setVapidDetails(
+		"mailto:vk6938663@gmail.com",
+		process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+		process.env.VAPID_PRIVATE_KEY
+	);
+}
 
 // ============================================
 // HELPER FUNCTIONS
