@@ -24,9 +24,13 @@ export const metadata: Metadata = {
 		telephone: false,
 	},
 	icons: {
-		icon: "/icons/icon-192x192.png",
-		shortcut: "/icons/icon-192x192.png",
-		apple: "/icons/icon-192x192.png",
+		icon: "/logo.png",
+		shortcut: "/logo.png",
+		apple: "/logo.png",
+		other: {
+			rel: "apple-touch-icon-precomposed",
+			url: "/logo.png",
+		},
 	},
 };
 
@@ -56,7 +60,8 @@ export default function RootLayout({
 						content="default"
 					/>
 					<meta name="apple-mobile-web-app-title" content="HCS School" />
-					<link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+					<link rel="apple-touch-icon" href="/logo.png" />
+					<link rel="icon" type="image/png" href="/logo.png" />
 					<script
 						dangerouslySetInnerHTML={{
 							__html: `
