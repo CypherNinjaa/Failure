@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { CldUploadWidget } from "next-cloudinary";
 import ParentSearchSelect from "../ParentSearchSelect";
+import ClassSearchSelect from "../ClassSearchSelect";
 
 const StudentForm = ({
 	type,
@@ -38,6 +39,7 @@ const StudentForm = ({
 	);
 
 	const [parentId, setParentId] = useState<string>(data?.parentId || "");
+	const [classId, setClassId] = useState<number>(data?.classId || 0);
 
 	const [state, formAction] = useFormState<
 		{ success: boolean; error: boolean; message?: string },
@@ -50,8 +52,8 @@ const StudentForm = ({
 	const onSubmit = handleSubmit((formData) => {
 		console.log("hello");
 		console.log(formData);
-		// Include parentId in the form submission
-		formAction({ ...formData, img: img?.secure_url, parentId });
+		// Include parentId and classId in the form submission
+		formAction({ ...formData, img: img?.secure_url, parentId, classId });
 	});
 
 	const router = useRouter();
@@ -252,34 +254,15 @@ const StudentForm = ({
 						</p>
 					)}
 				</div>
-				<div className="flex flex-col gap-2 w-full md:w-1/4">
-					<label className="text-xs text-gray-500">Class</label>
-					<select
-						className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-						{...register("classId")}
-						defaultValue={data?.classId}
-					>
-						{classes.map(
-							(classItem: {
-								id: number;
-								name: string;
-								capacity: number;
-								_count: { students: number };
-							}) => (
-								<option value={classItem.id} key={classItem.id}>
-									({classItem.name} -{" "}
-									{classItem._count.students + "/" + classItem.capacity}{" "}
-									Capacity)
-								</option>
-							)
-						)}
-					</select>
-					{errors.classId?.message && (
-						<p className="text-xs text-red-400">
-							{errors.classId.message.toString()}
-						</p>
-					)}
-				</div>
+				<ClassSearchSelect
+					classes={classes || []}
+					value={classId}
+					onChange={(value) => {
+						setClassId(value);
+						setValue("classId", value);
+					}}
+					error={errors.classId?.message?.toString()}
+				/>
 			</div>
 			{state.error && (
 				<span className="text-red-500">Something went wrong!</span>
