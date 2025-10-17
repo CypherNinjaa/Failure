@@ -7,7 +7,10 @@
 		"dev:network": "next dev -H 192.168.18.100",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"postinstall": "prisma generate",
+		"railway:migrate": "npx prisma migrate deploy",
+		"railway:seed": "npx prisma db seed"
 	},
 	"dependencies": {
 		"@clerk/elements": "^0.14.6",

@@ -28,6 +28,7 @@ yarn-error.log*
 # local env files
 .env
 .env*.local
+.env.railway.filled  # Don't commit filled Railway env file
 
 # vercel
 .vercel

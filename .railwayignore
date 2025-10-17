@@ -1,0 +1,50 @@
+# Railway Ignore File
+
+# Files and directories to exclude from Railway deployments
+
+# Documentation
+
+\*.md
+!README.md
+Docs/
+.github/
+
+# Development files
+
+.env.example
+.env.local
+.env\*.local
+docker-compose.yml
+.vscode/
+.idea/
+
+# Test files
+
+**tests**/
+**/\*.test.ts
+**/_.test.tsx
+\*\*/_.spec.ts \*_/_.spec.tsx
+
+# Face API (large files not needed at runtime)
+
+face-api.js-master/
+
+# Seed files (run manually)
+
+prisma/seed\*.ts
+scripts/
+
+# Git
+
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD (not needed on Railway)
+
+.github/workflows/
+
+# Local development
+
+\*.local
+.DS_Store

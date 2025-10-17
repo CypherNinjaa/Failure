@@ -15,6 +15,8 @@ const nextConfig = {
 				"localhost:3000",
 				"hgv24btw-3000.inc1.devtunnels.ms",
 				"*.devtunnels.ms",
+				"*.railway.app", // Railway deployment domains
+				"*.up.railway.app", // Alternative Railway domains
 			],
 		},
 	},
@@ -30,6 +32,8 @@ const nextConfig = {
 		}
 		return config;
 	},
+	// Enable standalone output for optimized production builds
+	output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
 };
 
 export default nextConfig;
