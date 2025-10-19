@@ -1,8 +1,47 @@
-import { SignIn } from "@clerk/nextjs";
+"use client";
+
+import { SignIn, useUser } from "@clerk/nextjs";
 import { ModernHeader } from "@/components/ui/modern-header";
 import { ModernFooter } from "@/components/ui/modern-footer";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function SignInPage() {
+	const { isSignedIn, user, isLoaded } = useUser();
+	const router = useRouter();
+
+	useEffect(() => {
+		if (isLoaded && isSignedIn && user) {
+			// Get user role and redirect to appropriate dashboard
+			const role = (user.publicMetadata?.role as string) || "student";
+			router.push(`/${role}`);
+		}
+	}, [isLoaded, isSignedIn, user, router]);
+
+	// Show loading state while checking authentication
+	if (!isLoaded) {
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+					<p className="text-muted-foreground">Loading...</p>
+				</div>
+			</div>
+		);
+	}
+
+	// If already signed in, don't show the sign-in form (redirect happening)
+	if (isSignedIn) {
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+					<p className="text-muted-foreground">Redirecting to dashboard...</p>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="min-h-screen bg-background">
 			<ModernHeader />
