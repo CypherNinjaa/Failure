@@ -203,7 +203,9 @@ export function CircularDownloads() {
 
 				if (newProgress >= 100) {
 					clearInterval(interval);
-					setCompletedDownloads((completed) => new Set([...completed, itemId]));
+					setCompletedDownloads(
+						(completed) => new Set([...Array.from(completed), itemId])
+					);
 					setTimeout(() => {
 						setDownloadProgress((current) => {
 							const updated = { ...current };
