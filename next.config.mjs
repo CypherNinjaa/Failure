@@ -6,6 +6,7 @@ const nextConfig = {
 			{ hostname: "res.cloudinary.com" },
 			{ hostname: "img.clerk.com" },
 			{ hostname: "images.clerk.dev" },
+			{ hostname: "images.unsplash.com" },
 		],
 		unoptimized: false,
 	},
