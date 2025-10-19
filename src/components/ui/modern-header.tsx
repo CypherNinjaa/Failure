@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 export function ModernHeader() {
 	const [isScrolled, setIsScrolled] = useState(false);
@@ -48,18 +49,22 @@ export function ModernHeader() {
 		return (
 			<header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg shadow-lg border-b border-border">
 				<div className="container mx-auto px-4">
-					<div className="flex items-center justify-between h-16 md:h-20">
-						<Link href="/" className="flex items-center space-x-3">
-							<div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-								<GraduationCap className="w-6 h-6 md:w-7 md:h-7 text-white" />
-							</div>
-							<div className="hidden sm:block">
-								<div className="font-bold text-lg md:text-xl text-foreground">
+					<div className="flex items-center justify-between h-16 md:h-20 gap-4">
+						<Link href="/" className="flex items-center gap-3 min-w-fit">
+							<Image
+								src="/logo.png"
+								alt="Happy Child School Logo"
+								width={48}
+								height={48}
+								className="w-10 h-10 md:w-12 md:h-12 object-contain flex-shrink-0"
+							/>
+							<div className="hidden sm:flex sm:flex-col">
+								<h1 className="font-bold text-xl md:text-2xl whitespace-nowrap bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent leading-tight">
 									Happy Child School
-								</div>
-								<div className="text-xs text-muted-foreground">
+								</h1>
+								<p className="text-xs text-muted-foreground whitespace-nowrap">
 									Excellence in Education
-								</div>
+								</p>
 							</div>
 						</Link>
 						<div className="flex items-center space-x-2 md:space-x-4">
@@ -68,13 +73,7 @@ export function ModernHeader() {
 								<Button variant="ghost" size="sm" asChild>
 									<Link href="/sign-in">Portal Login</Link>
 								</Button>
-								<Button
-									size="sm"
-									className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-									asChild
-								>
-									<Link href="/admissions">Apply Now</Link>
-								</Button>
+								
 							</div>
 							<Button variant="ghost" size="sm" className="lg:hidden p-2">
 								<Menu className="w-5 h-5" />
@@ -98,25 +97,25 @@ export function ModernHeader() {
 			transition={{ duration: 0.6 }}
 		>
 			<div className="container mx-auto px-4">
-				<div className="flex items-center justify-between h-16 md:h-20">
+				<div className="flex items-center justify-between h-16 md:h-20 gap-4">
 					{/* Logo */}
-					<Link href="/" className="flex items-center space-x-3 group">
-						<div className="relative">
-							<div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-								<GraduationCap className="w-6 h-6 md:w-7 md:h-7 text-white" />
-							</div>
-							<div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
-						</div>
-						<div className="hidden sm:block">
-							<div className="font-bold text-lg md:text-xl text-foreground">
+					<Link href="/" className="flex items-center gap-3 group min-w-fit">
+						<Image
+							src="/logo.png"
+							alt="Happy Child School Logo"
+							width={48}
+							height={48}
+							className="w-10 h-10 md:w-12 md:h-12 object-contain transition-transform duration-300 group-hover:scale-105 flex-shrink-0"
+						/>
+						<div className="hidden sm:flex sm:flex-col">
+							<h1 className="font-bold text-xl md:text-2xl whitespace-nowrap bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent leading-tight">
 								Happy Child School
-							</div>
-							<div className="text-xs text-muted-foreground">
+							</h1>
+							<p className="text-xs text-muted-foreground whitespace-nowrap">
 								Excellence in Education
-							</div>
+							</p>
 						</div>
 					</Link>
-
 					{/* Desktop Navigation */}
 					<nav className="hidden lg:flex items-center space-x-1">
 						{navItems.map((item) => {
@@ -136,7 +135,6 @@ export function ModernHeader() {
 							);
 						})}
 					</nav>
-
 					{/* Right Section */}
 					<div className="flex items-center space-x-2 md:space-x-4">
 						<ThemeToggle />
@@ -149,14 +147,6 @@ export function ModernHeader() {
 								asChild
 							>
 								<Link href="/sign-in">Portal Login</Link>
-							</Button>
-
-							<Button
-								size="sm"
-								className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-								asChild
-							>
-								<Link href="/admissions">Apply Now</Link>
 							</Button>
 						</div>
 
@@ -219,17 +209,6 @@ export function ModernHeader() {
 										onClick={() => setIsMobileMenuOpen(false)}
 									>
 										Portal Login
-									</Link>
-								</Button>
-								<Button
-									className="justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-									asChild
-								>
-									<Link
-										href="/admissions"
-										onClick={() => setIsMobileMenuOpen(false)}
-									>
-										Apply Now
 									</Link>
 								</Button>
 							</div>

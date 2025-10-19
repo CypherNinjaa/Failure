@@ -19,12 +19,14 @@ interface CounterProps {
 
 function AnimatedCounter({ end, duration = 2, suffix = "" }: CounterProps) {
 	const [count, setCount] = useState(0);
+	const [hasAnimated, setHasAnimated] = useState(false);
 	const ref = useRef<HTMLDivElement>(null);
-	const isInView = useInView(ref, { once: true });
+	const isInView = useInView(ref, { once: true, amount: 0.5 });
 
 	useEffect(() => {
-		if (!isInView) return;
+		if (!isInView || hasAnimated) return;
 
+		setHasAnimated(true);
 		let startTime: number;
 		let animationFrame: number;
 
@@ -49,7 +51,7 @@ function AnimatedCounter({ end, duration = 2, suffix = "" }: CounterProps) {
 				cancelAnimationFrame(animationFrame);
 			}
 		};
-	}, [isInView, end, duration]);
+	}, [isInView, end, duration, hasAnimated]);
 
 	return (
 		<div ref={ref} className="text-4xl md:text-5xl font-black">

@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
-	GraduationCap,
 	Mail,
 	Phone,
 	MapPin,
@@ -99,11 +99,17 @@ export function ModernFooter() {
 							className="space-y-6"
 						>
 							<div className="flex items-center space-x-3">
-								<div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-									<GraduationCap className="w-7 h-7 text-white" />
-								</div>
+								<Image
+									src="/logo.png"
+									alt="Happy Child School Logo"
+									width={48}
+									height={48}
+									className="w-12 h-12 object-contain"
+								/>
 								<div>
-									<div className="font-bold text-xl">Happy Child School</div>
+									<div className="font-bold text-xl bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
+										Happy Child School
+									</div>
 									<div className="text-sm text-gray-400">
 										Excellence in Education
 									</div>
