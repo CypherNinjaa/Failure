@@ -129,7 +129,7 @@ export function PrincipalMessage() {
 								</div>
 								<div>
 									<h3 className="text-2xl font-bold text-foreground">
-										Dr. Sarah Kumar
+										Chandan Thakur
 									</h3>
 									<p className="text-primary font-medium">Principal</p>
 									<p className="text-muted-foreground text-sm">
@@ -140,7 +140,7 @@ export function PrincipalMessage() {
 
 							<div className="space-y-4">
 								<p className="text-muted-foreground leading-relaxed">
-									With over 20 years of experience in education, Dr. Kumar has
+									With over 20 years of experience in education, Chandan Thakur has
 									dedicated her career to fostering innovative learning
 									environments and empowering students to reach their full
 									potential.
