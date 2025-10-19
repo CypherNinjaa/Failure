@@ -99,7 +99,7 @@ export function MobileNav({ className }: MobileNavProps) {
 									className="w-full justify-start space-x-2"
 									onClick={() => setIsOpen(false)}
 								>
-									<Link href="/login">
+									<Link href="/sign-in">
 										<LogIn className="h-4 w-4" />
 										<span>Portal Login</span>
 									</Link>

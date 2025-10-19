@@ -73,7 +73,6 @@ export function ModernHeader() {
 								<Button variant="ghost" size="sm" asChild>
 									<Link href="/sign-in">Portal Login</Link>
 								</Button>
-								
 							</div>
 							<Button variant="ghost" size="sm" className="lg:hidden p-2">
 								<Menu className="w-5 h-5" />
@@ -205,7 +204,7 @@ export function ModernHeader() {
 									asChild
 								>
 									<Link
-										href="/login"
+										href="/sign-in"
 										onClick={() => setIsMobileMenuOpen(false)}
 									>
 										Portal Login
