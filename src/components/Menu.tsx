@@ -8,7 +8,7 @@ const menuItems = [
 			{
 				icon: "/home.png",
 				label: "Home",
-				href: "/",
+				href: "/sign-in",
 				visible: ["admin", "teacher", "student", "parent"],
 			},
 			{

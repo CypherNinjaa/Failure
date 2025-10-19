@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Instagram-style gradient scroll effect for message bubbles */
+.message-bubble-own {
+	background: linear-gradient(
+		135deg,
+		#405de6,
+		#5b51d8,
+		#833ab4,
+		#c13584,
+		#e1306c,
+		#fd1d1d
+	);
+	background-attachment: fixed;
+	background-size: 200% 200%;
+	position: relative;
+}
+
+/* Received message bubble with subtle gradient */
+.message-bubble-received {
+	background: linear-gradient(135deg, #f0f0f0, #e8e8ff, #f5e6ff, #fff0f5);
+	background-attachment: fixed;
+	background-size: 200% 200%;
+	position: relative;
+}
+
+/* Hide sidebar and navbar on messages page */
+body.messages-page-active .dashboard-sidebar {
+	display: none !important;
+}
+
+body.messages-page-active .dashboard-navbar {
+	display: none !important;
+}
+
+/* Hide bottom navigation on messages page */
+body.messages-page-active nav[class*="bottom"] {
+	display: none !important;
+}
+
+body.messages-page-active .dashboard-content {
+	width: 100% !important;
+}
+
+body.messages-page-active .dashboard-content > div {
+	padding-bottom: 0 !important;
+}
+
+/* Custom scrollbar styles for messages */
+.scrollbar-thin::-webkit-scrollbar {
+	width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+	background: #833ab4;
+	border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+	background: #c13584;
+}
+
+.react-calendar {
+	width: 100% !important;
+	border: none !important;
+	font-family: "Inter", sans-serif !important;
+}
+
+.react-calendar__navigation__label__labelText {
+	font-weight: 600;
+}
+
+.react-calendar__tile--active {
+	background-color: #c3ebfa !important;
+	color: black !important;
+}
+
+.rbc-btn-group:first-child {
+	display: none !important;
+}
+
+.rbc-toolbar-label {
+	text-align: right !important;
+	padding: 0px 20px !important;
+}
+
+.rbc-btn-group:last-child {
+	font-size: 13px !important;
+}
+
+.rbc-btn-group:last-child button {
+	border: none !important;
+	background-color: #f1f0ff !important;
+	margin-left: 2px !important;
+}
+
+.rbc-toolbar button.rbc-active {
+	background-color: #dbdafe !important;
+	box-shadow: none !important;
+}
+
+.rbc-time-view {
+	border-color: #eee !important;
+}
+
+.rbc-time-header {
+	display: none !important;
+}
+
+.rbc-time-content {
+	border: none !important;
+}
+
+.rbc-time-gutter.rbc-time-column {
+	font-size: 12px !important;
+}
+
+.rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
+	padding: 0px 20px !important;
+}
+
+.rbc-timeslot-group {
+	background-color: #f7fdff !important;
+}
+
+.rbc-day-slot {
+	font-size: 14px !important;
+}
+
+.rbc-event {
+	border: none !important;
+	color: black !important;
+	padding: 10px !important;
+	margin: 10px !important;
+	width: 99% !important;
+}
+
+.rbc-event:nth-child(1) {
+	background-color: #e2f8ff !important;
+}
+.rbc-event:nth-child(2) {
+	background-color: #fefce8 !important;
+}
+.rbc-event:nth-child(3) {
+	background-color: #f2f1ff !important;
+}
+.rbc-event:nth-child(4) {
+	background-color: #fdf2fb !important;
+}
+.rbc-event:nth-child(5) {
+	background-color: #e2f8ff !important;
+}
+.rbc-event:nth-child(6) {
+	background-color: #fefce8 !important;
+}
+.rbc-event:nth-child(7) {
+	background-color: #f2f1ff !important;
+}
+.rbc-event:nth-child(8) {
+	background-color: #fdf2fb !important;
+}
+
+.rbc-event-label {
+	color: gray !important;
+	margin-bottom: 5px;
+}
+
+/* Touch feedback animations for mobile navigation */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+
+.animate-fadeIn {
+	animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+	animation: slideUp 0.3s ease-out;
+}
+
+/* Enhanced touch feedback */
+@media (hover: none) and (pointer: coarse) {
+	/* Only apply on touch devices */
+	.touch-feedback {
+		-webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+	}
+}
+
+/* Fix for mobile keyboard viewport issue */
+@supports (-webkit-touch-callout: none) {
+	/* iOS specific fix */
+	html {
+		height: -webkit-fill-available;
+	}
+	body {
+		min-height: -webkit-fill-available;
+	}
+}
+
+/* Ensure messages page container maintains proper height */
+.messages-container {
+	height: 100vh;
+	height: 100dvh; /* Dynamic viewport height for mobile */
+}
+
+@media (max-width: 768px) {
+	/* Mobile viewport fixes */
+	.messages-container {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 100vh;
+		height: 100dvh;
+		overflow: hidden;
+	}
+}
+
+/* Safe area for notched devices */
+.safe-area-bottom {
+	padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+	padding-top: env(safe-area-inset-top);
+}
