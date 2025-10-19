@@ -25,6 +25,18 @@ type MenuClientProps = {
 const MenuClient = ({ menuItems, role, userId }: MenuClientProps) => {
 	const { unreadCount } = useUnreadMessageCount(userId);
 
+	const handleClick = (
+		e: React.MouseEvent<HTMLAnchorElement>,
+		href: string
+	) => {
+		// Handle hash-based navigation for modal triggers
+		if (href.startsWith("#")) {
+			e.preventDefault();
+			const event = new CustomEvent("openModal", { detail: { modalId: href } });
+			window.dispatchEvent(event);
+		}
+	};
+
 	return (
 		<div className="mt-4 text-sm overflow-y-auto h-[calc(100vh-120px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
 			{menuItems.map((i) => (
@@ -39,6 +51,7 @@ const MenuClient = ({ menuItems, role, userId }: MenuClientProps) => {
 								<Link
 									href={item.href}
 									key={item.label}
+									onClick={(e) => handleClick(e, item.href)}
 									className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-lamaSkyLight relative"
 								>
 									<div className="relative">

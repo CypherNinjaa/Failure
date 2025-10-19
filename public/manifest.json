@@ -83,32 +83,48 @@
 			"url": "/list/attendances?action=mark",
 			"icons": [
 				{
-					"src": "/icons/attendance-96x96.png",
-					"sizes": "96x96"
+					"src": "/icons/icon-96x96.png",
+					"sizes": "96x96",
+					"type": "image/png"
 				}
 			]
 		},
 		{
 			"name": "View Students",
 			"short_name": "Students",
-			"description": "View all students",
+			"description": "View and manage all students",
 			"url": "/list/students",
 			"icons": [
 				{
-					"src": "/icons/students-96x96.png",
-					"sizes": "96x96"
+					"src": "/icons/icon-96x96.png",
+					"sizes": "96x96",
+					"type": "image/png"
 				}
 			]
 		},
 		{
 			"name": "Messages",
 			"short_name": "Messages",
-			"description": "View messages",
-			"url": "/messages",
+			"description": "View and send messages",
+			"url": "/list/messages",
 			"icons": [
 				{
-					"src": "/icons/messages-96x96.png",
-					"sizes": "96x96"
+					"src": "/icons/icon-96x96.png",
+					"sizes": "96x96",
+					"type": "image/png"
+				}
+			]
+		},
+		{
+			"name": "Exams",
+			"short_name": "Exams",
+			"description": "View exams and results",
+			"url": "/list/exams",
+			"icons": [
+				{
+					"src": "/icons/icon-96x96.png",
+					"sizes": "96x96",
+					"type": "image/png"
 				}
 			]
 		}

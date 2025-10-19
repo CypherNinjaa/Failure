@@ -380,3 +380,60 @@ export function useAppUpdate() {
 
 	return { updateAvailable, applyUpdate };
 }
+
+/**
+ * Hook to pre-cache role-specific data
+ */
+export function usePreCache() {
+	const [isCaching, setIsCaching] = useState(false);
+	const [cachingComplete, setCachingComplete] = useState(false);
+
+	const preCacheData = async (role: string) => {
+		if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+			console.warn("Service Worker not supported");
+			return false;
+		}
+
+		setIsCaching(true);
+
+		try {
+			const registration = await navigator.serviceWorker.ready;
+
+			if (registration.active) {
+				// Send message to service worker to pre-cache role data
+				registration.active.postMessage({
+					type: "PRECACHE_ROLE_DATA",
+					role: role,
+				});
+
+				// Store that pre-caching has been done
+				localStorage.setItem("precache-complete", "true");
+				localStorage.setItem("precache-role", role);
+				localStorage.setItem("precache-time", new Date().toISOString());
+
+				setCachingComplete(true);
+				console.log(`Pre-caching initiated for role: ${role}`);
+				return true;
+			}
+		} catch (error) {
+			console.error("Pre-caching failed:", error);
+			return false;
+		} finally {
+			setIsCaching(false);
+		}
+	};
+
+	const checkPreCacheStatus = () => {
+		if (typeof window === "undefined") return false;
+
+		const isComplete = localStorage.getItem("precache-complete") === "true";
+		setCachingComplete(isComplete);
+		return isComplete;
+	};
+
+	useEffect(() => {
+		checkPreCacheStatus();
+	}, []);
+
+	return { isCaching, cachingComplete, preCacheData, checkPreCacheStatus };
+}

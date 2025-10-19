@@ -21,21 +21,33 @@ const isPublicRoute = createRouteMatcher([
 	"/gallery",
 	"/news",
 	"/sign-in(.*)",
+	"/sign-out(.*)",
 	"/auth-callback(.*)",
 ]);
 
 console.log(matchers);
 
 export default clerkMiddleware((auth, req) => {
+	const { sessionClaims, userId } = auth();
+	const { pathname } = req.nextUrl;
+
+	// Get user role if authenticated
+	const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+	// If user is authenticated and trying to access sign-in, redirect to their dashboard
+	if (userId && pathname === "/sign-in") {
+		if (role && ["admin", "teacher", "student", "parent"].includes(role)) {
+			return NextResponse.redirect(new URL(`/${role}`, req.url));
+		}
+		return NextResponse.redirect(new URL("/auth-callback", req.url));
+	}
+
 	// Allow public routes without authentication
 	if (isPublicRoute(req)) {
 		return NextResponse.next();
 	}
 
-	const { sessionClaims } = auth();
-
-	const role = (sessionClaims?.metadata as { role?: string })?.role;
-
+	// Protected routes - check role-based access
 	for (const { matcher, allowedRoles } of matchers) {
 		if (matcher(req) && !allowedRoles.includes(role!)) {
 			return NextResponse.redirect(new URL(`/${role}`, req.url));
