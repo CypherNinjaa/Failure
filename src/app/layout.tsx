@@ -8,6 +8,12 @@ import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import { ThemeProvider } from "@/lib/theme-provider-new";
+import dynamic from "next/dynamic";
+
+const PWAPerformanceMonitor = dynamic(
+	() => import("@/components/PWAPerformanceMonitor"),
+	{ ssr: false }
+);
 
 const inter = Inter({
 	subsets: ["latin"],
@@ -140,6 +146,7 @@ export default function RootLayout({
 					className={`${inter.className} min-h-screen bg-background font-sans antialiased overflow-x-hidden`}
 				>
 					<ThemeProvider defaultTheme="system" storageKey="hcs-theme">
+						<PWAPerformanceMonitor />
 						<UpdatePrompt />
 						<OfflineIndicator />
 						<div className="relative flex min-h-screen flex-col w-full">

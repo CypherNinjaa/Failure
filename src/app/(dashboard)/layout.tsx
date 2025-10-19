@@ -1,6 +1,10 @@
 import Menu from "@/components/Menu";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import PreCacheLoader from "@/components/PreCacheLoader";
+import BackgroundSyncIndicator from "@/components/BackgroundSyncIndicator";
+import OfflineQueueViewer from "@/components/OfflineQueueViewer";
+import CacheSettings from "@/components/CacheSettings";
 import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
@@ -43,6 +47,14 @@ export default function DashboardLayout({
 			</div>
 			{/* BOTTOM NAVIGATION - Mobile only */}
 			<BottomNav role={role} userId={userId || null} />
+			{/* PRE-CACHE LOADER - Automatically caches role-specific data */}
+			<PreCacheLoader role={role} />
+			{/* BACKGROUND SYNC INDICATOR - Shows pending sync items */}
+			<BackgroundSyncIndicator />
+			{/* OFFLINE QUEUE VIEWER - View and manage pending items */}
+			<OfflineQueueViewer />
+			{/* CACHE SETTINGS - Manage cache and storage */}
+			<CacheSettings role={role} />
 		</div>
 	);
 }

@@ -313,6 +313,18 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 				href: "/settings",
 				visible: ["admin", "teacher", "student", "parent"],
 			},
+			{
+				icon: "/singleClass.png",
+				label: "Sync Queue",
+				href: "#offline-queue",
+				visible: ["admin", "teacher", "student", "parent"],
+			},
+			{
+				icon: "/cache.png",
+				label: "Cache Manager",
+				href: "#cache-settings",
+				visible: ["admin", "teacher", "student", "parent"],
+			},
 		];
 
 		return allItems
@@ -328,6 +340,19 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 			return pathname === href;
 		}
 		return pathname.startsWith(href);
+	};
+
+	const handleClick = (
+		e: React.MouseEvent<HTMLAnchorElement>,
+		href: string
+	) => {
+		// Handle hash-based navigation for modal triggers
+		if (href.startsWith("#")) {
+			e.preventDefault();
+			const event = new CustomEvent("openModal", { detail: { modalId: href } });
+			window.dispatchEvent(event);
+			setShowMore(false); // Close the more menu
+		}
 	};
 
 	return (
@@ -433,7 +458,12 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 									<Link
 										key={item.href}
 										href={item.href}
-										onClick={() => setShowMore(false)}
+										onClick={(e) => {
+											handleClick(e, item.href);
+											if (!item.href.startsWith("#")) {
+												setShowMore(false);
+											}
+										}}
 										className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all duration-200 active:scale-95 active:shadow-inner relative ${
 											isActive(item.href)
 												? "bg-lamaPurpleLight text-lamaPurple"

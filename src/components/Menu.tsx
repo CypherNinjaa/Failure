@@ -256,9 +256,21 @@ const menuItems = [
 				visible: ["admin", "teacher", "student", "parent"],
 			},
 			{
+				icon: "/singleClass.png",
+				label: "Sync Queue",
+				href: "#offline-queue",
+				visible: ["admin", "teacher", "student", "parent"],
+			},
+			{
+				icon: "/cache.png",
+				label: "Cache Manager",
+				href: "#cache-settings",
+				visible: ["admin", "teacher", "student", "parent"],
+			},
+			{
 				icon: "/logout.png",
 				label: "Logout",
-				href: "/logout",
+				href: "/sign-out",
 				visible: ["admin", "teacher", "student", "parent"],
 			},
 		],
