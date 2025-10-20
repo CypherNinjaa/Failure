@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+// Force dynamic rendering - required for auth()
+export const dynamic = "force-dynamic";
 
 export async function GET() {
 	try {

@@ -1,6 +1,9 @@
 import { getUserConversations } from "@/lib/messageActions";
 import { NextResponse } from "next/server";
 
+// Force dynamic rendering - required for auth() in getUserConversations
+export const dynamic = "force-dynamic";
+
 export async function GET() {
 	try {
 		const result = await getUserConversations();

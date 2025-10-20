@@ -1,6 +1,9 @@
 import { expireOldSuspensions } from "@/lib/actions";
 import { NextRequest, NextResponse } from "next/server";
 
+// Force dynamic rendering - required for request.headers
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
 	try {
 		// Verify the request is from Vercel Cron

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { calculateTeacherLeaderboard } from "@/lib/actions";
 
+// Force dynamic rendering - required for request.headers
+export const dynamic = "force-dynamic";
+
 const CRON_SECRET =
 	process.env.CRON_SECRET || "school_cron_2025_secure_token_vikash";
 
