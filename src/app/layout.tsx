@@ -9,6 +9,7 @@ import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import { ThemeProvider } from "@/lib/theme-provider-new";
 import dynamic from "next/dynamic";
+import FestivalProvider from "@/components/festival/FestivalProvider";
 
 const PWAPerformanceMonitor = dynamic(
 	() => import("@/components/PWAPerformanceMonitor"),
@@ -146,14 +147,16 @@ export default function RootLayout({
 					className={`${inter.className} min-h-screen bg-background font-sans antialiased overflow-x-hidden`}
 				>
 					<ThemeProvider defaultTheme="system" storageKey="hcs-theme">
-						<PWAPerformanceMonitor />
-						<UpdatePrompt />
-						<OfflineIndicator />
-						<div className="relative flex min-h-screen flex-col w-full">
-							<main className="flex-1 w-full">{children}</main>
-						</div>
-						<PWAInstallPrompt />
-						<ToastContainer position="bottom-right" theme="dark" />
+						<FestivalProvider>
+							<PWAPerformanceMonitor />
+							<UpdatePrompt />
+							<OfflineIndicator />
+							<div className="relative flex min-h-screen flex-col w-full">
+								<main className="flex-1 w-full">{children}</main>
+							</div>
+							<PWAInstallPrompt />
+							<ToastContainer position="bottom-right" theme="dark" />
+						</FestivalProvider>
 					</ThemeProvider>
 				</body>
 			</html>

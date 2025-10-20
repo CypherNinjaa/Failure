@@ -78,7 +78,7 @@ export default function UpdatePrompt() {
 							className="px-3 py-2 text-xs md:text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all font-medium"
 							disabled={isUpdating}
 						>
-							{showDetails ? "Hide" : "What&apos;s New"}
+							{showDetails ? "Hide" : "What's New"}
 						</button>
 						<button
 							onClick={() => setShowPrompt(false)}
