@@ -9,6 +9,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
+// Force dynamic rendering for all dashboard pages - required for database access
+export const dynamic = "force-dynamic";
+
 export default function DashboardLayout({
 	children,
 }: Readonly<{
