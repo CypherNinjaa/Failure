@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -68,7 +67,6 @@ export function ModernHeader() {
 							</div>
 						</Link>
 						<div className="flex items-center space-x-2 md:space-x-4">
-							<ThemeToggle />
 							<div className="hidden sm:flex items-center space-x-2">
 								<Button variant="ghost" size="sm" asChild>
 									<Link href="/sign-in">Portal Login</Link>
@@ -136,8 +134,6 @@ export function ModernHeader() {
 					</nav>
 					{/* Right Section */}
 					<div className="flex items-center space-x-2 md:space-x-4">
-						<ThemeToggle />
-
 						<div className="hidden sm:flex items-center space-x-2">
 							<Button
 								variant="ghost"

@@ -7,7 +7,6 @@ import "react-toastify/dist/ReactToastify.css";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import UpdatePrompt from "@/components/UpdatePrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
-import { ThemeProvider } from "@/lib/theme-provider-new";
 import dynamic from "next/dynamic";
 import FestivalProvider from "@/components/festival/FestivalProvider";
 
@@ -88,11 +87,8 @@ export const viewport: Viewport = {
 	maximumScale: 5,
 	userScalable: true,
 	viewportFit: "cover",
-	themeColor: [
-		{ media: "(prefers-color-scheme: light)", color: "#417AF5" },
-		{ media: "(prefers-color-scheme: dark)", color: "#5a8bff" },
-	],
-	colorScheme: "light dark",
+	themeColor: "#417AF5",
+	colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -157,18 +153,16 @@ export default function RootLayout({
 				<body
 					className={`${inter.className} min-h-screen bg-background font-sans antialiased overflow-x-hidden`}
 				>
-					<ThemeProvider defaultTheme="system" storageKey="hcs-theme">
-						<FestivalProvider>
-							<PWAPerformanceMonitor />
-							<UpdatePrompt />
-							<OfflineIndicator />
-							<div className="relative flex min-h-screen flex-col w-full">
-								<main className="flex-1 w-full">{children}</main>
-							</div>
-							<PWAInstallPrompt />
-							<ToastContainer position="bottom-right" theme="dark" />
-						</FestivalProvider>
-					</ThemeProvider>
+					<FestivalProvider>
+						<PWAPerformanceMonitor />
+						<UpdatePrompt />
+						<OfflineIndicator />
+						<div className="relative flex min-h-screen flex-col w-full">
+							<main className="flex-1 w-full">{children}</main>
+						</div>
+						<PWAInstallPrompt />
+						<ToastContainer position="bottom-right" theme="light" />
+					</FestivalProvider>
 				</body>
 			</html>
 		</ClerkProvider>
