@@ -1,111 +1,159 @@
 "use client";
 
-import { SignIn, useAuth } from "@clerk/nextjs";
-import { ModernHeader } from "@/components/ui/modern-header";
-import { ModernFooter } from "@/components/ui/modern-footer";
-import { useRouter, useSearchParams } from "next/navigation";
+import * as Clerk from "@clerk/elements/common";
+import * as SignIn from "@clerk/elements/sign-in";
+import { useUser } from "@clerk/nextjs";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function SignInPage() {
-	const { isLoaded, isSignedIn, sessionId } = useAuth();
+const LoginPage = () => {
+	const { isLoaded, isSignedIn, user } = useUser();
 	const router = useRouter();
-	const searchParams = useSearchParams();
-	const [isRedirecting, setIsRedirecting] = useState(false);
+	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
-		// More robust check for authenticated users
-		if (isLoaded && isSignedIn && sessionId) {
-			setIsRedirecting(true);
+		setMounted(true);
+	}, []);
 
-			// Check if there's a redirect URL in the query params
-			const redirectUrl = searchParams.get("redirect_url");
-
-			if (redirectUrl) {
-				// Decode and validate the redirect URL
-				try {
-					const decodedUrl = decodeURIComponent(redirectUrl);
-					// Only allow internal redirects
-					if (decodedUrl.startsWith("/")) {
-						router.replace(decodedUrl);
-						return;
-					}
-				} catch (e) {
-					console.error("Invalid redirect URL:", e);
-				}
+	// Automatic redirect based on role - this triggers AFTER successful login
+	useEffect(() => {
+		if (isSignedIn && user) {
+			const role = user?.publicMetadata.role as string;
+			if (role) {
+				router.push(`/${role}`);
 			}
-
-			// Default redirect to auth callback
-			router.replace("/auth-callback");
 		}
-	}, [isLoaded, isSignedIn, sessionId, router, searchParams]);
+	}, [isSignedIn, user, router]);
 
-	// Show loading state while checking authentication
-	if (!isLoaded) {
+	// Show loading skeleton immediately
+	if (!mounted || !isLoaded) {
 		return (
-			<div className="min-h-screen bg-background flex items-center justify-center">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-					<p className="text-muted-foreground">Checking authentication...</p>
-				</div>
-			</div>
-		);
-	}
-
-	// If already signed in, show redirect message
-	if (isSignedIn || isRedirecting) {
-		return (
-			<div className="min-h-screen bg-background flex items-center justify-center">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-					<p className="text-muted-foreground">Redirecting to dashboard...</p>
-					<p className="text-xs text-muted-foreground mt-2">Please wait...</p>
+			<div className="h-screen flex items-center justify-center bg-lamaSkyLight">
+				<div className="bg-white p-12 rounded-md shadow-2xl flex flex-col gap-2 w-full max-w-md">
+					<div className="flex items-center gap-2 mb-2">
+						<div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+						<div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+					</div>
+					<div className="w-48 h-5 bg-gray-200 rounded animate-pulse mb-4"></div>
+					<div className="w-full h-10 bg-gray-200 rounded animate-pulse mb-2"></div>
+					<div className="w-full h-10 bg-gray-200 rounded animate-pulse mb-2"></div>
+					<div className="w-full h-10 bg-blue-200 rounded animate-pulse"></div>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-background">
-			<ModernHeader />
-
-			<main className="pt-24 pb-16">
-				<div className="container mx-auto px-4">
-					<div className="flex justify-center">
-						<div className="w-full max-w-md">
-							<h1 className="text-3xl font-bold text-center mb-2">
-								Welcome Back
-							</h1>
-							<p className="text-muted-foreground text-center mb-8">
-								Sign in to access your dashboard
-							</p>
-
-							<SignIn
-								appearance={{
-									elements: {
-										rootBox: "w-full",
-										card: "shadow-xl border border-border",
-										headerTitle: "text-foreground",
-										headerSubtitle: "text-muted-foreground",
-										formButtonPrimary:
-											"bg-primary hover:bg-primary/90 text-primary-foreground",
-										formFieldInput:
-											"border-input bg-background text-foreground",
-										footerActionLink: "text-primary hover:text-primary/90",
-										identityPreviewText: "text-foreground",
-										formFieldLabel: "text-foreground",
-									},
-								}}
-								routing="hash"
-								signUpUrl={undefined}
-								forceRedirectUrl="/auth-callback"
-								fallbackRedirectUrl="/auth-callback"
-							/>
+		<div className="h-screen flex items-center justify-center bg-lamaSkyLight">
+			<SignIn.Root>
+				<SignIn.Step
+					name="start"
+					className="bg-white p-12 rounded-md shadow-2xl flex flex-col gap-2 relative"
+				>
+					{/* Loading Progress Bar - shows when user is being redirected */}
+					{isSignedIn && (
+						<div className="absolute top-0 left-0 right-0 h-1 bg-blue-100 rounded-t-md overflow-hidden">
+							<div className="h-full bg-blue-500 animate-progress-bar"></div>
 						</div>
-					</div>
-				</div>
-			</main>
+					)}
 
-			<ModernFooter />
+					<h1 className="text-xl font-bold flex items-center gap-2">
+						<Image
+							src="/logo.png"
+							alt="HCS Logo"
+							width={24}
+							height={24}
+							priority
+							className="w-auto h-auto"
+						/>
+						HCS
+					</h1>
+					<h2 className="text-gray-400">Sign in to your account</h2>
+
+					{/* Global Error Display */}
+					<Clerk.GlobalError className="text-sm text-red-400" />
+
+					{/* Username Field */}
+					<Clerk.Field name="identifier" className="flex flex-col gap-2">
+						<Clerk.Label className="text-xs text-gray-500">
+							Username
+						</Clerk.Label>
+						<Clerk.Input
+							type="text"
+							required
+							className="p-2 rounded-md ring-1 ring-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						/>
+						<Clerk.FieldError className="text-xs text-red-400" />
+					</Clerk.Field>
+
+					{/* Password Field */}
+					<Clerk.Field name="password" className="flex flex-col gap-2">
+						<Clerk.Label className="text-xs text-gray-500">
+							Password
+						</Clerk.Label>
+						<Clerk.Input
+							type="password"
+							required
+							className="p-2 rounded-md ring-1 ring-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						/>
+						<Clerk.FieldError className="text-xs text-red-400" />
+					</Clerk.Field>
+
+					{/* Submit Button with Loading State */}
+					<SignIn.Action submit asChild>
+						<button
+							disabled={isSignedIn}
+							className="group bg-blue-500 text-white my-1 rounded-md text-sm p-[10px] hover:bg-blue-600 hover:shadow-lg active:scale-95 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 relative overflow-hidden"
+						>
+							{isSignedIn ? (
+								<>
+									<svg
+										className="animate-spin h-5 w-5 text-white"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+										></circle>
+										<path
+											className="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+										></path>
+									</svg>
+									<span className="animate-pulse">Redirecting...</span>
+								</>
+							) : (
+								<>
+									<span>Sign In</span>
+									<svg
+										className="w-4 h-4 transition-transform group-hover:translate-x-1"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M13 7l5 5m0 0l-5 5m5-5H6"
+										/>
+									</svg>
+								</>
+							)}
+						</button>
+					</SignIn.Action>
+				</SignIn.Step>
+			</SignIn.Root>
 		</div>
 	);
-}
+};
+
+export default LoginPage;

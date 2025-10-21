@@ -642,6 +642,29 @@ select {
 	font-size: 16px; /* Prevent zoom on iOS */
 	-webkit-appearance: none;
 	appearance: none;
+	background-color: white;
+	color: #1a1a2e;
+}
+
+/* Dark mode form styles */
+.dark input,
+.dark textarea,
+.dark select {
+	background-color: #1a1a2e;
+	color: #f1f3f7;
+	border-color: #2d3748;
+}
+
+/* Ensure placeholder text is visible */
+input::placeholder,
+textarea::placeholder {
+	color: #9ca3af;
+	opacity: 1;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+	color: #6b7280;
 }
 
 /* Button enhancements for mobile */
@@ -814,6 +837,79 @@ button,
    FESTIVAL ANIMATIONS & STYLES
    ======================================== */
 
+/* Dashboard Force Light Theme - Override system dark mode */
+.dashboard-layout {
+	color-scheme: light !important;
+}
+
+/* Force light theme for dashboard sidebar - exclude notification badges */
+.dashboard-sidebar {
+	background-color: #ffffff !important;
+	color: #1a1a2e !important;
+}
+
+.dashboard-sidebar *:not([class*="bg-red-"]):not([class*="bg-purple-"]) {
+	color: inherit !important;
+}
+
+.dashboard-sidebar span:not([class*="bg-red-"]):not([class*="bg-purple-"]) {
+	color: #6b7280 !important;
+}
+
+.dashboard-sidebar .text-gray-400 {
+	color: #9ca3af !important;
+}
+
+.dashboard-sidebar .text-gray-500 {
+	color: #6b7280 !important;
+}
+
+/* Force light theme for dashboard navbar and content */
+.dashboard-navbar,
+.dashboard-content {
+	background-color: #f7f8fa !important;
+	color: #1a1a2e !important;
+}
+
+/* Force all search inputs in dashboard to use light theme */
+.dashboard-layout input[type="text"],
+.dashboard-layout input[type="search"],
+.dashboard-navbar input,
+.dashboard-content input {
+	background-color: white !important;
+	color: #1a1a2e !important;
+}
+
+.dashboard-layout input::placeholder,
+.dashboard-navbar input::placeholder,
+.dashboard-content input::placeholder {
+	color: #9ca3af !important;
+}
+
+/* Ensure all text in dashboard is visible in light theme - but preserve notification badges */
+.dashboard-content h1,
+.dashboard-content h2,
+.dashboard-content h3,
+.dashboard-content h4,
+.dashboard-content h5,
+.dashboard-content h6,
+.dashboard-content p,
+.dashboard-content label {
+	color: #1a1a2e !important;
+}
+
+/* Preserve notification badge colors */
+.bg-red-500,
+.bg-purple-500 {
+	background-color: rgb(239 68 68) !important;
+	color: white !important;
+}
+
+.bg-purple-500 {
+	background-color: rgb(168 85 247) !important;
+	color: white !important;
+}
+
 /* Festival floating animation */
 @keyframes float {
 	0%,
@@ -957,4 +1053,68 @@ button,
 		);
 	background-size: 100px 100px, 120px 120px, 80px 80px;
 	background-position: 0 0, 40px 40px, 60px 60px;
+}
+
+/* Sign-in button loading animation */
+@keyframes progress-bar {
+	0% {
+		width: 0%;
+		opacity: 0.8;
+	}
+	50% {
+		width: 70%;
+		opacity: 1;
+	}
+	100% {
+		width: 100%;
+		opacity: 0.8;
+	}
+}
+
+.animate-progress-bar {
+	animation: progress-bar 1.5s ease-in-out infinite;
+}
+
+/* Form input utility classes for consistent styling */
+.form-input {
+	background-color: white !important;
+	color: #1a1a2e !important;
+	border: 1px solid #e5e7eb;
+}
+
+.dark .form-input {
+	background-color: #1a1a2e !important;
+	color: #f1f3f7 !important;
+	border-color: #2d3748;
+}
+
+.form-input:focus {
+	outline: none;
+	border-color: #417af5;
+	box-shadow: 0 0 0 3px rgba(65, 122, 245, 0.2);
+}
+
+/* Override any Clerk or third-party input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea {
+	background-color: white !important;
+	color: #1a1a2e !important;
+}
+
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="tel"],
+.dark input[type="url"],
+.dark input[type="search"],
+.dark textarea {
+	background-color: #1a1a2e !important;
+	color: #f1f3f7 !important;
 }
