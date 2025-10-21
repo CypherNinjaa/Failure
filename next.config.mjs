@@ -33,8 +33,6 @@ const nextConfig = {
 		}
 		return config;
 	},
-	// Enable standalone output for optimized production builds
-	output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
 };
 
 export default nextConfig;
