@@ -1,0 +1,870 @@
+2025-10-21T06:32:30.724409224Z [inf]  
+2025-10-21T06:32:39.891650032Z [inf]  [35m[Region: asia-southeast1][0m
+2025-10-21T06:32:39.901876783Z [inf]  [35m=========================
+2025-10-21T06:32:39.901921045Z [inf]  Using Detected Dockerfile
+2025-10-21T06:32:39.901927206Z [inf]  =========================
+2025-10-21T06:32:39.901932266Z [inf]  [0m
+2025-10-21T06:32:39.901950973Z [inf]  context: w6x5-1V6V
+2025-10-21T06:32:40.156414042Z [inf]  [internal] load build definition from Dockerfile
+2025-10-21T06:32:40.156479951Z [inf]  [internal] load build definition from Dockerfile
+2025-10-21T06:32:40.156503427Z [inf]  [internal] load build definition from Dockerfile
+2025-10-21T06:32:40.225403012Z [inf]  [internal] load build definition from Dockerfile
+2025-10-21T06:32:40.233813196Z [inf]  [internal] load metadata for docker.io/library/node:18-alpine
+2025-10-21T06:32:40.241710167Z [inf]  [auth] library/node:pull token for registry-1.docker.io
+2025-10-21T06:32:40.241808520Z [inf]  [auth] library/node:pull token for registry-1.docker.io
+2025-10-21T06:32:41.716422049Z [inf]  [internal] load metadata for docker.io/library/node:18-alpine
+2025-10-21T06:32:41.716514176Z [inf]  [internal] load .dockerignore
+2025-10-21T06:32:41.716792844Z [inf]  [internal] load .dockerignore
+2025-10-21T06:32:41.717077789Z [inf]  [internal] load .dockerignore
+2025-10-21T06:32:41.736009406Z [inf]  [internal] load .dockerignore
+2025-10-21T06:32:41.743365277Z [inf]  [runner 3/8] RUN adduser --system --uid 1001 nextjs
+2025-10-21T06:32:41.743439228Z [inf]  [runner 2/8] RUN addgroup --system --gid 1001 nodejs
+2025-10-21T06:32:41.743452446Z [inf]  [builder 1/4] WORKDIR /app
+2025-10-21T06:32:41.743462139Z [inf]  [base 1/1] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+2025-10-21T06:32:41.743522404Z [inf]  [deps 4/6] COPY prisma ./prisma/
+2025-10-21T06:32:41.743533301Z [inf]  [deps 3/6] COPY package*.json ./
+2025-10-21T06:32:41.743539467Z [inf]  [internal] load build context
+2025-10-21T06:32:41.743545325Z [inf]  [deps 2/6] WORKDIR /app
+2025-10-21T06:32:41.743551249Z [inf]  [deps 1/6] RUN apk add --no-cache libc6-compat openssl
+2025-10-21T06:32:41.743592124Z [inf]  [runner 8/8] COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+2025-10-21T06:32:41.743598625Z [inf]  [runner 7/8] COPY --from=builder /app/prisma ./prisma
+2025-10-21T06:32:41.743604245Z [inf]  [runner 6/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+2025-10-21T06:32:41.743609985Z [inf]  [runner 5/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+2025-10-21T06:32:41.743620931Z [inf]  [runner 4/8] COPY --from=builder /app/public ./public
+2025-10-21T06:32:41.743627687Z [inf]  [builder 4/4] RUN npm run build
+2025-10-21T06:32:41.743633673Z [inf]  [builder 3/4] COPY . .
+2025-10-21T06:32:41.743640965Z [inf]  [builder 2/4] COPY --from=deps /app/node_modules ./node_modules
+2025-10-21T06:32:41.743646676Z [inf]  [deps 6/6] RUN npx prisma generate
+2025-10-21T06:32:41.743652174Z [inf]  [deps 5/6] RUN npm ci
+2025-10-21T06:32:41.743847581Z [inf]  [internal] load build context
+2025-10-21T06:32:41.743862138Z [inf]  [base 1/1] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+2025-10-21T06:32:41.743887018Z [inf]  [internal] load build context
+2025-10-21T06:32:41.754061101Z [inf]  [base 1/1] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+2025-10-21T06:32:41.755418821Z [inf]  [builder 1/4] WORKDIR /app
+2025-10-21T06:32:41.755497217Z [inf]  [base 1/1] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+2025-10-21T06:32:41.755528741Z [inf]  [base 1/1] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+2025-10-21T06:32:41.755544531Z [inf]  [internal] load build context
+2025-10-21T06:32:41.755579068Z [inf]  [deps 1/6] RUN apk add --no-cache libc6-compat openssl
+2025-10-21T06:32:41.755592417Z [inf]  [runner 2/8] RUN addgroup --system --gid 1001 nodejs
+2025-10-21T06:32:41.965115816Z [inf]  fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz
+
+2025-10-21T06:32:42.035939944Z [inf]  [internal] load build context
+2025-10-21T06:32:42.065649235Z [inf]  fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/x86_64/APKINDEX.tar.gz
+
+2025-10-21T06:32:42.246936616Z [inf]  [runner 2/8] RUN addgroup --system --gid 1001 nodejs
+2025-10-21T06:32:42.249349431Z [inf]  [runner 3/8] RUN adduser --system --uid 1001 nextjs
+2025-10-21T06:32:42.385988608Z [inf]  [runner 3/8] RUN adduser --system --uid 1001 nextjs
+2025-10-21T06:32:42.458772916Z [inf]  (1/6) Upgrading libcrypto3 (3.3.3-r0 -> 3.3.5-r0)
+
+2025-10-21T06:32:42.500420504Z [inf]  (2/6) Upgrading libssl3 (3.3.3-r0 -> 3.3.5-r0)
+
+2025-10-21T06:32:42.510661542Z [inf]  (3/6) Installing musl-obstack (1.2.3-r2)
+
+2025-10-21T06:32:42.513311599Z [inf]  (4/6) Installing libucontext (1.3.2-r0)
+
+2025-10-21T06:32:42.51598658Z [inf]  (5/6) Installing gcompat (1.1.0-r4)
+
+2025-10-21T06:32:42.521128734Z [inf]  (6/6) Installing openssl (3.3.5-r0)
+
+2025-10-21T06:32:42.532411Z [inf]  Executing busybox-1.37.0-r12.trigger
+
+2025-10-21T06:32:42.541393093Z [inf]  OK: 11 MiB in 21 packages
+
+2025-10-21T06:32:42.823292434Z [inf]  [deps 1/6] RUN apk add --no-cache libc6-compat openssl
+2025-10-21T06:32:42.825989155Z [inf]  [deps 2/6] WORKDIR /app
+2025-10-21T06:32:42.857387667Z [inf]  [deps 2/6] WORKDIR /app
+2025-10-21T06:32:42.859646515Z [inf]  [deps 3/6] COPY package*.json ./
+2025-10-21T06:32:42.889849206Z [inf]  [deps 3/6] COPY package*.json ./
+2025-10-21T06:32:42.892159315Z [inf]  [deps 4/6] COPY prisma ./prisma/
+2025-10-21T06:32:42.920446105Z [inf]  [deps 4/6] COPY prisma ./prisma/
+2025-10-21T06:32:42.922330640Z [inf]  [deps 5/6] RUN npm ci
+2025-10-21T06:32:48.093511054Z [inf]  npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+
+2025-10-21T06:32:49.120198129Z [inf]  npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+
+2025-10-21T06:32:51.516673983Z [inf]  npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+
+2025-10-21T06:32:51.517417569Z [inf]  npm warn deprecated @humanwhocodes/config-array@0.11.14: Use @eslint/config-array instead
+
+2025-10-21T06:32:52.806898324Z [inf]  npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+2025-10-21T06:33:42.803411354Z [inf]  
+> vikash-dev-next-dashboard@0.1.0 postinstall
+> prisma generate
+
+
+2025-10-21T06:33:43.97683121Z [inf]  warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+
+2025-10-21T06:33:44.295145191Z [inf]  Prisma schema loaded from prisma/schema.prisma
+
+2025-10-21T06:33:45.156987468Z [inf]  
+✔ Generated Prisma Client (v6.17.1) to ./node_modules/@prisma/client in 419ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+
+2025-10-21T06:33:45.203466088Z [inf]  
+added 780 packages, and audited 781 packages in 1m
+
+2025-10-21T06:33:45.203489404Z [inf]  
+161 packages are looking for funding
+  run `npm fund` for details
+
+2025-10-21T06:33:45.466761337Z [inf]  
+14 vulnerabilities (5 low, 3 moderate, 5 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+
+2025-10-21T06:33:45.469144749Z [inf]  npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.6.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+npm notice To update run: npm install -g npm@11.6.2
+npm notice
+
+2025-10-21T06:33:46.544696981Z [inf]  [deps 5/6] RUN npm ci
+2025-10-21T06:33:46.548205349Z [inf]  [deps 6/6] RUN npx prisma generate
+2025-10-21T06:33:48.664684476Z [inf]  warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+
+2025-10-21T06:33:49.014899047Z [inf]  Prisma schema loaded from prisma/schema.prisma
+
+2025-10-21T06:33:49.916146703Z [inf]  
+✔ Generated Prisma Client (v6.17.1) to ./node_modules/@prisma/client in 446ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+
+2025-10-21T06:33:50.574321186Z [inf]  [deps 6/6] RUN npx prisma generate
+2025-10-21T06:34:02.146178026Z [inf]  [builder 2/4] COPY --from=deps /app/node_modules ./node_modules
+2025-10-21T06:34:07.290924987Z [inf]  [builder 2/4] COPY --from=deps /app/node_modules ./node_modules
+2025-10-21T06:34:07.292552272Z [inf]  [builder 3/4] COPY . .
+2025-10-21T06:34:07.746084672Z [inf]  [builder 3/4] COPY . .
+2025-10-21T06:34:07.748539072Z [inf]  [builder 4/4] RUN npm run build
+2025-10-21T06:34:08.500912602Z [inf]  
+> vikash-dev-next-dashboard@0.1.0 build
+> next build
+
+
+2025-10-21T06:34:09.288011454Z [inf]    ▲ Next.js 14.2.5
+
+2025-10-21T06:34:09.288483621Z [inf]  
+
+2025-10-21T06:34:09.317024234Z [inf]     Creating an optimized production build ...
+
+2025-10-21T06:35:01.121360716Z [inf]   ✓ Compiled successfully
+
+2025-10-21T06:35:01.123339741Z [inf]     Linting and checking validity of types ...
+
+2025-10-21T06:35:31.101171923Z [inf]     Collecting page data ...
+
+2025-10-21T06:35:39.51776157Z [inf]     Generating static pages (0/76) ...
+
+2025-10-21T06:35:40.681087719Z [inf]  prisma:error 
+Invalid `prisma.location.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+
+2025-10-21T06:35:40.685963066Z [inf]  Error fetching locations: PrismaClientInitializationError: 
+Invalid `prisma.location.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async p (/app/.next/server/app/api/locations/active/route.js:1:579)
+    at async /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:36258
+    at async eR.execute (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:26874)
+    at async eR.handle (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37512)
+    at async exportAppRoute (/app/node_modules/next/dist/export/routes/app-route.js:77:26)
+    at async exportPageImpl (/app/node_modules/next/dist/export/worker.js:175:20) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined
+}
+
+2025-10-21T06:35:40.735058224Z [inf]     Generating static pages (19/76) 
+
+2025-10-21T06:35:40.753258611Z [inf]  prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+
+2025-10-21T06:35:40.768469246Z [inf]     Generating static pages (38/76) 
+
+2025-10-21T06:35:41.769363107Z [inf]     Generating static pages (57/76) 
+
+2025-10-21T06:35:41.7699698Z [inf]  prisma:error 
+Invalid `prisma.admin.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.teacher.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.student.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.parent.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.student.groupBy()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.attendance.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.income.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.admin.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.teacher.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.student.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.parent.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.student.groupBy()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.attendance.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+prisma:error 
+Invalid `prisma.income.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+
+2025-10-21T06:35:41.770255305Z [inf]  PrismaClientInitializationError: 
+Invalid `prisma.admin.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2496051771'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.teacher.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2799041211'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.student.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '1153882555'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.parent.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '424739643'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.student.groupBy()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async v (/app/.next/server/app/(dashboard)/admin/page.js:1:49796) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2985152430'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.attendance.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async p (/app/.next/server/app/(dashboard)/admin/page.js:1:48851) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '421538477'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.income.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async P (/app/.next/server/app/(dashboard)/admin/page.js:1:52284) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2136358788'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.admin.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2496051771'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.teacher.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2799041211'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.student.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '1153882555'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.parent.count()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async A (/app/.next/server/app/(dashboard)/admin/page.js:1:53247) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '424739643'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.student.groupBy()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async v (/app/.next/server/app/(dashboard)/admin/page.js:1:49796) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2985152430'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.attendance.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async p (/app/.next/server/app/(dashboard)/admin/page.js:1:48851) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '421538477'
+}
+PrismaClientInitializationError: 
+Invalid `prisma.income.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7568)
+    at ei.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at ei.request (/app/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at async a (/app/node_modules/@prisma/client/runtime/library.js:130:9551)
+    at async P (/app/.next/server/app/(dashboard)/admin/page.js:1:52284) {
+  clientVersion: '6.17.1',
+  errorCode: undefined,
+  retryable: undefined,
+  digest: '2136358788'
+}
+
+2025-10-21T06:35:41.770867366Z [inf]   ✓ Generating static pages (76/76)
+
+2025-10-21T06:35:42.306944889Z [inf]     Finalizing page optimization ...
+   Collecting build traces ...
+
+2025-10-21T06:35:55.780195441Z [inf]  
+
+2025-10-21T06:35:55.794641598Z [inf]  Route (app)                                    Size     First Load JS
+┌ ƒ /                                          10.7 kB         164 kB
+├ ƒ /_not-found                                879 B          88.8 kB
+├ ƒ /about                                     14.1 kB         167 kB
+├ ƒ /academics                                 13.3 kB         166 kB
+├ ƒ /admin                                     12 kB           213 kB
+├ ƒ /admin-notifications                       2.52 kB        96.8 kB
+├ ƒ /admin/attendance-settings                 1.64 kB         103 kB
+├ ƒ /admin/auto-absent                         181 B          95.4 kB
+├ ƒ /admin/cron-jobs                           1.81 kB         103 kB
+├ ƒ /admin/export-data                         98.5 kB         198 kB
+├ ƒ /admin/payment-approvals                   1.36 kB         101 kB
+├ ƒ /admin/payment-config                      2.19 kB         154 kB
+├ ƒ /admin/penalty-management                  1.39 kB         101 kB
+├ ƒ /admin/penalty-management/[id]             5 kB            111 kB
+├ ƒ /admin/record-payment                      1.54 kB         106 kB
+├ ƒ /admin/transactions                        1.27 kB        89.2 kB
+├ ƒ /admissions                                21.8 kB         175 kB
+├ ƒ /api/admin/send-notification               0 B                0 B
+├ ƒ /api/admin/test-notification               0 B                0 B
+├ ƒ /api/approve-payment                       0 B                0 B
+├ ƒ /api/attendance-settings                   0 B                0 B
+├ ƒ /api/auto-mark-absent                      0 B                0 B
+├ ƒ /api/conversations/[conversationId]/media  0 B                0 B
+├ ƒ /api/conversations/refresh                 0 B                0 B
+├ ƒ /api/conversations/unread-counts           0 B                0 B
+├ ƒ /api/cron/expire-suspensions               0 B                0 B
+├ ƒ /api/cron/mark-absent-teachers             0 B                0 B
+├ ƒ /api/cron/process-badges                   0 B                0 B
+├ ƒ /api/cron/update-teacher-leaderboard       0 B                0 B
+├ ƒ /api/current-user                          0 B                0 B
+├ ƒ /api/export-filters                        0 B                0 B
+├ ƒ /api/face-attendance                       0 B                0 B
+├ ○ /api/health                                0 B                0 B
+├ ƒ /api/locations/active                      0 B                0 B
+├ ƒ /api/messages/[conversationId]             0 B                0 B
+├ ƒ /api/online-status                         0 B                0 B
+├ ƒ /api/parent-payment                        0 B                0 B
+├ ƒ /api/payment-config                        0 B                0 B
+├ ƒ /api/push/subscribe                        0 B                0 B
+├ ƒ /api/push/test                             0 B                0 B
+├ ƒ /api/teacher-attendance                    0 B                0 B
+├ ƒ /api/users/[userId]                        0 B                0 B
+├ ○ /apple-icon.png                            0 B                0 B
+├ ƒ /blog                                      9.61 kB         163 kB
+├ ƒ /blog/[id]                                 7.88 kB         164 kB
+├ ƒ /co-curricular                             11.1 kB         164 kB
+├ ƒ /contact                                   7.77 kB         161 kB
+├ ƒ /facilities                                12.1 kB         165 kB
+├ ƒ /gallery                                   10.4 kB         163 kB
+├ ○ /icon.png                                  0 B                0 B
+├ ƒ /list/announcements                        2.26 kB         107 kB
+├ ƒ /list/assign-fees                          2.26 kB         107 kB
+├ ƒ /list/assignments                          2.26 kB         107 kB
+├ ƒ /list/attendance                           1.39 kB         101 kB
+├ ƒ /list/badges                               2.63 kB         107 kB
+├ ƒ /list/classes                              2.25 kB         113 kB
+├ ƒ /list/classes/[id]/attendance              4.61 kB        98.9 kB
+├ ƒ /list/classes/[id]/face-attendance         4.08 kB         267 kB
+├ ƒ /list/events                               2.26 kB         107 kB
+├ ƒ /list/exams                                2.26 kB         107 kB
+├ ƒ /list/expenses                             2.26 kB         107 kB
+├ ƒ /list/fee-structures                       2.23 kB         106 kB
+├ ƒ /list/income                               2.22 kB         106 kB
+├ ƒ /list/leaderboard                          180 B          93.2 kB
+├ ƒ /list/lessons                              3.74 kB         108 kB
+├ ƒ /list/locations                            2.25 kB         113 kB
+├ ƒ /list/messages                             5.56 kB         272 kB
+├ ƒ /list/messages/[conversationId]            11 kB           312 kB
+├ ƒ /list/notification-settings                188 B           125 kB
+├ ƒ /list/parents                              2.26 kB         107 kB
+├ ƒ /list/results                              2.26 kB         107 kB
+├ ƒ /list/salaries                             2.23 kB         106 kB
+├ ƒ /list/student-fees                         1.37 kB         101 kB
+├ ƒ /list/students                             2.25 kB         113 kB
+├ ƒ /list/students/[id]                        2.41 kB         282 kB
+├ ƒ /list/subjects                             2.26 kB         107 kB
+├ ƒ /list/teacher-attendance                   1.39 kB         101 kB
+├ ƒ /list/teacher-leaderboard                  660 B          93.7 kB
+├ ƒ /list/teachers                             2.25 kB         113 kB
+├ ƒ /list/teachers/[id]                        2.41 kB         282 kB
+├ ƒ /news                                      11.2 kB         164 kB
+├ ƒ /parent                                    1.99 kB         164 kB
+├ ƒ /parent/fees                               4.54 kB         156 kB
+├ ƒ /parent/transactions                       1.17 kB        94.2 kB
+├ ƒ /profile                                   190 B           100 kB
+├ ƒ /settings                                  1.65 kB         127 kB
+├ ƒ /sign-in                                   37 kB           150 kB
+├ ƒ /sign-out                                  1.92 kB         110 kB
+├ ƒ /student                                   2.23 kB         186 kB
+├ ƒ /student-badges                            302 B            95 kB
+├ ƒ /teacher                                   2.31 kB         181 kB
+├ ƒ /teacher-badges                            302 B            95 kB
+└ ƒ /teacher/attendance                        6.37 kB         276 kB
++ First Load JS shared by all                  87.9 kB
+  ├ chunks/7023-ab895f481f456c09.js            31.7 kB
+  ├ chunks/fd9d1056-5ee3151e8489ce74.js        53.6 kB
+  └ other shared chunks (total)                2.59 kB
+
+
+ƒ Middleware                                   59.4 kB
+
+
+2025-10-21T06:35:55.795015441Z [inf]  ○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+2025-10-21T06:35:55.904462908Z [inf]  npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.6.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+npm notice To update run: npm install -g npm@11.6.2
+npm notice
+
+2025-10-21T06:35:56.576747292Z [inf]  [builder 4/4] RUN npm run build
+2025-10-21T06:35:57.751350230Z [inf]  [runner 4/8] COPY --from=builder /app/public ./public
+2025-10-21T06:35:57.801582735Z [inf]  [runner 4/8] COPY --from=builder /app/public ./public
+2025-10-21T06:35:57.804045589Z [inf]  [runner 5/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+2025-10-21T06:35:58.090612973Z [inf]  [runner 5/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+2025-10-21T06:35:58.092281819Z [inf]  [runner 6/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+2025-10-21T06:35:58.146785753Z [inf]  [runner 6/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+2025-10-21T06:35:58.148991924Z [inf]  [runner 7/8] COPY --from=builder /app/prisma ./prisma
+2025-10-21T06:35:58.173796416Z [inf]  [runner 7/8] COPY --from=builder /app/prisma ./prisma
+2025-10-21T06:35:58.175879760Z [inf]  [runner 8/8] COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+2025-10-21T06:35:58.225275481Z [inf]  [runner 8/8] COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+2025-10-21T06:35:58.228977160Z [inf]  exporting to docker image format
+2025-10-21T06:35:58.229053414Z [inf]  exporting to image
+2025-10-21T06:36:02.381088893Z [inf]  importing to docker
+2025-10-21T06:36:02.836768096Z [inf]  [auth] sharing credentials for production-asia-southeast1-eqsg3a.railway-registry.com
+2025-10-21T06:36:02.836843443Z [inf]  [auth] sharing credentials for production-asia-southeast1-eqsg3a.railway-registry.com
+2025-10-21T06:36:03.742696101Z [inf]  importing to docker
+2025-10-21T06:38:31.690610368Z [inf]  [92mBuild time: 351.79 seconds[0m
+2025-10-21T06:39:50.573953284Z [inf]  
+2025-10-21T06:39:50.574056281Z [inf]  [35m====================
+Starting Healthcheck
+====================
+[0m
+2025-10-21T06:39:50.574060950Z [inf]  [37mPath: /api/health[0m
+2025-10-21T06:39:50.574063761Z [inf]  [37mRetry window: 5m0s[0m
+2025-10-21T06:39:50.574066061Z [inf]  
+2025-10-21T06:39:50.808135127Z [inf]  [93mAttempt #1 failed with service unavailable. Continuing to retry for 4m59s[0m
+2025-10-21T06:39:54.043465112Z [inf]  [93mAttempt #2 failed with service unavailable. Continuing to retry for 4m56s[0m
+2025-10-21T06:40:00.315795196Z [inf]  [93mAttempt #3 failed with service unavailable. Continuing to retry for 4m50s[0m
+2025-10-21T06:40:04.508160137Z [inf]  [93mAttempt #4 failed with service unavailable. Continuing to retry for 4m46s[0m
+2025-10-21T06:40:12.754422573Z [inf]  [93mAttempt #5 failed with service unavailable. Continuing to retry for 4m37s[0m
+2025-10-21T06:40:28.972285433Z [inf]  [93mAttempt #6 failed with service unavailable. Continuing to retry for 4m21s[0m
+2025-10-21T06:40:59.176372712Z [inf]  [93mAttempt #7 failed with service unavailable. Continuing to retry for 3m51s[0m
+2025-10-21T06:41:29.417028371Z [inf]  [93mAttempt #8 failed with service unavailable. Continuing to retry for 3m21s[0m
+2025-10-21T06:41:59.609113617Z [inf]  [93mAttempt #9 failed with service unavailable. Continuing to retry for 2m50s[0m
+2025-10-21T06:42:29.796972319Z [inf]  [93mAttempt #10 failed with service unavailable. Continuing to retry for 2m20s[0m
