@@ -26,7 +26,7 @@ const inter = Inter({
 export const metadata: Metadata = {
 	metadataBase: new URL(
 		process.env.NODE_ENV === "production"
-			? "https://happychildschool.edu"
+			? "https://happychild.in"
 			: "http://localhost:3000"
 	),
 	title: "HCS - Happy Child School",
@@ -101,7 +101,15 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<ClerkProvider>
+		<ClerkProvider
+			appearance={{
+				baseTheme: undefined,
+				variables: {
+					colorPrimary: "#417AF5",
+				},
+			}}
+			signInUrl="/sign-in"
+		>
 			<html lang="en" suppressHydrationWarning className={inter.variable}>
 				<head>
 					<link rel="manifest" href="/manifest.json" />
@@ -120,6 +128,9 @@ export default function RootLayout({
 						href="https://fonts.gstatic.com"
 						crossOrigin="anonymous"
 					/>
+					{/* Preconnect to Clerk for faster loading */}
+					<link rel="preconnect" href="https://clerk.accounts.dev" />
+					<link rel="dns-prefetch" href="https://clerk.accounts.dev" />
 					<script
 						dangerouslySetInnerHTML={{
 							__html: `

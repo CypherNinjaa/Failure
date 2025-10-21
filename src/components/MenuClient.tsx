@@ -39,13 +39,23 @@ const MenuClient = ({ menuItems, role, userId }: MenuClientProps) => {
 
 	return (
 		<div className="mt-4 text-sm overflow-y-auto h-[calc(100vh-120px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
-			{menuItems.map((i) => (
-				<div className="flex flex-col gap-2" key={i.title}>
-					<span className="hidden lg:block text-gray-400 font-light my-4">
-						{i.title}
-					</span>
-					{i.items.map((item) => {
-						if (item.visible.includes(role)) {
+			{menuItems.map((section) => {
+				// Filter items that are visible for the current role
+				const visibleItems = section.items.filter((item) =>
+					item.visible.includes(role)
+				);
+
+				// Only render section if there are visible items
+				if (visibleItems.length === 0) {
+					return null;
+				}
+
+				return (
+					<div className="flex flex-col gap-2" key={section.title}>
+						<span className="hidden lg:block text-gray-400 font-light my-4">
+							{section.title}
+						</span>
+						{visibleItems.map((item) => {
 							const isMessagesLink = item.href === "/list/messages";
 							return (
 								<Link
@@ -72,10 +82,10 @@ const MenuClient = ({ menuItems, role, userId }: MenuClientProps) => {
 									)}
 								</Link>
 							);
-						}
-					})}
-				</div>
-			))}
+						})}
+					</div>
+				);
+			})}
 		</div>
 	);
 };

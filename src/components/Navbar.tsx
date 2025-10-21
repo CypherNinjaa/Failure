@@ -56,12 +56,12 @@ const Navbar = async () => {
 			</div>
 
 			{/* SEARCH BAR - Desktop Only */}
-			<div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2">
+			<div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2 bg-white">
 				<Image src="/search.png" alt="" width={14} height={14} />
 				<input
 					type="text"
 					placeholder="Search..."
-					className="w-[200px] p-2 bg-transparent outline-none"
+					className="w-[200px] p-2 bg-white text-gray-800 placeholder:text-gray-400 outline-none"
 				/>
 			</div>
 			{/* ICONS AND USER */}

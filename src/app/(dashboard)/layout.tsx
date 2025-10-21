@@ -19,7 +19,7 @@ export default function DashboardLayout({
 		(sessionClaims?.metadata as { role?: string })?.role || "student";
 
 	return (
-		<div className="h-screen flex">
+		<div className="h-screen flex dashboard-layout">
 			{/* LEFT SIDEBAR - Hidden on mobile, visible on tablet+ */}
 			<div className="hidden md:block md:w-[8%] lg:w-[16%] xl:w-[14%] p-4 dashboard-sidebar">
 				<Link
@@ -33,7 +33,7 @@ export default function DashboardLayout({
 						height={32}
 						className="w-auto h-auto"
 					/>
-					<span className="hidden lg:block font-bold ">HCS</span>
+					<span className="hidden lg:block font-bold text-gray-800">HCS</span>
 				</Link>
 				<Menu />
 			</div>

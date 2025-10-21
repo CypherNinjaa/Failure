@@ -86,7 +86,10 @@ const MessageIcon = ({ userId }: { userId: string }) => {
 		>
 			<Image src="/message.png" alt="Messages" width={20} height={20} />
 			{unreadCount > 0 && (
-				<span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg animate-pulse">
+				<span
+					className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg animate-pulse"
+					style={{ color: "white" }}
+				>
 					{unreadCount > 9 ? "9+" : unreadCount}
 				</span>
 			)}
