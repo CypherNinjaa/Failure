@@ -4333,8 +4333,8 @@ export const createGalleryItem = async (
 			},
 		});
 
-		// revalidatePath("/media-coordinator/gallery");
-		// revalidatePath("/");
+		revalidatePath("/media-coordinator/gallery");
+		revalidatePath("/");
 		return { success: true, error: false };
 	} catch (err) {
 		console.error("Error creating gallery item:", err);
@@ -4373,8 +4373,8 @@ export const updateGalleryItem = async (
 			},
 		});
 
-		// revalidatePath("/media-coordinator/gallery");
-		// revalidatePath("/");
+		revalidatePath("/media-coordinator/gallery");
+		revalidatePath("/");
 		return { success: true, error: false };
 	} catch (err) {
 		console.error("Error updating gallery item:", err);
@@ -4401,8 +4401,8 @@ export const deleteGalleryItem = async (
 			where: { id: parseInt(id) },
 		});
 
-		// revalidatePath("/media-coordinator/gallery");
-		// revalidatePath("/");
+		revalidatePath("/media-coordinator/gallery");
+		revalidatePath("/");
 		return { success: true, error: false };
 	} catch (err) {
 		console.error("Error deleting gallery item:", err);

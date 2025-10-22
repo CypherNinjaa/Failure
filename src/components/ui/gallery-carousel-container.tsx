@@ -2,60 +2,68 @@ import prisma from "@/lib/prisma";
 import { GalleryCarouselClient } from "./gallery-carousel-client";
 
 // Fallback gallery items (used when database is empty or not migrated yet)
-const fallbackGalleryItems = [
+const fallbackGalleryItems: Array<{
+	id: number;
+	type: "image" | "video";
+	src: string;
+	title: string;
+	description: string;
+	location: string;
+	category: "facility" | "event" | "activity" | "achievement";
+}> = [
 	{
 		id: 1,
-		type: "image" as const,
+		type: "image",
 		src: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=600&fit=crop&crop=center",
 		title: "Modern Science Laboratory",
 		description: "State-of-the-art equipment for hands-on learning",
 		location: "Science Building, 2nd Floor",
-		category: "facility" as const,
+		category: "facility",
 	},
 	{
 		id: 2,
-		type: "image" as const,
+		type: "image",
 		src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop&crop=center",
 		title: "Annual Sports Day 2024",
 		description: "Students showcasing their athletic talents",
 		location: "Main Sports Ground",
-		category: "event" as const,
+		category: "event",
 	},
 	{
 		id: 3,
-		type: "video" as const,
+		type: "video",
 		src: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800&h=600&fit=crop&crop=center",
 		title: "Art & Craft Workshop",
 		description: "Creative minds at work in our art studio",
 		location: "Creative Arts Center",
-		category: "activity" as const,
+		category: "activity",
 	},
 	{
 		id: 4,
-		type: "image" as const,
+		type: "image",
 		src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&h=600&fit=crop&crop=center",
 		title: "Digital Learning Hub",
 		description: "Interactive smart classrooms with latest technology",
 		location: "Technology Wing",
-		category: "facility" as const,
+		category: "facility",
 	},
 	{
 		id: 5,
-		type: "image" as const,
+		type: "image",
 		src: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop&crop=center",
 		title: "National Award Winners",
 		description: "Our students excelling at national competitions",
 		location: "Assembly Hall",
-		category: "achievement" as const,
+		category: "achievement",
 	},
 	{
 		id: 6,
-		type: "image" as const,
+		type: "image",
 		src: "https://images.unsplash.com/photo-1460518451285-97b6aa326961?w=800&h=600&fit=crop&crop=center",
 		title: "Cultural Festival Performance",
 		description: "Vibrant cultural performances by talented students",
 		location: "Main Auditorium",
-		category: "event" as const,
+		category: "event",
 	},
 ];
 
@@ -79,7 +87,7 @@ export async function GalleryCarousel() {
 				src: item.src,
 				title: item.title,
 				description: item.description,
-				location: item.location || undefined,
+				location: item.location || "School Campus",
 				category: item.category.toLowerCase() as
 					| "facility"
 					| "event"

@@ -7,6 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import Image from "next/image";
 import FormModal from "@/components/FormModal";
 import { Prisma } from "@prisma/client";
+import GalleryFilters from "@/components/GalleryFilters";
 
 type GalleryItemList = {
 	id: number;
@@ -186,45 +187,7 @@ const GalleryManagementPage = async ({
 				<div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
 					<TableSearch />
 					<div className="flex items-center gap-4 self-end">
-						{/* Filter by Category */}
-						<select
-							className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-							defaultValue={category || ""}
-							onChange={(e) => {
-								const params = new URLSearchParams(window.location.search);
-								if (e.target.value) {
-									params.set("category", e.target.value);
-								} else {
-									params.delete("category");
-								}
-								window.location.search = params.toString();
-							}}
-						>
-							<option value="">All Categories</option>
-							<option value="FACILITY">Facilities</option>
-							<option value="EVENT">Events</option>
-							<option value="ACTIVITY">Activities</option>
-							<option value="ACHIEVEMENT">Achievements</option>
-						</select>
-
-						{/* Filter by Status */}
-						<select
-							className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-							defaultValue={status || ""}
-							onChange={(e) => {
-								const params = new URLSearchParams(window.location.search);
-								if (e.target.value) {
-									params.set("status", e.target.value);
-								} else {
-									params.delete("status");
-								}
-								window.location.search = params.toString();
-							}}
-						>
-							<option value="">All Status</option>
-							<option value="active">Active</option>
-							<option value="inactive">Inactive</option>
-						</select>
+						<GalleryFilters />
 
 						<button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
 							<Image src="/filter.png" alt="" width={14} height={14} />

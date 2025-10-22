@@ -447,5 +447,3 @@ export const gallerySchema = z.object({
 });
 
 export type GallerySchema = z.infer<typeof gallerySchema>;
-
-export type NotificationSchema = z.infer<typeof notificationSchema>;

@@ -57,6 +57,14 @@ const GalleryForm = ({
 
 	const onSubmit = handleSubmit((formData) => {
 		console.log("Form data:", formData);
+		console.log("Image URL:", img?.secure_url);
+
+		// Validate that an image has been uploaded
+		if (!img?.secure_url && !formData.src) {
+			toast.error("Please upload an image!");
+			return;
+		}
+
 		formAction({ ...formData, src: img?.secure_url || formData.src });
 	});
 
@@ -92,6 +100,7 @@ const GalleryForm = ({
 					uploadPreset="school"
 					onSuccess={(result, { widget }) => {
 						setImg(result.info);
+						setValue("src", (result.info as any).secure_url);
 						widget.close();
 					}}
 				>
@@ -107,6 +116,7 @@ const GalleryForm = ({
 											src={img.secure_url}
 											alt="Uploaded"
 											fill
+											sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
 											className="object-cover"
 										/>
 										<div className="absolute top-2 right-2 bg-white px-2 py-1 rounded text-xs">
@@ -244,6 +254,13 @@ const GalleryForm = ({
 			{data && (
 				<input type="hidden" {...register("id")} defaultValue={data.id} />
 			)}
+
+			{/* Hidden input to store image URL */}
+			<input
+				type="hidden"
+				{...register("src")}
+				value={img?.secure_url || data?.src || ""}
+			/>
 
 			{state.error && (
 				<span className="text-red-500">Something went wrong!</span>
