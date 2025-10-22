@@ -9,7 +9,7 @@ const menuItems = [
 				icon: "/home.png",
 				label: "Home",
 				href: "/sign-in",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 			{
 				icon: "/teacher.png",
@@ -146,6 +146,17 @@ const menuItems = [
 		],
 	},
 	{
+		title: "MEDIA",
+		items: [
+			{
+				icon: "/singleClass.png",
+				label: "Gallery Management",
+				href: "/media-coordinator/gallery",
+				visible: ["media-coordinator", "admin"],
+			},
+		],
+	},
+	{
 		title: "FINANCE",
 		items: [
 			{
@@ -247,31 +258,31 @@ const menuItems = [
 				icon: "/profile.png",
 				label: "Profile",
 				href: "/profile",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 			{
 				icon: "/setting.png",
 				label: "Settings",
 				href: "/settings",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 			{
 				icon: "/singleClass.png",
 				label: "Sync Queue",
 				href: "#offline-queue",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 			{
 				icon: "/cache.png",
 				label: "Cache Manager",
 				href: "#cache-settings",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 			{
 				icon: "/logout.png",
 				label: "Logout",
 				href: "/sign-out",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 		],
 	},

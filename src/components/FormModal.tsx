@@ -18,6 +18,7 @@ import {
 	deleteMCQQuestion,
 	deleteBadge,
 	deleteFeeStructure,
+	deleteGalleryItem,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -45,6 +46,7 @@ const deleteActionMap = {
 	mcqQuestion: deleteMCQQuestion,
 	badge: deleteBadge,
 	feeStructure: deleteFeeStructure,
+	gallery: deleteGalleryItem,
 	// Note: Payments, salaries, income, expense should not be deletable
 };
 
@@ -117,6 +119,9 @@ const ExpenseForm = dynamic(() => import("./forms/ExpenseForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 const AssignFeesForm = dynamic(() => import("./forms/AssignFeesForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const GalleryForm = dynamic(() => import("./forms/GalleryForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 
@@ -269,6 +274,9 @@ const forms: {
 			classes={relatedData?.classes || []}
 			students={relatedData?.students || []}
 		/>
+	),
+	gallery: (setOpen, type, data, relatedData) => (
+		<GalleryForm type={type} data={data} setOpen={setOpen} />
 	),
 };
 

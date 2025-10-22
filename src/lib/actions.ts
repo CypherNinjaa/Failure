@@ -20,6 +20,7 @@ import {
 	MCQQuestionSchema,
 	MCQAttemptSchema,
 	StudentAnswerSchema,
+	GallerySchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";
@@ -4301,5 +4302,110 @@ export const getPendingFees = async () => {
 	} catch (err) {
 		console.error("Error getting pending fees:", err);
 		return null;
+	}
+};
+
+// ==================== GALLERY MANAGEMENT ====================
+
+export const createGalleryItem = async (
+	currentState: CurrentState,
+	data: GallerySchema
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can create gallery items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		await prisma.galleryItem.create({
+			data: {
+				type: data.type,
+				src: data.src,
+				title: data.title,
+				description: data.description,
+				location: data.location || null,
+				category: data.category,
+				isActive: data.isActive ?? true,
+				displayOrder: data.displayOrder ?? 0,
+			},
+		});
+
+		// revalidatePath("/media-coordinator/gallery");
+		// revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating gallery item:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateGalleryItem = async (
+	currentState: CurrentState,
+	data: GallerySchema
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can update gallery items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		if (!data.id) {
+			return { success: false, error: true, message: "ID is required" };
+		}
+
+		await prisma.galleryItem.update({
+			where: { id: data.id },
+			data: {
+				type: data.type,
+				src: data.src,
+				title: data.title,
+				description: data.description,
+				location: data.location || null,
+				category: data.category,
+				isActive: data.isActive ?? true,
+				displayOrder: data.displayOrder ?? 0,
+			},
+		});
+
+		// revalidatePath("/media-coordinator/gallery");
+		// revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating gallery item:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteGalleryItem = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can delete gallery items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+
+		await prisma.galleryItem.delete({
+			where: { id: parseInt(id) },
+		});
+
+		// revalidatePath("/media-coordinator/gallery");
+		// revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting gallery item:", err);
+		return { success: false, error: true };
 	}
 };
