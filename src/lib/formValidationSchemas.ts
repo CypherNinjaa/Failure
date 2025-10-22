@@ -447,3 +447,16 @@ export const gallerySchema = z.object({
 });
 
 export type GallerySchema = z.infer<typeof gallerySchema>;
+
+export const newsTickerSchema = z.object({
+	id: z.coerce.number().optional(),
+	icon: z.string().min(1, { message: "Icon is required!" }),
+	text: z.string().min(1, { message: "Text is required!" }),
+	type: z.enum(["EVENT", "FACILITY", "ACHIEVEMENT", "ANNOUNCEMENT"], {
+		message: "Type is required!",
+	}),
+	isActive: z.boolean().default(true),
+	displayOrder: z.coerce.number().default(0),
+});
+
+export type NewsTickerSchema = z.infer<typeof newsTickerSchema>;
