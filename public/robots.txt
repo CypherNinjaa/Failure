@@ -1,0 +1,17 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /teacher
+Disallow: /student
+Disallow: /parent
+Disallow: /media-coordinator
+Disallow: /list
+Disallow: /profile
+Disallow: /settings
+
+# Host
+Host: https://happychild.in
+
+# Sitemaps
+Sitemap: https://happychild.in/sitemap.xml

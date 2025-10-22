@@ -33,6 +33,27 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 			];
 		}
 
+		if (role === "media-coordinator") {
+			return [
+				{ icon: "/home.png", label: "Home", href: "/media-coordinator" },
+				{
+					icon: "/gallery.png",
+					label: "Gallery",
+					href: "/media-coordinator/gallery",
+				},
+				{
+					icon: "/announcement.png",
+					label: "News",
+					href: "/media-coordinator/news-ticker",
+				},
+				{
+					icon: "/chart.png",
+					label: "Stats",
+					href: "/media-coordinator/stats",
+				},
+			];
+		}
+
 		if (role === "teacher") {
 			return [
 				{ icon: "/home.png", label: "Home", href: "/teacher" },
@@ -76,6 +97,22 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 					href: "/list/attendance",
 				},
 				{ icon: "/result.png", label: "Results", href: "/list/results" },
+			];
+		}
+
+		if (role === "media-coordinator") {
+			return [
+				{ icon: "/home.png", label: "Home", href: "/media-coordinator" },
+				{
+					icon: "/gallery.png",
+					label: "Gallery",
+					href: "/media-coordinator/gallery",
+				},
+				{
+					icon: "/announcement.png",
+					label: "News",
+					href: "/media-coordinator/news-ticker",
+				},
 			];
 		}
 
@@ -311,19 +348,37 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 				icon: "/setting.png",
 				label: "Settings",
 				href: "/settings",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
+			},
+			{
+				icon: "/gallery.png",
+				label: "Gallery",
+				href: "/media-coordinator/gallery",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/announcement.png",
+				label: "News Ticker",
+				href: "/media-coordinator/news-ticker",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/profile.png",
+				label: "Profile",
+				href: "/profile",
+				visible: ["media-coordinator"],
 			},
 			{
 				icon: "/singleClass.png",
 				label: "Sync Queue",
 				href: "#offline-queue",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 			{
 				icon: "/cache.png",
 				label: "Cache Manager",
 				href: "#cache-settings",
-				visible: ["admin", "teacher", "student", "parent"],
+				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 		];
 

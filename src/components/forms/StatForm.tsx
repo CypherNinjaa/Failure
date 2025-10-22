@@ -3,26 +3,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import InputField from "../InputField";
-import {
-	newsTickerSchema,
-	NewsTickerSchema,
-} from "@/lib/formValidationSchemas";
-import { createNewsTicker, updateNewsTicker } from "@/lib/actions";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { statSchema, StatSchema } from "@/lib/formValidationSchemas";
 import { useFormState } from "react-dom";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { createStatItem, updateStatItem } from "@/lib/actions";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
-const NewsTickerForm = ({
+const StatForm = ({
 	type,
 	data,
 	setOpen,
-	relatedData,
 }: {
 	type: "create" | "update";
 	data?: any;
 	setOpen: Dispatch<SetStateAction<boolean>>;
-	relatedData?: any;
 }) => {
 	const {
 		register,
@@ -30,8 +25,8 @@ const NewsTickerForm = ({
 		formState: { errors },
 		setValue,
 		watch,
-	} = useForm<NewsTickerSchema>({
-		resolver: zodResolver(newsTickerSchema),
+	} = useForm<StatSchema>({
+		resolver: zodResolver(statSchema),
 		defaultValues: data
 			? {
 					...data,
@@ -41,44 +36,25 @@ const NewsTickerForm = ({
 			: {
 					isActive: true,
 					displayOrder: 0,
+					suffix: "+",
 			  },
 	});
 
 	const [state, formAction] = useFormState(
-		type === "create" ? createNewsTicker : updateNewsTicker,
+		type === "create" ? createStatItem : updateStatItem,
 		{
 			success: false,
 			error: false,
 		}
 	);
 
-	const router = useRouter();
-
-	// Available icons (use emojis or you can replace with actual icon paths)
-	const iconOptions = [
-		{ value: "🎉", label: "🎉 Party Popper" },
-		{ value: "📚", label: "📚 Books" },
-		{ value: "🏆", label: "🏆 Trophy" },
-		{ value: "📢", label: "📢 Megaphone" },
-		{ value: "🎓", label: "🎓 Graduation Cap" },
-		{ value: "⚽", label: "⚽ Soccer Ball" },
-		{ value: "🎨", label: "🎨 Art Palette" },
-		{ value: "🔬", label: "🔬 Microscope" },
-		{ value: "🎭", label: "🎭 Theater Masks" },
-		{ value: "🏅", label: "🏅 Medal" },
-		{ value: "📝", label: "📝 Memo" },
-		{ value: "🌟", label: "🌟 Star" },
-		{ value: "🎪", label: "🎪 Circus Tent" },
-		{ value: "🎬", label: "🎬 Clapperboard" },
-		{ value: "🏫", label: "🏫 School" },
-	];
-
 	const onSubmit = handleSubmit((formData) => {
-		console.log("Form data before submission:", formData);
+		console.log("Form data:", formData);
 
 		// Ensure proper types
 		const submitData = {
 			...formData,
+			value: Number(formData.value) || 0,
 			displayOrder: Number(formData.displayOrder) || 0,
 			isActive: Boolean(formData.isActive),
 		};
@@ -87,14 +63,12 @@ const NewsTickerForm = ({
 		formAction(submitData as any);
 	});
 
+	const router = useRouter();
+
 	useEffect(() => {
 		console.log("State changed:", state);
 		if (state.success) {
-			toast(
-				`News ticker item has been ${
-					type === "create" ? "created" : "updated"
-				}!`
-			);
+			toast(`Stat item has been ${type === "create" ? "created" : "updated"}!`);
 			setOpen(false);
 			router.refresh();
 		}
@@ -106,17 +80,74 @@ const NewsTickerForm = ({
 		}
 	}, [state]);
 
+	// Icon options
+	const iconOptions = [
+		{ value: "Users", label: "Users" },
+		{ value: "BookOpen", label: "Book Open" },
+		{ value: "Trophy", label: "Trophy" },
+		{ value: "Star", label: "Star" },
+		{ value: "Award", label: "Award" },
+		{ value: "GraduationCap", label: "Graduation Cap" },
+		{ value: "Building", label: "Building" },
+		{ value: "Calendar", label: "Calendar" },
+	];
+
+	// Gradient options
+	const gradientOptions = [
+		{ value: "from-blue-500 to-cyan-500", label: "Blue to Cyan" },
+		{ value: "from-purple-500 to-pink-500", label: "Purple to Pink" },
+		{ value: "from-green-500 to-emerald-500", label: "Green to Emerald" },
+		{ value: "from-orange-500 to-red-500", label: "Orange to Red" },
+		{ value: "from-yellow-500 to-orange-500", label: "Yellow to Orange" },
+		{ value: "from-indigo-500 to-purple-500", label: "Indigo to Purple" },
+		{ value: "from-pink-500 to-rose-500", label: "Pink to Rose" },
+		{ value: "from-teal-500 to-cyan-500", label: "Teal to Cyan" },
+	];
+
 	return (
 		<form className="flex flex-col gap-8" onSubmit={onSubmit}>
 			<h1 className="text-xl font-semibold">
-				{type === "create" ? "Create a new" : "Update"} news ticker item
+				{type === "create" ? "Create a new" : "Update"} stat item
 			</h1>
 			<div className="flex justify-between flex-wrap gap-4">
-				<div className="flex flex-col gap-2 w-full md:w-1/4">
-					<label className="text-xs text-gray-500">Icon</label>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Value"
+						name="value"
+						type="number"
+						register={register}
+						error={errors?.value}
+					/>
+				</div>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Suffix (e.g., +, %, K)"
+						name="suffix"
+						register={register}
+						error={errors?.suffix}
+					/>
+				</div>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Label (e.g., Happy Students)"
+						name="label"
+						register={register}
+						error={errors?.label}
+					/>
+				</div>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Emoji (e.g., 🎓)"
+						name="emoji"
+						register={register}
+						error={errors?.emoji}
+					/>
+				</div>{" "}
+				<div className="flex flex-col gap-2 w-full md:w-[48%]">
+					<label className="text-xs text-gray-500">Icon Name</label>
 					<select
 						className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-						{...register("icon")}
+						{...register("iconName")}
 					>
 						<option value="">Select an icon</option>
 						{iconOptions.map((option) => (
@@ -125,42 +156,31 @@ const NewsTickerForm = ({
 							</option>
 						))}
 					</select>
-					{errors.icon?.message && (
+					{errors.iconName?.message && (
 						<p className="text-xs text-red-400">
-							{errors.icon.message.toString()}
+							{errors.iconName.message.toString()}
 						</p>
 					)}
 				</div>
-
-				<div className="w-full md:w-2/3">
-					<InputField
-						label="Text"
-						name="text"
-						register={register}
-						error={errors?.text}
-					/>
-				</div>
-			</div>
-			<div className="flex justify-between flex-wrap gap-4">
-				<div className="flex flex-col gap-2 w-full md:w-1/3">
-					<label className="text-xs text-gray-500">Type</label>
+				<div className="flex flex-col gap-2 w-full md:w-[48%]">
+					<label className="text-xs text-gray-500">Gradient</label>
 					<select
 						className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-						{...register("type")}
+						{...register("gradient")}
 					>
-						<option value="">Select type</option>
-						<option value="EVENT">Event</option>
-						<option value="FACILITY">Facility</option>
-						<option value="ACHIEVEMENT">Achievement</option>
-						<option value="ANNOUNCEMENT">Announcement</option>
+						<option value="">Select a gradient</option>
+						{gradientOptions.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
 					</select>
-					{errors.type?.message && (
+					{errors.gradient?.message && (
 						<p className="text-xs text-red-400">
-							{errors.type.message.toString()}
+							{errors.gradient.message.toString()}
 						</p>
 					)}
 				</div>
-
 				<div className="w-full md:w-1/3">
 					<InputField
 						label="Display Order"
@@ -170,7 +190,6 @@ const NewsTickerForm = ({
 						error={errors?.displayOrder}
 					/>
 				</div>
-
 				<div className="flex flex-col gap-2 w-full md:w-1/4">
 					<label className="text-xs text-gray-500">Active Status</label>
 					<button
@@ -195,6 +214,7 @@ const NewsTickerForm = ({
 					)}
 				</div>
 			</div>
+
 			{data && (
 				<InputField
 					label="Id"
@@ -205,6 +225,7 @@ const NewsTickerForm = ({
 					hidden
 				/>
 			)}
+
 			<button className="bg-blue-400 text-white p-2 rounded-md">
 				{type === "create" ? "Create" : "Update"}
 			</button>
@@ -212,4 +233,4 @@ const NewsTickerForm = ({
 	);
 };
 
-export default NewsTickerForm;
+export default StatForm;

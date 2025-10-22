@@ -1252,3 +1252,20 @@ enum NewsTickerType {
   ACHIEVEMENT
   ANNOUNCEMENT
 }
+
+model StatItem {
+  id          Int      @id @default(autoincrement())
+  value       Int      // The numeric value (e.g., 1200, 80, 15, 95)
+  suffix      String   @default("") // Suffix like "+", "%", etc.
+  label       String   // Label like "Happy Students", "Expert Teachers"
+  emoji       String   // Emoji representation
+  iconName    String   // Icon name reference (Users, BookOpen, Trophy, Star)
+  gradient    String   // Gradient classes (e.g., "from-blue-500 to-cyan-500")
+  displayOrder Int     @default(0) // For custom ordering
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([displayOrder])
+}
