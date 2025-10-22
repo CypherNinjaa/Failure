@@ -1230,3 +1230,25 @@ enum GalleryCategory {
   ACTIVITY
   ACHIEVEMENT
 }
+
+// News Ticker Management
+model NewsTickerItem {
+  id          Int       @id @default(autoincrement())
+  icon        String    // Icon name or path (e.g., "trophy", "calendar", "book", "megaphone")
+  text        String
+  type        NewsTickerType
+  isActive    Boolean   @default(true)
+  displayOrder Int      @default(0) // For custom ordering
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+enum NewsTickerType {
+  EVENT
+  FACILITY
+  ACHIEVEMENT
+  ANNOUNCEMENT
+}

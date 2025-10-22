@@ -21,6 +21,7 @@ import {
 	MCQAttemptSchema,
 	StudentAnswerSchema,
 	GallerySchema,
+	NewsTickerSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";
@@ -4406,6 +4407,105 @@ export const deleteGalleryItem = async (
 		return { success: true, error: false };
 	} catch (err) {
 		console.error("Error deleting gallery item:", err);
+		return { success: false, error: true };
+	}
+};
+
+// NEWS TICKER CRUD ACTIONS
+
+export const createNewsTicker = async (
+	currentState: CurrentState,
+	data: NewsTickerSchema
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can create news ticker items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		await prisma.newsTickerItem.create({
+			data: {
+				icon: data.icon,
+				text: data.text,
+				type: data.type,
+				isActive: data.isActive ?? true,
+				displayOrder: data.displayOrder ?? 0,
+			},
+		});
+
+		revalidatePath("/media-coordinator/news-ticker");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating news ticker item:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateNewsTicker = async (
+	currentState: CurrentState,
+	data: NewsTickerSchema
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can update news ticker items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		if (!data.id) {
+			return { success: false, error: true, message: "ID is required" };
+		}
+
+		await prisma.newsTickerItem.update({
+			where: { id: data.id },
+			data: {
+				icon: data.icon,
+				text: data.text,
+				type: data.type,
+				isActive: data.isActive ?? true,
+				displayOrder: data.displayOrder ?? 0,
+			},
+		});
+
+		revalidatePath("/media-coordinator/news-ticker");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating news ticker item:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteNewsTicker = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can delete news ticker items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+
+		await prisma.newsTickerItem.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/media-coordinator/news-ticker");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting news ticker item:", err);
 		return { success: false, error: true };
 	}
 };

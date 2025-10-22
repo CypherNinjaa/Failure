@@ -12,6 +12,9 @@ const MediaCoordinatorPage = async () => {
 		.groupBy({
 			by: ["category"],
 			_count: true,
+			orderBy: {
+				category: "asc",
+			},
 		})
 		.catch(() => []);
 
@@ -19,6 +22,14 @@ const MediaCoordinatorPage = async () => {
 		(await prisma.galleryItem.count().catch(() => 0)) || 0;
 	const activeGalleryItems =
 		(await prisma.galleryItem
+			.count({ where: { isActive: true } })
+			.catch(() => 0)) || 0;
+
+	// Count news ticker items
+	const totalNewsTickerItems =
+		(await prisma.newsTickerItem.count().catch(() => 0)) || 0;
+	const activeNewsTickerItems =
+		(await prisma.newsTickerItem
 			.count({ where: { isActive: true } })
 			.catch(() => 0)) || 0;
 
@@ -43,9 +54,8 @@ const MediaCoordinatorPage = async () => {
 					Manage school gallery, images, videos, and media content
 				</p>
 			</div>
-
 			{/* Stats Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
 				<div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg shadow">
 					<div className="flex items-center justify-between mb-4">
 						<div>
@@ -92,8 +102,21 @@ const MediaCoordinatorPage = async () => {
 					</div>
 					<div className="text-sm opacity-90">Student activities</div>
 				</div>
-			</div>
 
+				<div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-6 rounded-lg shadow">
+					<div className="flex items-center justify-between mb-4">
+						<div>
+							<p className="text-sm opacity-80 mb-1">News Ticker Items</p>
+							<p className="text-3xl font-bold">{totalNewsTickerItems}</p>
+						</div>
+						<span className="text-5xl opacity-30">📢</span>
+					</div>
+					<div className="text-sm opacity-90">
+						{activeNewsTickerItems} active •{" "}
+						{totalNewsTickerItems - activeNewsTickerItems} inactive
+					</div>
+				</div>
+			</div>{" "}
 			{/* Quick Actions */}
 			<div className="bg-white p-6 rounded-md shadow-md">
 				<h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -131,18 +154,22 @@ const MediaCoordinatorPage = async () => {
 						</div>
 					</div>
 
-					<div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 opacity-50 cursor-not-allowed">
-						<div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center">
-							<span className="text-2xl">📰</span>
+					<Link
+						href="/media-coordinator/news-ticker"
+						className="flex items-center gap-4 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200"
+					>
+						<div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+							<span className="text-2xl">�</span>
 						</div>
 						<div>
-							<h3 className="font-semibold text-gray-600">News & Updates</h3>
-							<p className="text-sm text-gray-500">Coming soon</p>
+							<h3 className="font-semibold text-gray-800">News Ticker</h3>
+							<p className="text-sm text-gray-600">
+								Manage {activeNewsTickerItems} active news items
+							</p>
 						</div>
-					</div>
+					</Link>
 				</div>
-			</div>
-
+			</div>{" "}
 			{/* Recent Activity */}
 			<div className="bg-white p-6 rounded-md shadow-md">
 				<h2 className="text-xl font-semibold text-gray-800 mb-4">
