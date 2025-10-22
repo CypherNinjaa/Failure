@@ -429,3 +429,21 @@ export const notificationSchema = z.object({
 });
 
 export type NotificationSchema = z.infer<typeof notificationSchema>;
+
+export const gallerySchema = z.object({
+	id: z.coerce.number().optional(),
+	type: z.enum(["IMAGE", "VIDEO"], {
+		message: "Type is required!",
+	}),
+	src: z.string().min(1, { message: "Image/Video URL is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	location: z.string().optional().or(z.literal("")),
+	category: z.enum(["FACILITY", "EVENT", "ACTIVITY", "ACHIEVEMENT"], {
+		message: "Category is required!",
+	}),
+	isActive: z.boolean().default(true),
+	displayOrder: z.coerce.number().default(0),
+});
+
+export type GallerySchema = z.infer<typeof gallerySchema>;

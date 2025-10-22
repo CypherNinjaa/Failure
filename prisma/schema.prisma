@@ -1199,3 +1199,34 @@ enum MessageType {
   FILE
   SYSTEM  // "John joined the group", "Jane left the group"
 }
+
+// Gallery Management
+model GalleryItem {
+  id          Int       @id @default(autoincrement())
+  type        GalleryItemType
+  src         String    // Image/video URL (Cloudinary)
+  title       String
+  description String
+  location    String?   
+  category    GalleryCategory
+  isActive    Boolean   @default(true)
+  displayOrder Int      @default(0) // For custom ordering
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([category])
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+enum GalleryItemType {
+  IMAGE
+  VIDEO
+}
+
+enum GalleryCategory {
+  FACILITY
+  EVENT
+  ACTIVITY
+  ACHIEVEMENT
+}
