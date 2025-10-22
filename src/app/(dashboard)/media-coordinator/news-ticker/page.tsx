@@ -98,12 +98,25 @@ const renderRow = (item: NewsTickerItem) => (
 const NewsTickerListPage = async ({
 	searchParams,
 }: {
-	searchParams: { [key: string]: string | undefined };
+	searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
 	const { sessionClaims } = auth();
 	const role = (sessionClaims?.metadata as { role?: string })?.role;
 
-	const { page, search, type, status } = searchParams;
+	// Only media-coordinator and admin can access this page
+	if (role !== "media-coordinator" && role !== "admin") {
+		return (
+			<div className="p-6">
+				<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+					Access Denied. Only Media Coordinators and Admins can access this
+					page.
+				</div>
+			</div>
+		);
+	}
+
+	const resolvedSearchParams = await searchParams;
+	const { page, search, type, status } = resolvedSearchParams;
 
 	const p = page ? parseInt(page) : 1;
 
@@ -140,6 +153,9 @@ const NewsTickerListPage = async ({
 		prisma.newsTickerItem.groupBy({
 			by: ["type"],
 			_count: true,
+			orderBy: {
+				type: "asc",
+			},
 		}),
 	]);
 

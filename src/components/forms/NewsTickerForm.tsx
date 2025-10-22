@@ -31,10 +31,16 @@ const NewsTickerForm = ({
 		setValue,
 	} = useForm<NewsTickerSchema>({
 		resolver: zodResolver(newsTickerSchema),
-		defaultValues: data || {
-			isActive: true,
-			displayOrder: 0,
-		},
+		defaultValues: data
+			? {
+					...data,
+					isActive: data.isActive ?? true,
+					displayOrder: data.displayOrder ?? 0,
+			  }
+			: {
+					isActive: true,
+					displayOrder: 0,
+			  },
 	});
 
 	const [state, formAction] = useFormState(
@@ -67,12 +73,23 @@ const NewsTickerForm = ({
 	];
 
 	const onSubmit = handleSubmit((formData) => {
-		formAction(formData);
+		console.log("Form data before submission:", formData);
+
+		// Ensure proper types
+		const submitData = {
+			...formData,
+			displayOrder: Number(formData.displayOrder) || 0,
+			isActive: Boolean(formData.isActive),
+		};
+
+		console.log("Submitting:", submitData);
+		formAction(submitData as any);
 	});
 
 	useEffect(() => {
+		console.log("State changed:", state);
 		if (state.success) {
-			toast(
+			toast.success(
 				`News ticker item has been ${
 					type === "create" ? "created" : "updated"
 				}!`
@@ -80,20 +97,16 @@ const NewsTickerForm = ({
 			setOpen(false);
 			router.refresh();
 		}
-	}, [state, router, type, setOpen]);
-
-	useEffect(() => {
 		if (state.error) {
 			toast.error("Something went wrong!");
 		}
-	}, [state.error]);
+	}, [state, router, type, setOpen]);
 
 	return (
 		<form className="flex flex-col gap-8" onSubmit={onSubmit}>
 			<h1 className="text-xl font-semibold">
 				{type === "create" ? "Create a new" : "Update"} news ticker item
 			</h1>
-
 			<div className="flex justify-between flex-wrap gap-4">
 				<div className="flex flex-col gap-2 w-full md:w-1/4">
 					<label className="text-xs text-gray-500">Icon</label>
@@ -124,7 +137,6 @@ const NewsTickerForm = ({
 					/>
 				</div>
 			</div>
-
 			<div className="flex justify-between flex-wrap gap-4">
 				<div className="flex flex-col gap-2 w-full md:w-1/3">
 					<label className="text-xs text-gray-500">Type</label>
@@ -156,17 +168,24 @@ const NewsTickerForm = ({
 				</div>
 
 				<div className="flex flex-col gap-2 w-full md:w-1/4">
-					<label className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer">
-						<input
-							type="checkbox"
-							{...register("isActive")}
-							className="w-4 h-4"
-						/>
-						<span>Active</span>
-					</label>
+					<label className="text-xs text-gray-500">Active Status</label>
+					<div className="ring-[1.5px] ring-gray-300 p-3 rounded-md bg-lamaSkyLight hover:bg-lamaSky/20 transition-colors">
+						<label className="flex items-center gap-3 cursor-pointer">
+							<input
+								type="checkbox"
+								{...register("isActive")}
+								className="w-5 h-5 cursor-pointer accent-green-500"
+							/>
+							<span className="text-sm font-medium">Active</span>
+						</label>
+					</div>
+					{errors.isActive?.message && (
+						<p className="text-xs text-red-400">
+							{errors.isActive.message.toString()}
+						</p>
+					)}
 				</div>
 			</div>
-
 			{data && (
 				<InputField
 					label="Id"
@@ -177,7 +196,6 @@ const NewsTickerForm = ({
 					hidden
 				/>
 			)}
-
 			<button className="bg-blue-400 text-white p-2 rounded-md">
 				{type === "create" ? "Create" : "Update"}
 			</button>
