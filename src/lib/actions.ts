@@ -22,6 +22,7 @@ import {
 	StudentAnswerSchema,
 	GallerySchema,
 	NewsTickerSchema,
+	StatSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";

@@ -1,15 +1,32 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
 	Users,
 	BookOpen,
 	Trophy,
 	Star,
+	Award,
+	GraduationCap,
+	Building,
+	Calendar,
 	ChevronLeft,
 	ChevronRight,
 } from "lucide-react";
+
+// Icon mapping
+const iconMap: { [key: string]: any } = {
+	Users,
+	BookOpen,
+	Trophy,
+	Star,
+	Award,
+	GraduationCap,
+	Building,
+	Calendar,
+};
 
 interface CounterProps {
 	end: number;
@@ -17,113 +34,57 @@ interface CounterProps {
 	suffix?: string;
 }
 
-function AnimatedCounter({ end, duration = 2, suffix = "" }: CounterProps) {
-	const [count, setCount] = useState(0);
-	const [hasAnimated, setHasAnimated] = useState(false);
-	const ref = useRef<HTMLDivElement>(null);
-	const isInView = useInView(ref, { once: true, amount: 0.5 });
-
-	useEffect(() => {
-		if (!isInView || hasAnimated) return;
-
-		setHasAnimated(true);
-		let startTime: number;
-		let animationFrame: number;
-
-		const animate = (currentTime: number) => {
-			if (!startTime) startTime = currentTime;
-			const progress = Math.min(
-				(currentTime - startTime) / (duration * 1000),
-				1
-			);
-
-			setCount(Math.floor(progress * end));
-
-			if (progress < 1) {
-				animationFrame = requestAnimationFrame(animate);
-			}
-		};
-
-		animationFrame = requestAnimationFrame(animate);
-
-		return () => {
-			if (animationFrame) {
-				cancelAnimationFrame(animationFrame);
-			}
-		};
-	}, [isInView, end, duration, hasAnimated]);
-
+function AnimatedCounter({ end, suffix = "" }: CounterProps) {
 	return (
-		<div ref={ref} className="text-4xl md:text-5xl font-black">
-			{count}
+		<div className="text-4xl md:text-5xl font-black">
+			{end}
 			{suffix}
 		</div>
 	);
 }
 
-export function StatsSection() {
+interface StatItemType {
+	value: number;
+	suffix: string;
+	label: string;
+	emoji: string;
+	iconName: string;
+	gradient: string;
+}
+
+export default function StatsClient({ stats }: { stats: StatItemType[] }) {
 	const [currentSlide, setCurrentSlide] = useState(0);
 	const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-	const [mounted, setMounted] = useState(false);
 
-	// Prevent hydration mismatch
-	useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	const stats = [
-		{
-			icon: Users,
-			value: 1200,
-			suffix: "+",
-			label: "Happy Students",
-			emoji: "🎓",
-			gradient: "from-blue-500 to-cyan-500",
-		},
-		{
-			icon: BookOpen,
-			value: 80,
-			suffix: "+",
-			label: "Expert Teachers",
-			emoji: "👨‍🏫",
-			gradient: "from-purple-500 to-pink-500",
-		},
-		{
-			icon: Trophy,
-			value: 15,
-			suffix: "+",
-			label: "Years Excellence",
-			emoji: "🏆",
-			gradient: "from-green-500 to-emerald-500",
-		},
-		{
-			icon: Star,
-			value: 95,
-			suffix: "%",
-			label: "Success Rate",
-			emoji: "⭐",
-			gradient: "from-orange-500 to-red-500",
-		},
-	];
+	const formattedStats = stats.map((stat) => ({
+		icon: iconMap[stat.iconName] || Users,
+		value: Number(stat.value) || 0,
+		suffix: stat.suffix || "",
+		label: stat.label,
+		emoji: stat.emoji,
+		gradient: stat.gradient,
+	}));
 
 	// Auto-play carousel on mobile
 	useEffect(() => {
-		if (!mounted || !isAutoPlaying) return;
+		if (!isAutoPlaying) return;
 
 		const interval = setInterval(() => {
-			setCurrentSlide((prev) => (prev + 1) % stats.length);
+			setCurrentSlide((prev) => (prev + 1) % formattedStats.length);
 		}, 3000);
 
 		return () => clearInterval(interval);
-	}, [isAutoPlaying, stats.length, mounted]);
+	}, [isAutoPlaying, formattedStats.length]);
 
 	const nextSlide = () => {
-		setCurrentSlide((prev) => (prev + 1) % stats.length);
+		setCurrentSlide((prev) => (prev + 1) % formattedStats.length);
 		setIsAutoPlaying(false);
 	};
 
 	const prevSlide = () => {
-		setCurrentSlide((prev) => (prev - 1 + stats.length) % stats.length);
+		setCurrentSlide(
+			(prev) => (prev - 1 + formattedStats.length) % formattedStats.length
+		);
 		setIsAutoPlaying(false);
 	};
 
@@ -132,7 +93,7 @@ export function StatsSection() {
 		setIsAutoPlaying(false);
 	};
 
-	const StatCard = ({ stat }: { stat: (typeof stats)[0] }) => (
+	const StatCard = ({ stat }: { stat: (typeof formattedStats)[0] }) => (
 		<div
 			className={`relative bg-card border border-border rounded-3xl p-6 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden`}
 		>
@@ -177,35 +138,22 @@ export function StatsSection() {
 	return (
 		<section className="py-16 md:py-24 bg-muted/30">
 			<div className="container mx-auto px-4">
-				{mounted && (
-					<motion.div
-						initial={{ opacity: 0, y: 30 }}
-						whileInView={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.8 }}
-						viewport={{ once: true }}
-						className="text-center mb-12"
-					>
-						<h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4">
-							📊 Our Impact in Numbers
-						</h2>
-						<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-							These numbers represent our commitment to excellence and the trust
-							our community places in us.
-						</p>
-					</motion.div>
-				)}
-
-				{!mounted && (
-					<div className="text-center mb-12">
-						<h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4">
-							📊 Our Impact in Numbers
-						</h2>
-						<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-							These numbers represent our commitment to excellence and the trust
-							our community places in us.
-						</p>
-					</div>
-				)}
+				<div className="text-center mb-12">
+					<h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4">
+						<Image
+							src="/chart.png"
+							alt="chart"
+							width={40}
+							height={40}
+							className="inline-block mr-2"
+						/>{" "}
+						Our Impact in Numbers
+					</h2>
+					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+						These numbers represent our commitment to excellence and the trust
+						our community places in us.
+					</p>
+				</div>
 
 				{/* Mobile Carousel View */}
 				<div className="block md:hidden">
@@ -216,7 +164,7 @@ export function StatsSection() {
 								className="flex transition-transform duration-300 ease-in-out"
 								style={{ transform: `translateX(-${currentSlide * 100}%)` }}
 							>
-								{stats.map((stat, index) => (
+								{formattedStats.map((stat, index) => (
 									<motion.div
 										key={stat.label}
 										className="w-full flex-shrink-0 px-2"
@@ -242,12 +190,12 @@ export function StatsSection() {
 							onClick={nextSlide}
 							className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-card p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-10"
 						>
-							<ChevronRight className="w-5 h-5 text-muted-foreground" />
+							<ChevronLeft className="w-5 h-5 text-muted-foreground" />
 						</button>
 
 						{/* Dots Indicator */}
 						<div className="flex justify-center mt-6 space-x-2">
-							{stats.map((_, index) => (
+							{formattedStats.map((_, index) => (
 								<button
 									key={index}
 									onClick={() => goToSlide(index)}
@@ -264,7 +212,7 @@ export function StatsSection() {
 
 				{/* Desktop Grid View */}
 				<div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
-					{stats.map((stat, index) => (
+					{formattedStats.map((stat, index) => (
 						<motion.div
 							key={stat.label}
 							initial={{ opacity: 0, y: 30, scale: 0.9 }}

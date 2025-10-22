@@ -10,49 +10,77 @@ import {
 	ChevronLeft,
 	ChevronRight,
 } from "lucide-react";
+import Image from "next/image";
 
-export function StarPerformers() {
+interface StudentLeaderboard {
+	id: string;
+	rank: number;
+	averageScore: number;
+	totalTests: number;
+	bestScore: number;
+	student: {
+		id: string;
+		name: string;
+		surname: string;
+		img: string | null;
+		class: {
+			name: string;
+		};
+		grade: {
+			level: number;
+		};
+	};
+}
+
+interface StarPerformersClientProps {
+	students: StudentLeaderboard[];
+}
+
+export default function StarPerformersClient({
+	students,
+}: StarPerformersClientProps) {
 	const [currentSlide, setCurrentSlide] = useState(0);
 	const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-	const topStudents = [
-		{
-			id: 1,
-			name: "Arjun Sharma",
-			grade: "10th Grade",
-			achievement: "Science Olympiad Gold",
-			badge: "🏆",
-			points: 2850,
-			rank: 1,
-			avatar: "AS",
-			gradient: "from-yellow-400 to-orange-500",
-		},
-		{
-			id: 2,
-			name: "Priya Patel",
-			grade: "9th Grade",
-			achievement: "Art Competition Winner",
-			badge: "🎨",
-			points: 2720,
-			rank: 2,
-			avatar: "PP",
-			gradient: "from-pink-400 to-purple-500",
-		},
-		{
-			id: 3,
-			name: "Rahul Kumar",
-			grade: "8th Grade",
-			achievement: "Academic Excellence",
-			badge: "📚",
-			points: 2680,
-			rank: 3,
-			avatar: "RK",
-			gradient: "from-blue-400 to-cyan-500",
-		},
-	];
+
+	// Transform database data to display format
+	const topStudents = (students || []).map((student, index) => {
+		const gradients = [
+			"from-yellow-400 to-orange-500",
+			"from-pink-400 to-purple-500",
+			"from-blue-400 to-cyan-500",
+		];
+		const badges = ["🏆", "🎨", "📚"];
+		const achievements = [
+			`Top Performer - ${student.bestScore?.toFixed(1) || 0}% Best Score`,
+			`Academic Excellence - ${student.totalTests || 0} Tests Completed`,
+			`Consistent Achiever - ${student.averageScore?.toFixed(1) || 0}% Average`,
+		];
+
+		// Safely access nested properties
+		const studentName = student.student?.name || "Unknown";
+		const studentSurname = student.student?.surname || "Student";
+		const gradeLevel = student.student?.grade?.level || 0;
+
+		// Generate initials from name
+		const initials = `${studentName[0]}${studentSurname[0]}`.toUpperCase();
+
+		return {
+			id: student.id,
+			name: `${studentName} ${studentSurname}`,
+			grade: `${gradeLevel}th Grade`,
+			achievement: achievements[index] || `Academic Excellence`,
+			badge: badges[index] || "⭐",
+			points: Math.round((student.averageScore || 0) * 10), // Convert score to points
+			rank: student.rank,
+			avatar: initials,
+			gradient: gradients[index] || "from-blue-400 to-cyan-500",
+			img: student.student?.img || null,
+		};
+	});
 
 	// Auto-play carousel on mobile
 	useEffect(() => {
-		if (!isAutoPlaying) return;
+		if (!isAutoPlaying || topStudents.length === 0) return;
 
 		const interval = setInterval(() => {
 			setCurrentSlide((prev) => (prev + 1) % topStudents.length);
@@ -60,6 +88,25 @@ export function StarPerformers() {
 
 		return () => clearInterval(interval);
 	}, [isAutoPlaying, topStudents.length]);
+
+	// If no students, show empty state
+	if (!students || students.length === 0) {
+		return (
+			<section className="py-16 md:py-24 bg-muted/30">
+				<div className="container mx-auto px-4">
+					<div className="text-center">
+						<h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4">
+							🌟 Our Star Performers
+						</h2>
+						<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+							No leaderboard data available yet. Complete some tests to see the
+							top performers!
+						</p>
+					</div>
+				</div>
+			</section>
+		);
+	}
 
 	const nextSlide = () => {
 		setCurrentSlide((prev) => (prev + 1) % topStudents.length);
@@ -165,9 +212,19 @@ export function StarPerformers() {
 												{/* Avatar */}
 												<div className="relative mb-6">
 													<div
-														className={`w-20 h-20 bg-gradient-to-br ${student.gradient} rounded-full flex items-center justify-center mx-auto shadow-xl transition-all duration-300`}
+														className={`w-20 h-20 bg-gradient-to-br ${student.gradient} rounded-full flex items-center justify-center mx-auto shadow-xl transition-all duration-300 overflow-hidden`}
 													>
-														<span className="text-2xl">{student.badge}</span>
+														{student.img ? (
+															<Image
+																src={student.img}
+																alt={student.name}
+																width={80}
+																height={80}
+																className="w-full h-full object-cover"
+															/>
+														) : (
+															<span className="text-2xl">{student.badge}</span>
+														)}
 													</div>
 
 													{/* Initials overlay */}
@@ -292,11 +349,21 @@ export function StarPerformers() {
 									{/* Avatar */}
 									<div className="relative mb-6">
 										<div
-											className={`w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br ${student.gradient} rounded-full flex items-center justify-center mx-auto shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300`}
+											className={`w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br ${student.gradient} rounded-full flex items-center justify-center mx-auto shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 overflow-hidden`}
 										>
-											<span className="text-2xl md:text-3xl">
-												{student.badge}
-											</span>
+											{student.img ? (
+												<Image
+													src={student.img}
+													alt={student.name}
+													width={96}
+													height={96}
+													className="w-full h-full object-cover"
+												/>
+											) : (
+												<span className="text-2xl md:text-3xl">
+													{student.badge}
+												</span>
+											)}
 										</div>
 
 										{/* Initials overlay for personalization */}

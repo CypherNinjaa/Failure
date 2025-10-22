@@ -46,6 +46,11 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 					label: "News",
 					href: "/media-coordinator/news-ticker",
 				},
+				{
+					icon: "/chart.png",
+					label: "Stats",
+					href: "/media-coordinator/stats",
+				},
 			];
 		}
 

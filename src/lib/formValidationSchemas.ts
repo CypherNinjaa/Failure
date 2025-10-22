@@ -460,3 +460,17 @@ export const newsTickerSchema = z.object({
 });
 
 export type NewsTickerSchema = z.infer<typeof newsTickerSchema>;
+
+export const statSchema = z.object({
+	id: z.coerce.number().optional(),
+	value: z.coerce.number().min(1, { message: "Value is required!" }),
+	suffix: z.string().default(""),
+	label: z.string().min(1, { message: "Label is required!" }),
+	emoji: z.string().min(1, { message: "Emoji is required!" }),
+	iconName: z.string().min(1, { message: "Icon name is required!" }),
+	gradient: z.string().min(1, { message: "Gradient is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type StatSchema = z.infer<typeof statSchema>;

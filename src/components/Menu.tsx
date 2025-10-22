@@ -160,6 +160,12 @@ const menuItems = [
 				href: "/media-coordinator/news-ticker",
 				visible: ["media-coordinator", "admin"],
 			},
+			{
+				icon: "/chart.png",
+				label: "Stats",
+				href: "/media-coordinator/stats",
+				visible: ["media-coordinator", "admin"],
+			},
 		],
 	},
 	{
