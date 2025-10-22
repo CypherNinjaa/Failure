@@ -23,6 +23,8 @@ import {
 	GallerySchema,
 	NewsTickerSchema,
 	StatSchema,
+	TestimonialSchema,
+	testimonialSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";
@@ -4614,10 +4616,25 @@ export const deleteStatItem = async (
 
 export const createTestimonial = async (
 	currentState: CurrentState,
-	data: TestimonialSchema
+	formData: FormData
 ) => {
 	try {
 		const { userId } = auth();
+
+		const data = {
+			name: formData.get("name") as string,
+			role: formData.get("role") as string,
+			avatar: formData.get("avatar") as string,
+			content: formData.get("content") as string,
+			rating: parseInt(formData.get("rating") as string) || 5,
+			gradient: formData.get("gradient") as string,
+			email: formData.get("email") as string,
+			phone: formData.get("phone") as string,
+			displayOrder: parseInt(formData.get("displayOrder") as string) || 0,
+		};
+
+		// Validate with Zod
+		testimonialSchema.parse(data);
 
 		await prisma.testimonial.create({
 			data: {
@@ -4625,14 +4642,14 @@ export const createTestimonial = async (
 				role: data.role,
 				avatar: data.avatar,
 				content: data.content,
-				rating: data.rating || 5,
+				rating: data.rating,
 				gradient: data.gradient,
 				email: data.email || null,
 				phone: data.phone || null,
 				submittedBy: userId || null,
 				status: "PENDING",
 				isPublished: false,
-				displayOrder: data.displayOrder || 0,
+				displayOrder: data.displayOrder,
 			},
 		});
 
@@ -4646,7 +4663,7 @@ export const createTestimonial = async (
 
 export const updateTestimonial = async (
 	currentState: CurrentState,
-	data: TestimonialSchema
+	formData: FormData
 ) => {
 	try {
 		const { sessionClaims } = auth();
@@ -4657,9 +4674,25 @@ export const updateTestimonial = async (
 			return { success: false, error: true, message: "Unauthorized" };
 		}
 
+		const data = {
+			id: parseInt(formData.get("id") as string),
+			name: formData.get("name") as string,
+			role: formData.get("role") as string,
+			avatar: formData.get("avatar") as string,
+			content: formData.get("content") as string,
+			rating: parseInt(formData.get("rating") as string) || 5,
+			gradient: formData.get("gradient") as string,
+			email: formData.get("email") as string,
+			phone: formData.get("phone") as string,
+			displayOrder: parseInt(formData.get("displayOrder") as string) || 0,
+		};
+
 		if (!data.id) {
 			return { success: false, error: true };
 		}
+
+		// Validate with Zod
+		testimonialSchema.parse(data);
 
 		await prisma.testimonial.update({
 			where: { id: data.id },
@@ -4668,11 +4701,11 @@ export const updateTestimonial = async (
 				role: data.role,
 				avatar: data.avatar,
 				content: data.content,
-				rating: data.rating || 5,
+				rating: data.rating,
 				gradient: data.gradient,
 				email: data.email || null,
 				phone: data.phone || null,
-				displayOrder: data.displayOrder || 0,
+				displayOrder: data.displayOrder,
 			},
 		});
 

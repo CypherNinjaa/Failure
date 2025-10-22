@@ -47,7 +47,14 @@ const TestimonialForm = ({
 	const router = useRouter();
 
 	const onSubmit = handleSubmit((data) => {
-		formAction(data);
+		// Convert data object to FormData
+		const formData = new FormData();
+		Object.entries(data).forEach(([key, value]) => {
+			if (value !== undefined && value !== null) {
+				formData.append(key, value.toString());
+			}
+		});
+		formAction(formData);
 	});
 
 	useEffect(() => {
@@ -75,33 +82,36 @@ const TestimonialForm = ({
 			</h1>
 
 			<div className="flex justify-between flex-wrap gap-4">
-				<InputField
-					label="Full Name"
-					name="name"
-					defaultValue={data?.name}
-					register={register}
-					error={errors?.name}
-					className="w-full md:w-[48%]"
-				/>
-				<InputField
-					label="Role (e.g., Parent - Grade 8)"
-					name="role"
-					defaultValue={data?.role}
-					register={register}
-					error={errors?.role}
-					className="w-full md:w-[48%]"
-				/>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Full Name"
+						name="name"
+						defaultValue={data?.name}
+						register={register}
+						error={errors?.name}
+					/>
+				</div>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Role (e.g., Parent - Grade 8)"
+						name="role"
+						defaultValue={data?.role}
+						register={register}
+						error={errors?.role}
+					/>
+				</div>
 			</div>
 
 			<div className="flex justify-between flex-wrap gap-4">
-				<InputField
-					label="Avatar (Emoji like 👨‍👩‍👧 or 🎓)"
-					name="avatar"
-					defaultValue={data?.avatar}
-					register={register}
-					error={errors?.avatar}
-					className="w-full md:w-[48%]"
-				/>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Avatar (Emoji like 👨‍👩‍👧 or 🎓)"
+						name="avatar"
+						defaultValue={data?.avatar}
+						register={register}
+						error={errors?.avatar}
+					/>
+				</div>
 				<div className="flex flex-col gap-2 w-full md:w-[48%]">
 					<label className="text-xs text-gray-500">Rating (1-5 stars)</label>
 					<input
@@ -137,23 +147,25 @@ const TestimonialForm = ({
 			</div>
 
 			<div className="flex justify-between flex-wrap gap-4">
-				<InputField
-					label="Email (Optional)"
-					name="email"
-					type="email"
-					defaultValue={data?.email}
-					register={register}
-					error={errors?.email}
-					className="w-full md:w-[48%]"
-				/>
-				<InputField
-					label="Phone (Optional)"
-					name="phone"
-					defaultValue={data?.phone}
-					register={register}
-					error={errors?.phone}
-					className="w-full md:w-[48%]"
-				/>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Email (Optional)"
+						name="email"
+						type="email"
+						defaultValue={data?.email}
+						register={register}
+						error={errors?.email}
+					/>
+				</div>
+				<div className="w-full md:w-[48%]">
+					<InputField
+						label="Phone (Optional)"
+						name="phone"
+						defaultValue={data?.phone}
+						register={register}
+						error={errors?.phone}
+					/>
+				</div>
 			</div>
 
 			<div className="flex flex-col gap-2 w-full">

@@ -28,7 +28,8 @@ export type FormContainerProps = {
 		| "assignFees"
 		| "gallery"
 		| "newsTicker"
-		| "stat";
+		| "stat"
+		| "testimonial";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;
