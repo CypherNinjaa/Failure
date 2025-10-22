@@ -21,6 +21,7 @@ import {
 	deleteGalleryItem,
 	deleteNewsTicker,
 	deleteStatItem,
+	deleteTestimonial,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -51,6 +52,7 @@ const deleteActionMap = {
 	gallery: deleteGalleryItem,
 	newsTicker: deleteNewsTicker,
 	stat: deleteStatItem,
+	testimonial: deleteTestimonial,
 	// Note: Payments, salaries, income, expense should not be deletable
 };
 
@@ -132,6 +134,9 @@ const NewsTickerForm = dynamic(() => import("./forms/NewsTickerForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 const StatForm = dynamic(() => import("./forms/StatForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const TestimonialForm = dynamic(() => import("./forms/TestimonialForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
 
@@ -293,6 +298,14 @@ const forms: {
 	),
 	stat: (setOpen, type, data, relatedData) => (
 		<StatForm type={type} data={data} setOpen={setOpen} />
+	),
+	testimonial: (setOpen, type, data, relatedData) => (
+		<TestimonialForm
+			type={type}
+			data={data}
+			setOpen={setOpen}
+			relatedData={relatedData}
+		/>
 	),
 };
 

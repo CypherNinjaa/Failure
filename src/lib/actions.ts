@@ -4609,3 +4609,164 @@ export const deleteStatItem = async (
 		return { success: false, error: true };
 	}
 };
+
+// ==================== TESTIMONIAL ACTIONS ====================
+
+export const createTestimonial = async (
+	currentState: CurrentState,
+	data: TestimonialSchema
+) => {
+	try {
+		const { userId } = auth();
+
+		await prisma.testimonial.create({
+			data: {
+				name: data.name,
+				role: data.role,
+				avatar: data.avatar,
+				content: data.content,
+				rating: data.rating || 5,
+				gradient: data.gradient,
+				email: data.email || null,
+				phone: data.phone || null,
+				submittedBy: userId || null,
+				status: "PENDING",
+				isPublished: false,
+				displayOrder: data.displayOrder || 0,
+			},
+		});
+
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating testimonial:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateTestimonial = async (
+	currentState: CurrentState,
+	data: TestimonialSchema
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can update testimonials
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		if (!data.id) {
+			return { success: false, error: true };
+		}
+
+		await prisma.testimonial.update({
+			where: { id: data.id },
+			data: {
+				name: data.name,
+				role: data.role,
+				avatar: data.avatar,
+				content: data.content,
+				rating: data.rating || 5,
+				gradient: data.gradient,
+				email: data.email || null,
+				phone: data.phone || null,
+				displayOrder: data.displayOrder || 0,
+			},
+		});
+
+		revalidatePath("/media-coordinator/testimonials");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating testimonial:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const approveTestimonial = async (id: number) => {
+	try {
+		const { sessionClaims, userId } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can approve
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		await prisma.testimonial.update({
+			where: { id },
+			data: {
+				status: "APPROVED",
+				isPublished: true,
+				reviewedBy: userId || null,
+				reviewedAt: new Date(),
+			},
+		});
+
+		revalidatePath("/media-coordinator/testimonials");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error approving testimonial:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const rejectTestimonial = async (id: number) => {
+	try {
+		const { sessionClaims, userId } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can reject
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		await prisma.testimonial.update({
+			where: { id },
+			data: {
+				status: "REJECTED",
+				isPublished: false,
+				reviewedBy: userId || null,
+				reviewedAt: new Date(),
+			},
+		});
+
+		revalidatePath("/media-coordinator/testimonials");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error rejecting testimonial:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteTestimonial = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can delete
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+
+		await prisma.testimonial.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/media-coordinator/testimonials");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting testimonial:", err);
+		return { success: false, error: true };
+	}
+};

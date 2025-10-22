@@ -166,6 +166,12 @@ const menuItems = [
 				href: "/media-coordinator/stats",
 				visible: ["media-coordinator", "admin"],
 			},
+			{
+				icon: "/message.png",
+				label: "Testimonials",
+				href: "/media-coordinator/testimonials",
+				visible: ["media-coordinator", "admin"],
+			},
 		],
 	},
 	{
