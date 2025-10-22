@@ -5,9 +5,10 @@
 	"scripts": {
 		"dev": "next dev -H 0.0.0.0",
 		"dev:network": "next dev -H 192.168.18.100",
-		"build": "next build",
+		"build": "next build && next-sitemap",
 		"start": "next start",
 		"lint": "next lint",
+		"postbuild": "next-sitemap",
 		"postinstall": "prisma generate",
 		"railway:migrate": "npx prisma migrate deploy",
 		"railway:seed": "npx prisma db seed"
@@ -27,6 +28,7 @@
 		"@types/react-big-calendar": "^1.8.9",
 		"@types/web-push": "^3.6.4",
 		"class-variance-authority": "^0.7.1",
+		"cloudinary": "^2.8.0",
 		"clsx": "^2.1.1",
 		"encoding": "^0.1.13",
 		"face-api.js": "^0.22.2",
@@ -35,6 +37,7 @@
 		"moment": "^2.30.1",
 		"next": "14.2.5",
 		"next-cloudinary": "^6.13.0",
+		"next-sitemap": "^4.2.3",
 		"nodemailer": "^7.0.9",
 		"pusher": "^5.2.0",
 		"pusher-js": "^8.4.0",

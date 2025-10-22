@@ -4509,3 +4509,102 @@ export const deleteNewsTicker = async (
 		return { success: false, error: true };
 	}
 };
+
+// STATS CRUD ACTIONS
+
+export const createStatItem = async (currentState: CurrentState, data: any) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can create stat items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		await prisma.statItem.create({
+			data: {
+				value: parseInt(data.value),
+				suffix: data.suffix || "",
+				label: data.label,
+				emoji: data.emoji,
+				iconName: data.iconName,
+				gradient: data.gradient,
+				displayOrder: parseInt(data.displayOrder) || 0,
+				isActive: data.isActive ?? true,
+			},
+		});
+
+		revalidatePath("/media-coordinator/stats");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating stat item:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateStatItem = async (currentState: CurrentState, data: any) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can update stat items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		if (!data.id) {
+			return { success: false, error: true, message: "ID is required" };
+		}
+
+		await prisma.statItem.update({
+			where: { id: parseInt(data.id) },
+			data: {
+				value: parseInt(data.value),
+				suffix: data.suffix || "",
+				label: data.label,
+				emoji: data.emoji,
+				iconName: data.iconName,
+				gradient: data.gradient,
+				displayOrder: parseInt(data.displayOrder) || 0,
+				isActive: data.isActive ?? true,
+			},
+		});
+
+		revalidatePath("/media-coordinator/stats");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating stat item:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteStatItem = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		// Only media-coordinator and admin can delete stat items
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+
+		await prisma.statItem.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/media-coordinator/stats");
+		revalidatePath("/");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting stat item:", err);
+		return { success: false, error: true };
+	}
+};

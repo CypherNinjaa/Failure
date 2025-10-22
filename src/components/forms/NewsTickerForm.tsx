@@ -29,6 +29,7 @@ const NewsTickerForm = ({
 		handleSubmit,
 		formState: { errors },
 		setValue,
+		watch,
 	} = useForm<NewsTickerSchema>({
 		resolver: zodResolver(newsTickerSchema),
 		defaultValues: data
@@ -89,7 +90,7 @@ const NewsTickerForm = ({
 	useEffect(() => {
 		console.log("State changed:", state);
 		if (state.success) {
-			toast.success(
+			toast(
 				`News ticker item has been ${
 					type === "create" ? "created" : "updated"
 				}!`
@@ -97,10 +98,13 @@ const NewsTickerForm = ({
 			setOpen(false);
 			router.refresh();
 		}
+	}, [state, router, type, setOpen]);
+
+	useEffect(() => {
 		if (state.error) {
 			toast.error("Something went wrong!");
 		}
-	}, [state, router, type, setOpen]);
+	}, [state]);
 
 	return (
 		<form className="flex flex-col gap-8" onSubmit={onSubmit}>
@@ -169,16 +173,21 @@ const NewsTickerForm = ({
 
 				<div className="flex flex-col gap-2 w-full md:w-1/4">
 					<label className="text-xs text-gray-500">Active Status</label>
-					<div className="ring-[1.5px] ring-gray-300 p-3 rounded-md bg-lamaSkyLight hover:bg-lamaSky/20 transition-colors">
-						<label className="flex items-center gap-3 cursor-pointer">
-							<input
-								type="checkbox"
-								{...register("isActive")}
-								className="w-5 h-5 cursor-pointer accent-green-500"
-							/>
-							<span className="text-sm font-medium">Active</span>
-						</label>
-					</div>
+					<button
+						type="button"
+						onClick={() => {
+							const currentValue = watch("isActive");
+							setValue("isActive", !currentValue);
+						}}
+						className={`ring-[1.5px] ring-gray-300 p-3 rounded-md transition-all duration-200 flex items-center justify-center gap-2 font-medium ${
+							watch("isActive")
+								? "bg-green-100 text-green-700 hover:bg-green-200"
+								: "bg-red-100 text-red-700 hover:bg-red-200"
+						}`}
+					>
+						<span className="text-lg">{watch("isActive") ? "✓" : "✕"}</span>
+						<span>{watch("isActive") ? "Active" : "Inactive"}</span>
+					</button>
 					{errors.isActive?.message && (
 						<p className="text-xs text-red-400">
 							{errors.isActive.message.toString()}

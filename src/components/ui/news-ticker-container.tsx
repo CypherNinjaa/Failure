@@ -11,6 +11,11 @@ export async function NewsTicker() {
 			orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
 		});
 
+		// If no items in database, return null (don't show news ticker)
+		if (newsItems.length === 0) {
+			return null;
+		}
+
 		// Transform to client format
 		const clientNewsItems = newsItems.map((item) => ({
 			icon: item.icon,
@@ -22,61 +27,10 @@ export async function NewsTicker() {
 				| "announcement",
 		}));
 
-		// Use fallback data if no items in database
-		const fallbackItems = [
-			{
-				icon: "🎉",
-				text: "Annual Sports Day 2025 - March 15th",
-				type: "event" as const,
-			},
-			{
-				icon: "📚",
-				text: "New Smart Classrooms Inaugurated",
-				type: "facility" as const,
-			},
-			{
-				icon: "🏆",
-				text: "Science Fair Winners Announced",
-				type: "achievement" as const,
-			},
-			{
-				icon: "🎭",
-				text: "Cultural Festival Coming Soon",
-				type: "event" as const,
-			},
-		];
-
-		return (
-			<NewsTickerClient
-				newsItems={clientNewsItems.length > 0 ? clientNewsItems : fallbackItems}
-			/>
-		);
+		return <NewsTickerClient newsItems={clientNewsItems} />;
 	} catch (error) {
-		// If table doesn't exist yet or other error, use fallback
-		console.log("News ticker using fallback data:", error);
-		const fallbackItems = [
-			{
-				icon: "🎉",
-				text: "Annual Sports Day 2025 - March 15th",
-				type: "event" as const,
-			},
-			{
-				icon: "📚",
-				text: "New Smart Classrooms Inaugurated",
-				type: "facility" as const,
-			},
-			{
-				icon: "🏆",
-				text: "Science Fair Winners Announced",
-				type: "achievement" as const,
-			},
-			{
-				icon: "🎭",
-				text: "Cultural Festival Coming Soon",
-				type: "event" as const,
-			},
-		];
-
-		return <NewsTickerClient newsItems={fallbackItems} />;
+		// If table doesn't exist yet or database error, don't show news ticker
+		console.error("Error fetching news ticker items:", error);
+		return null;
 	}
 }
