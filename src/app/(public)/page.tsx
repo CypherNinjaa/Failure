@@ -3,8 +3,8 @@ import { MobileHero } from "@/components/ui/mobile-hero";
 import { NewsTicker } from "@/components/ui/news-ticker";
 import StatsSection from "@/components/ui/stats-section-server";
 import { GalleryCarousel } from "@/components/ui/gallery-carousel";
-import { EventsSection } from "@/components/ui/events-section";
-import { TestimonialsSection } from "@/components/ui/testimonials-section";
+import EventsSection from "@/components/ui/events-section-server";
+import TestimonialsSection from "@/components/ui/testimonials-section-server";
 import StarPerformers from "@/components/ui/star-performers-server";
 import { ModernFooter } from "@/components/ui/modern-footer";
 

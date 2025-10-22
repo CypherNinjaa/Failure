@@ -1269,3 +1269,33 @@ model StatItem {
   @@index([isActive])
   @@index([displayOrder])
 }
+
+model Testimonial {
+  id          Int      @id @default(autoincrement())
+  name        String   // Person's name
+  role        String   // Role like "Parent - Grade 8", "Student - Grade 10", "Teacher"
+  avatar      String   // Emoji or avatar URL
+  content     String   @db.Text // Testimonial content
+  rating      Int      @default(5) // Rating 1-5
+  gradient    String   // Gradient classes for styling
+  status      TestimonialStatus @default(PENDING) // Review status
+  email       String?  // Optional email for contact
+  phone       String?  // Optional phone
+  submittedBy String?  // User ID who submitted (if logged in)
+  reviewedBy  String?  // Media coordinator who reviewed
+  reviewedAt  DateTime? // When it was reviewed
+  displayOrder Int     @default(0) // For custom ordering on frontend
+  isPublished Boolean  @default(false) // Whether to show on website
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([status])
+  @@index([isPublished])
+  @@index([displayOrder])
+}
+
+enum TestimonialStatus {
+  PENDING   // Waiting for review
+  APPROVED  // Accepted by media coordinator
+  REJECTED  // Rejected by media coordinator
+}

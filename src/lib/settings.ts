@@ -34,6 +34,7 @@ export const routeAccessMap: RouteAccessMap = {
 	"/media-coordinator/gallery": ["media-coordinator", "admin"],
 	"/media-coordinator/news-ticker": ["media-coordinator", "admin"],
 	"/media-coordinator/stats": ["media-coordinator", "admin"],
+	"/media-coordinator/testimonials": ["media-coordinator", "admin"],
 	"/profile": ["admin", "teacher", "student", "parent", "media-coordinator"],
 	"/settings": ["admin", "teacher", "student", "parent", "media-coordinator"],
 };

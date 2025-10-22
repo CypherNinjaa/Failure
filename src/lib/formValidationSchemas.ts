@@ -474,3 +474,25 @@ export const statSchema = z.object({
 });
 
 export type StatSchema = z.infer<typeof statSchema>;
+
+export const testimonialSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Name is required!" }),
+	role: z.string().min(1, { message: "Role is required!" }),
+	avatar: z.string().min(1, { message: "Avatar is required!" }),
+	content: z
+		.string()
+		.min(10, { message: "Content must be at least 10 characters!" })
+		.max(500, { message: "Content must not exceed 500 characters!" }),
+	rating: z.coerce.number().min(1).max(5).default(5),
+	gradient: z.string().min(1, { message: "Gradient is required!" }),
+	email: z
+		.string()
+		.email({ message: "Invalid email address!" })
+		.optional()
+		.or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	displayOrder: z.coerce.number().default(0),
+});
+
+export type TestimonialSchema = z.infer<typeof testimonialSchema>;

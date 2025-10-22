@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
 	Calendar,
 	MapPin,
@@ -12,45 +13,75 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function EventsSection() {
+interface Event {
+	id: number;
+	title: string;
+	description: string;
+	startTime: Date;
+	endTime: Date;
+	classId: number | null;
+	class: {
+		name: string;
+	} | null;
+}
+
+interface EventsSectionClientProps {
+	events: Event[];
+}
+
+export default function EventsSectionClient({
+	events,
+}: EventsSectionClientProps) {
 	const [currentSlide, setCurrentSlide] = useState(0);
 	const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-	const upcomingEvents = [
-		{
-			id: 1,
-			title: "Annual Sports Day",
-			date: "March 15, 2025",
-			time: "9:00 AM - 4:00 PM",
-			location: "School Playground",
-			attendees: 500,
-			emoji: "🏃‍♂️",
-			gradient: "from-blue-500 to-cyan-500",
-		},
-		{
-			id: 2,
-			title: "Science Exhibition",
-			date: "March 22, 2025",
-			time: "10:00 AM - 2:00 PM",
-			location: "Science Lab",
-			attendees: 200,
-			emoji: "🔬",
-			gradient: "from-purple-500 to-pink-500",
-		},
-		{
-			id: 3,
-			title: "Cultural Festival",
-			date: "March 28, 2025",
-			time: "6:00 PM - 9:00 PM",
-			location: "Main Auditorium",
-			attendees: 800,
-			emoji: "🎭",
-			gradient: "from-green-500 to-emerald-500",
-		},
+	const [selectedDate, setSelectedDate] = useState<number | null>(null);
+	const [showEventModal, setShowEventModal] = useState(false);
+
+	// Transform database events to display format
+	const gradients = [
+		"from-blue-500 to-cyan-500",
+		"from-purple-500 to-pink-500",
+		"from-green-500 to-emerald-500",
+		"from-orange-500 to-red-500",
+		"from-pink-500 to-rose-500",
+		"from-indigo-500 to-purple-500",
 	];
+
+	const emojis = ["🏃‍♂️", "🔬", "🎭", "🎨", "🎵", "📚", "⚽", "🎪", "🌟", "🎉"];
+
+	const upcomingEvents = events.map((event, index) => {
+		const startDate = new Date(event.startTime);
+		const endDate = new Date(event.endTime);
+
+		// Use event ID to generate a consistent "random-looking" number
+		const deterministicAttendees = 100 + ((event.id * 137) % 400);
+
+		return {
+			id: event.id,
+			title: event.title,
+			date: startDate.toLocaleDateString("en-US", {
+				month: "long",
+				day: "numeric",
+				year: "numeric",
+			}),
+			time: `${startDate.toLocaleTimeString("en-US", {
+				hour: "numeric",
+				minute: "2-digit",
+			})} - ${endDate.toLocaleTimeString("en-US", {
+				hour: "numeric",
+				minute: "2-digit",
+			})}`,
+			location: event.class?.name || "School Campus",
+			attendees: deterministicAttendees,
+			emoji: emojis[index % emojis.length],
+			gradient: gradients[index % gradients.length],
+			description: event.description,
+		};
+	});
 
 	// Auto-play carousel on mobile
 	useEffect(() => {
-		if (!isAutoPlaying) return;
+		if (!isAutoPlaying || upcomingEvents.length === 0) return;
 
 		const interval = setInterval(() => {
 			setCurrentSlide((prev) => (prev + 1) % upcomingEvents.length);
@@ -58,6 +89,32 @@ export function EventsSection() {
 
 		return () => clearInterval(interval);
 	}, [isAutoPlaying, upcomingEvents.length]);
+
+	// If no events, show empty state
+	if (!events || events.length === 0) {
+		return (
+			<section className="py-16 md:py-24 bg-background">
+				<div className="container mx-auto px-4">
+					<div className="text-center">
+						<h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 flex items-center justify-center gap-2">
+							<Image
+								src="/event-list.png"
+								alt="Events"
+								width={40}
+								height={40}
+								className="inline-block"
+							/>
+							Upcoming Events
+						</h2>
+						<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+							No upcoming events scheduled at the moment. Check back later for
+							exciting activities!
+						</p>
+					</div>
+				</div>
+			</section>
+		);
+	}
 
 	const nextSlide = () => {
 		setCurrentSlide((prev) => (prev + 1) % upcomingEvents.length);
@@ -76,11 +133,33 @@ export function EventsSection() {
 		setIsAutoPlaying(false);
 	};
 
+	// Get current month and year
+	const now = new Date();
+	const currentMonth = now.getMonth();
+	const currentYear = now.getFullYear();
+	const currentDay = now.getDate();
+
+	// Get event dates for the current month
+	const eventDates = events
+		.filter((event) => {
+			const eventDate = new Date(event.startTime);
+			return (
+				eventDate.getMonth() === currentMonth &&
+				eventDate.getFullYear() === currentYear
+			);
+		})
+		.map((event) => new Date(event.startTime).getDate());
+
+	// Get first day of month and total days
+	const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+	const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+	// Generate calendar days
 	const calendarDays = Array.from({ length: 35 }, (_, i) => {
-		const day = i - 6;
-		const isCurrentMonth = day > 0 && day <= 31;
-		const isEvent = [15, 22, 28].includes(day);
-		const isToday = day === 8;
+		const day = i - firstDayOfMonth + 1;
+		const isCurrentMonth = day > 0 && day <= daysInMonth;
+		const isEvent = eventDates.includes(day);
+		const isToday = day === currentDay && isCurrentMonth;
 
 		return {
 			day: isCurrentMonth ? day : null,
@@ -88,6 +167,72 @@ export function EventsSection() {
 			isToday,
 		};
 	});
+
+	// Get month name
+	const monthNames = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	];
+	const currentMonthName = monthNames[currentMonth];
+
+	// Handle calendar date click
+	const handleDateClick = (day: number | null, isEvent: boolean) => {
+		if (!day || !isEvent) return;
+
+		// Find events for this date
+		const eventsOnDate = upcomingEvents.filter((event) => {
+			const eventDate = new Date(
+				events[upcomingEvents.indexOf(event)].startTime
+			);
+			return (
+				eventDate.getDate() === day &&
+				eventDate.getMonth() === currentMonth &&
+				eventDate.getFullYear() === currentYear
+			);
+		});
+
+		if (eventsOnDate.length > 0) {
+			setSelectedDate(day);
+			setShowEventModal(true);
+			// On mobile, scroll to the first event
+			if (window.innerWidth < 768) {
+				const eventIndex = upcomingEvents.findIndex(
+					(e) =>
+						new Date(events[upcomingEvents.indexOf(e)].startTime).getDate() ===
+						day
+				);
+				if (eventIndex !== -1) {
+					setCurrentSlide(eventIndex);
+					setIsAutoPlaying(false);
+				}
+			}
+		}
+	};
+
+	// Get events for selected date
+	const selectedDateEvents =
+		selectedDate !== null
+			? upcomingEvents.filter((event) => {
+					const eventDate = new Date(
+						events[upcomingEvents.indexOf(event)].startTime
+					);
+					return (
+						eventDate.getDate() === selectedDate &&
+						eventDate.getMonth() === currentMonth &&
+						eventDate.getFullYear() === currentYear
+					);
+			  })
+			: [];
 
 	return (
 		<section className="py-16 md:py-24 bg-background">
@@ -295,7 +440,7 @@ export function EventsSection() {
 						className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-xl"
 					>
 						<h3 className="text-2xl font-bold text-foreground mb-6 text-center">
-							March 2025
+							{currentMonthName} {currentYear}
 						</h3>
 
 						{/* Calendar Header */}
@@ -313,24 +458,42 @@ export function EventsSection() {
 						{/* Calendar Grid */}
 						<div className="grid grid-cols-7 gap-2">
 							{calendarDays.map((dayData, index) => (
-								<motion.div
+								<motion.button
 									key={index}
+									onClick={() => handleDateClick(dayData.day, dayData.isEvent)}
 									whileHover={dayData.day ? { scale: 1.1 } : {}}
+									whileTap={dayData.isEvent ? { scale: 0.95 } : {}}
+									disabled={!dayData.day}
+									title={
+										dayData.isEvent
+											? `Click to view events on ${dayData.day}`
+											: dayData.isToday
+											? "Today"
+											: ""
+									}
 									className={`
-                    aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer
+                    aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 relative
                     ${
 											dayData.day
 												? dayData.isToday
-													? "bg-blue-600 text-white shadow-lg"
+													? "bg-blue-600 text-white shadow-lg cursor-pointer hover:shadow-xl"
 													: dayData.isEvent
-													? "bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl"
-													: "text-foreground hover:bg-muted"
-												: "text-muted-foreground"
+													? "bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl cursor-pointer hover:scale-110 animate-pulse"
+													: "text-foreground hover:bg-muted cursor-default"
+												: "text-muted-foreground cursor-default"
+										}
+										${
+											dayData.isEvent && !dayData.isToday
+												? "ring-2 ring-purple-500/50 ring-offset-2"
+												: ""
 										}
                   `}
 								>
 									{dayData.day}
-								</motion.div>
+									{dayData.isEvent && (
+										<span className="absolute bottom-1 w-1 h-1 bg-white rounded-full"></span>
+									)}
+								</motion.button>
 							))}
 						</div>
 
@@ -343,12 +506,101 @@ export function EventsSection() {
 								</div>
 								<div className="flex items-center gap-2">
 									<div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full"></div>
-									<span className="text-muted-foreground">Events</span>
+									<span className="text-muted-foreground">
+										Events (Click to view)
+									</span>
 								</div>
 							</div>
 						</div>
 					</motion.div>
 				</div>
+
+				{/* Event Details Modal */}
+				{showEventModal && selectedDateEvents.length > 0 && (
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+						onClick={() => setShowEventModal(false)}
+					>
+						<motion.div
+							initial={{ scale: 0.9, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							exit={{ scale: 0.9, opacity: 0 }}
+							className="bg-card border border-border rounded-3xl p-6 md:p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+							onClick={(e) => e.stopPropagation()}
+						>
+							<div className="flex items-center justify-between mb-6">
+								<h3 className="text-2xl font-bold text-foreground">
+									Events on {currentMonthName} {selectedDate}, {currentYear}
+								</h3>
+								<button
+									onClick={() => setShowEventModal(false)}
+									className="p-2 hover:bg-muted rounded-full transition-colors"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										className="h-6 w-6"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M6 18L18 6M6 6l12 12"
+										/>
+									</svg>
+								</button>
+							</div>
+
+							<div className="space-y-4">
+								{selectedDateEvents.map((event, index) => (
+									<div
+										key={event.id}
+										className={`bg-gradient-to-br ${event.gradient} p-6 rounded-2xl text-white`}
+									>
+										<div className="flex items-start gap-4">
+											<div className="flex-shrink-0 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+												<span className="text-2xl">{event.emoji}</span>
+											</div>
+											<div className="flex-1">
+												<h4 className="text-xl font-bold mb-2">
+													{event.title}
+												</h4>
+												<p className="text-white/90 text-sm mb-3">
+													{event.description}
+												</p>
+												<div className="space-y-2 text-sm">
+													<div className="flex items-center gap-2">
+														<Clock className="w-4 h-4" />
+														<span>{event.time}</span>
+													</div>
+													<div className="flex items-center gap-2">
+														<MapPin className="w-4 h-4" />
+														<span>{event.location}</span>
+													</div>
+													<div className="flex items-center gap-2">
+														<Users className="w-4 h-4" />
+														<span>{event.attendees}+ expected attendees</span>
+													</div>
+												</div>
+												<Button
+													className="mt-4 bg-white text-gray-900 hover:bg-gray-100"
+													onClick={() => setShowEventModal(false)}
+												>
+													Register Now
+												</Button>
+											</div>
+										</div>
+									</div>
+								))}
+							</div>
+						</motion.div>
+					</motion.div>
+				)}
 			</div>
 		</section>
 	);

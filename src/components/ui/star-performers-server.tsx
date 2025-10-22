@@ -1,68 +1,34 @@
-import prisma from "@/lib/prisma";
+import { calculateLeaderboard } from "@/lib/actions";
 import StarPerformersClient from "./star-performers-client";
 
 export default async function StarPerformers() {
 	try {
-		// Fetch the latest leaderboard snapshots for top 3 students
-		const topStudents = await prisma.leaderboardSnapshot.findMany({
-			orderBy: [{ rank: "asc" }],
-			take: 3,
-			include: {
-				student: {
-					select: {
-						id: true,
-						name: true,
-						surname: true,
-						img: true,
-						class: {
-							select: {
-								name: true,
-							},
-						},
-						grade: {
-							select: {
-								level: true,
-							},
-						},
-					},
-				},
-			},
-			where: {
-				// Get the most recent snapshots
-				createdAt: {
-					gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-				},
-			},
-		});
+		// Fetch top 3 students using the same leaderboard calculation
+		const leaderboard = await calculateLeaderboard({});
 
-		// If no recent data, try to get any top 3
-		const studentsToDisplay =
-			topStudents.length > 0
-				? topStudents
-				: await prisma.leaderboardSnapshot.findMany({
-						orderBy: [{ rank: "asc" }],
-						take: 3,
-						include: {
-							student: {
-								select: {
-									id: true,
-									name: true,
-									surname: true,
-									img: true,
-									class: {
-										select: {
-											name: true,
-										},
-									},
-									grade: {
-										select: {
-											level: true,
-										},
-									},
-								},
-							},
-						},
-				  });
+		// Get only the top 3
+		const topStudents = leaderboard.slice(0, 3);
+
+		// Transform the data to match the expected format
+		const studentsToDisplay = topStudents.map((entry) => ({
+			id: entry.studentId,
+			rank: entry.rank,
+			averageScore: entry.averageScore,
+			totalTests: entry.totalTests,
+			bestScore: entry.bestScore,
+			student: {
+				id: entry.studentId,
+				name: entry.studentName,
+				surname: entry.studentSurname,
+				img: entry.studentImg,
+				class: {
+					name: entry.className || "N/A",
+				},
+				grade: {
+					level: parseInt(entry.className?.match(/\d+/)?.[0] || "0"),
+				},
+			},
+		}));
 
 		return <StarPerformersClient students={studentsToDisplay} />;
 	} catch (error) {
