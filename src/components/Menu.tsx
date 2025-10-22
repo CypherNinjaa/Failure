@@ -167,7 +167,7 @@ const menuItems = [
 				visible: ["media-coordinator", "admin"],
 			},
 			{
-				icon: "/message.png",
+				icon: "/review.png",
 				label: "Testimonials",
 				href: "/media-coordinator/testimonials",
 				visible: ["media-coordinator", "admin"],
