@@ -149,7 +149,7 @@ const menuItems = [
 		title: "MEDIA",
 		items: [
 			{
-				icon: "/singleClass.png",
+				icon: "/gallery.png",
 				label: "Gallery Management",
 				href: "/media-coordinator/gallery",
 				visible: ["media-coordinator", "admin"],
@@ -267,7 +267,7 @@ const menuItems = [
 				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],
 			},
 			{
-				icon: "/singleClass.png",
+				icon: "/sync.png",
 				label: "Sync Queue",
 				href: "#offline-queue",
 				visible: ["admin", "teacher", "student", "parent", "media-coordinator"],

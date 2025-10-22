@@ -1,5 +1,3 @@
-"use client";
-
 import { ModernHeader } from "@/components/ui/modern-header";
 import { MobileHero } from "@/components/ui/mobile-hero";
 import { NewsTicker } from "@/components/ui/news-ticker";
@@ -9,17 +7,8 @@ import { EventsSection } from "@/components/ui/events-section";
 import { TestimonialsSection } from "@/components/ui/testimonials-section";
 import { StarPerformers } from "@/components/ui/star-performers";
 import { ModernFooter } from "@/components/ui/modern-footer";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-	const router = useRouter();
-
-	// Prefetch the sign-in page for faster navigation
-	useEffect(() => {
-		router.prefetch("/sign-in");
-	}, [router]);
-
 	return (
 		<div className="min-h-screen bg-background">
 			<ModernHeader />
