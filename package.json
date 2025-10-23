@@ -5,10 +5,10 @@
 	"scripts": {
 		"dev": "next dev -H 0.0.0.0",
 		"dev:network": "next dev -H 192.168.18.100",
-		"build": "next build && next-sitemap",
+		"prebuild": "node scripts/clean-sitemap.js",
+		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"postbuild": "next-sitemap",
 		"postinstall": "prisma generate",
 		"railway:migrate": "npx prisma migrate deploy",
 		"railway:seed": "npx prisma db seed"
