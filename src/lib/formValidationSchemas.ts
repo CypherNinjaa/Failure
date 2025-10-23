@@ -496,3 +496,70 @@ export const testimonialSchema = z.object({
 });
 
 export type TestimonialSchema = z.infer<typeof testimonialSchema>;
+
+// ===== ABOUT PAGE SCHEMAS =====
+
+export const timelineEventSchema = z.object({
+	id: z.coerce.number().optional(),
+	year: z.string().min(1, { message: "Year is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }),
+	description: z
+		.string()
+		.min(10, { message: "Description must be at least 10 characters!" }),
+	icon: z.string().min(1, { message: "Icon/Emoji is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type TimelineEventSchema = z.infer<typeof timelineEventSchema>;
+
+export const principalInfoSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Name is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }),
+	qualifications: z
+		.string()
+		.min(1, { message: "Qualifications are required!" }),
+	photo: z.string().min(1, { message: "Photo/Initials are required!" }),
+	message: z
+		.string()
+		.min(20, { message: "Message must be at least 20 characters!" }),
+	messageAudio: z.string().optional().or(z.literal("")),
+	email: z
+		.string()
+		.email({ message: "Invalid email address!" })
+		.optional()
+		.or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	experience: z.string().optional().or(z.literal("")),
+	specialization: z.string().optional().or(z.literal("")),
+	isActive: z.boolean().default(true),
+});
+
+export type PrincipalInfoSchema = z.infer<typeof principalInfoSchema>;
+
+export const leadershipMemberSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Name is required!" }),
+	position: z.string().min(1, { message: "Position is required!" }),
+	category: z
+		.enum(["leadership", "academic", "administrative"])
+		.default("leadership"),
+	experience: z.string().optional().or(z.literal("")),
+	education: z.string().optional().or(z.literal("")),
+	photo: z.string().min(1, { message: "Photo/Initials are required!" }),
+	email: z
+		.string()
+		.email({ message: "Invalid email address!" })
+		.optional()
+		.or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	specialization: z.string().optional().or(z.literal("")),
+	bio: z.string().optional().or(z.literal("")),
+	quote: z.string().optional().or(z.literal("")),
+	linkedIn: z.string().optional().or(z.literal("")),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type LeadershipMemberSchema = z.infer<typeof leadershipMemberSchema>;

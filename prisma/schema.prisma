@@ -1299,3 +1299,69 @@ enum TestimonialStatus {
   APPROVED  // Accepted by media coordinator
   REJECTED  // Rejected by media coordinator
 }
+
+// ===== ABOUT PAGE DYNAMIC CONTENT =====
+
+// Timeline/History Events
+model TimelineEvent {
+  id          Int      @id @default(autoincrement())
+  year        String   // Year like "2024" or "2020-2021"
+  title       String   // Event title
+  description String   @db.Text // Event description
+  icon        String   // Emoji or icon identifier
+  displayOrder Int     @default(0) // Order on timeline
+  isActive    Boolean  @default(true) // Show/hide on website
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([displayOrder])
+  @@index([isActive])
+}
+
+// Principal Information
+model PrincipalInfo {
+  id              Int      @id @default(autoincrement())
+  name            String   // Full name
+  title           String   // Title like "Principal & CEO"
+  qualifications  String   // Education degrees
+  photo           String   // Image URL or initials
+  message         String   @db.Text // Welcome message
+  messageAudio    String?  // Optional audio/video URL
+  email           String?  // Contact email
+  phone           String?  // Contact phone
+  experience      String?  // Years of experience
+  specialization  String?  // Areas of expertise
+  philosophies    Json?    // Array of philosophy objects {title, description, color}
+  isActive        Boolean  @default(true) // Only one should be active
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([isActive])
+}
+
+// Leadership Team Members
+model LeadershipMember {
+  id              Int      @id @default(autoincrement())
+  name            String   // Full name
+  position        String   // Position/title
+  category        String   @default("leadership") // "leadership", "academic", "administrative"
+  experience      String?  // Years of experience
+  education       String?  // Educational qualifications
+  photo           String   // Image URL or initials
+  email           String?  // Contact email
+  phone           String?  // Contact phone
+  specialization  String?  // Areas of expertise
+  achievements    Json?    // Array of achievement strings
+  bio             String?  @db.Text // Short biography
+  quote           String?  // Personal quote
+  linkedIn        String?  // LinkedIn profile URL
+  displayOrder    Int      @default(0) // Order on page
+  isActive        Boolean  @default(true) // Show/hide
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([category])
+  @@index([displayOrder])
+  @@index([isActive])
+}
+

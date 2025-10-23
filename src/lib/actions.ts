@@ -4803,3 +4803,335 @@ export const deleteTestimonial = async (
 		return { success: false, error: true };
 	}
 };
+
+// ==================== TIMELINE EVENT ACTIONS ====================
+
+export const createTimelineEvent = async (
+	currentState: CurrentState,
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const data = {
+			year: formData.get("year") as string,
+			title: formData.get("title") as string,
+			description: formData.get("description") as string,
+			icon: formData.get("icon") as string,
+			displayOrder: parseInt(formData.get("displayOrder") as string) || 0,
+			isActive: formData.get("isActive") === "true",
+		};
+
+		await prisma.timelineEvent.create({
+			data,
+		});
+
+		revalidatePath("/about");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating timeline event:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateTimelineEvent = async (
+	currentState: CurrentState,
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = parseInt(formData.get("id") as string);
+		const data = {
+			year: formData.get("year") as string,
+			title: formData.get("title") as string,
+			description: formData.get("description") as string,
+			icon: formData.get("icon") as string,
+			displayOrder: parseInt(formData.get("displayOrder") as string) || 0,
+			isActive: formData.get("isActive") === "true",
+		};
+
+		await prisma.timelineEvent.update({
+			where: { id },
+			data,
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/timeline");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating timeline event:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteTimelineEvent = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+		await prisma.timelineEvent.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/timeline");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting timeline event:", err);
+		return { success: false, error: true };
+	}
+};
+
+// ==================== PRINCIPAL INFO ACTIONS ====================
+
+export const createPrincipalInfo = async (
+	currentState: CurrentState,
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		// Deactivate all existing principals
+		await prisma.principalInfo.updateMany({
+			data: { isActive: false },
+		});
+
+		const data = {
+			name: formData.get("name") as string,
+			title: formData.get("title") as string,
+			qualifications: formData.get("qualifications") as string,
+			photo: formData.get("photo") as string,
+			message: formData.get("message") as string,
+			messageAudio: (formData.get("messageAudio") as string) || null,
+			email: (formData.get("email") as string) || null,
+			phone: (formData.get("phone") as string) || null,
+			experience: (formData.get("experience") as string) || null,
+			specialization: (formData.get("specialization") as string) || null,
+			isActive: true,
+		};
+
+		await prisma.principalInfo.create({
+			data,
+		});
+
+		revalidatePath("/about");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating principal info:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updatePrincipalInfo = async (
+	currentState: CurrentState,
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = parseInt(formData.get("id") as string);
+		const isActive = formData.get("isActive") === "true";
+
+		// If setting this as active, deactivate others
+		if (isActive) {
+			await prisma.principalInfo.updateMany({
+				where: { id: { not: id } },
+				data: { isActive: false },
+			});
+		}
+
+		const data = {
+			name: formData.get("name") as string,
+			title: formData.get("title") as string,
+			qualifications: formData.get("qualifications") as string,
+			photo: formData.get("photo") as string,
+			message: formData.get("message") as string,
+			messageAudio: (formData.get("messageAudio") as string) || null,
+			email: (formData.get("email") as string) || null,
+			phone: (formData.get("phone") as string) || null,
+			experience: (formData.get("experience") as string) || null,
+			specialization: (formData.get("specialization") as string) || null,
+			isActive,
+		};
+
+		await prisma.principalInfo.update({
+			where: { id },
+			data,
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/principal");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating principal info:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deletePrincipalInfo = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+		await prisma.principalInfo.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/principal");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting principal info:", err);
+		return { success: false, error: true };
+	}
+};
+
+// ==================== LEADERSHIP MEMBER ACTIONS ====================
+
+export const createLeadershipMember = async (
+	currentState: CurrentState,
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const data = {
+			name: formData.get("name") as string,
+			position: formData.get("position") as string,
+			category: formData.get("category") as string,
+			experience: (formData.get("experience") as string) || null,
+			education: (formData.get("education") as string) || null,
+			photo: formData.get("photo") as string,
+			email: (formData.get("email") as string) || null,
+			phone: (formData.get("phone") as string) || null,
+			specialization: (formData.get("specialization") as string) || null,
+			bio: (formData.get("bio") as string) || null,
+			quote: (formData.get("quote") as string) || null,
+			linkedIn: (formData.get("linkedIn") as string) || null,
+			displayOrder: parseInt(formData.get("displayOrder") as string) || 0,
+			isActive: formData.get("isActive") === "true",
+		};
+
+		await prisma.leadershipMember.create({
+			data,
+		});
+
+		revalidatePath("/about");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating leadership member:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateLeadershipMember = async (
+	currentState: CurrentState,
+	formData: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = parseInt(formData.get("id") as string);
+		const data = {
+			name: formData.get("name") as string,
+			position: formData.get("position") as string,
+			category: formData.get("category") as string,
+			experience: (formData.get("experience") as string) || null,
+			education: (formData.get("education") as string) || null,
+			photo: formData.get("photo") as string,
+			email: (formData.get("email") as string) || null,
+			phone: (formData.get("phone") as string) || null,
+			specialization: (formData.get("specialization") as string) || null,
+			bio: (formData.get("bio") as string) || null,
+			quote: (formData.get("quote") as string) || null,
+			linkedIn: (formData.get("linkedIn") as string) || null,
+			displayOrder: parseInt(formData.get("displayOrder") as string) || 0,
+			isActive: formData.get("isActive") === "true",
+		};
+
+		await prisma.leadershipMember.update({
+			where: { id },
+			data,
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/leadership");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating leadership member:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteLeadershipMember = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+		await prisma.leadershipMember.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/leadership");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting leadership member:", err);
+		return { success: false, error: true };
+	}
+};
