@@ -363,6 +363,36 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 				visible: ["media-coordinator"],
 			},
 			{
+				icon: "/chart.png",
+				label: "Stats",
+				href: "/media-coordinator/stats",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/review.png",
+				label: "Testimonials",
+				href: "/media-coordinator/testimonials",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/calendar.png",
+				label: "School History",
+				href: "/media-coordinator/school-history",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/profile.png",
+				label: "Principal Info",
+				href: "/media-coordinator/principal-info",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/teacher.png",
+				label: "Leadership Team",
+				href: "/media-coordinator/leadership-team",
+				visible: ["media-coordinator"],
+			},
+			{
 				icon: "/profile.png",
 				label: "Profile",
 				href: "/profile",

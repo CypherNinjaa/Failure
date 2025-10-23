@@ -172,6 +172,24 @@ const menuItems = [
 				href: "/media-coordinator/testimonials",
 				visible: ["media-coordinator", "admin"],
 			},
+			{
+				icon: "/calendar.png",
+				label: "School History",
+				href: "/media-coordinator/school-history",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
+				icon: "/profile.png",
+				label: "Principal Info",
+				href: "/media-coordinator/principal-info",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
+				icon: "/teacher.png",
+				label: "Leadership Team",
+				href: "/media-coordinator/leadership-team",
+				visible: ["media-coordinator", "admin"],
+			},
 		],
 	},
 	{

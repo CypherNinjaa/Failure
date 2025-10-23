@@ -1365,3 +1365,25 @@ model LeadershipMember {
   @@index([isActive])
 }
 
+model SupportStaff {
+  id              Int      @id @default(autoincrement())
+  name            String   // Full name
+  role            String   // Job title/role
+  department      String   // Department (Technology, Health Services, etc.)
+  education       String?  // Educational qualifications
+  experience      String?  // Years of experience
+  specialization  String?  // Areas of expertise
+  photo           String   // Image URL or initials
+  email           String?  // Contact email
+  phone           String?  // Contact phone
+  bio             String?  @db.Text // Short biography
+  displayOrder    Int      @default(0) // Order on page
+  isActive        Boolean  @default(true) // Show/hide
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([department])
+  @@index([displayOrder])
+  @@index([isActive])
+}
+

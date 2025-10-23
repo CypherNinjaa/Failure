@@ -22,6 +22,9 @@ import {
 	deleteNewsTicker,
 	deleteStatItem,
 	deleteTestimonial,
+	deleteTimelineEvent,
+	deletePrincipalInfo,
+	deleteLeadershipMember,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -53,6 +56,9 @@ const deleteActionMap = {
 	newsTicker: deleteNewsTicker,
 	stat: deleteStatItem,
 	testimonial: deleteTestimonial,
+	timelineEvent: deleteTimelineEvent,
+	principalInfo: deletePrincipalInfo,
+	leadershipMember: deleteLeadershipMember,
 	// Note: Payments, salaries, income, expense should not be deletable
 };
 
@@ -139,6 +145,18 @@ const StatForm = dynamic(() => import("./forms/StatForm"), {
 const TestimonialForm = dynamic(() => import("./forms/TestimonialForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
+const TimelineEventForm = dynamic(() => import("./forms/TimelineEventForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const PrincipalInfoForm = dynamic(() => import("./forms/PrincipalInfoForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const LeadershipMemberForm = dynamic(
+	() => import("./forms/LeadershipMemberForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
 
 const forms: {
 	[key: string]: (
@@ -306,6 +324,15 @@ const forms: {
 			setOpen={setOpen}
 			relatedData={relatedData}
 		/>
+	),
+	timelineEvent: (setOpen, type, data, relatedData) => (
+		<TimelineEventForm type={type} data={data} setOpen={setOpen} />
+	),
+	principalInfo: (setOpen, type, data, relatedData) => (
+		<PrincipalInfoForm type={type} data={data} setOpen={setOpen} />
+	),
+	leadershipMember: (setOpen, type, data, relatedData) => (
+		<LeadershipMemberForm type={type} data={data} setOpen={setOpen} />
 	),
 };
 

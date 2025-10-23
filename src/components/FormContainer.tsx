@@ -29,7 +29,10 @@ export type FormContainerProps = {
 		| "gallery"
 		| "newsTicker"
 		| "stat"
-		| "testimonial";
+		| "testimonial"
+		| "timelineEvent"
+		| "principalInfo"
+		| "leadershipMember";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;

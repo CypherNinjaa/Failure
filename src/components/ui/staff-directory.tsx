@@ -11,167 +11,40 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-export function StaffDirectory() {
+interface Teacher {
+	id?: string;
+	name: string;
+	subject: string;
+	education: string;
+	experience: string;
+	specialization: string;
+	achievements: string[];
+	image: string;
+	rating: number;
+	email?: string;
+	phone?: string;
+}
+
+interface NonTeachingStaff {
+	name: string;
+	role: string;
+	department: string;
+	education: string;
+	experience: string;
+	specialization: string;
+	image: string;
+}
+
+interface StaffDirectoryClientProps {
+	teachers: Teacher[];
+	nonTeachingStaff: NonTeachingStaff[];
+}
+
+export function StaffDirectoryClient({
+	teachers,
+	nonTeachingStaff,
+}: StaffDirectoryClientProps) {
 	const [activeTab, setActiveTab] = useState("teachers");
-
-	interface Teacher {
-		name: string;
-		subject: string;
-		education: string;
-		experience: string;
-		specialization: string;
-		achievements: string[];
-		image: string;
-		rating: number;
-	}
-
-	interface NonTeachingStaff {
-		name: string;
-		role: string;
-		department: string;
-		education: string;
-		experience: string;
-		specialization: string;
-		image: string;
-	}
-
-	const teachers: Teacher[] = [
-		{
-			name: "Ms. Jennifer Adams",
-			subject: "Mathematics",
-			education: "M.Sc. Mathematics, UCLA",
-			experience: "12 Years",
-			specialization: "Advanced Calculus, Statistics",
-			achievements: [
-				"Math Excellence Award 2023",
-				"Student Choice Teacher 2022",
-			],
-			image: "JA",
-			rating: 4.9,
-		},
-		{
-			name: "Dr. Robert Wilson",
-			subject: "Physics",
-			education: "Ph.D. Physics, MIT",
-			experience: "15 Years",
-			specialization: "Quantum Mechanics, Astrophysics",
-			achievements: [
-				"Science Innovation Award 2023",
-				"Research Excellence 2021",
-			],
-			image: "RW",
-			rating: 4.8,
-		},
-		{
-			name: "Ms. Lisa Thompson",
-			subject: "English Literature",
-			education: "M.A. English, Oxford University",
-			experience: "10 Years",
-			specialization: "Creative Writing, World Literature",
-			achievements: [
-				"Literary Excellence Award 2023",
-				"Creative Teaching Award 2022",
-			],
-			image: "LT",
-			rating: 4.9,
-		},
-		{
-			name: "Mr. Carlos Martinez",
-			subject: "Computer Science",
-			education: "M.Tech Computer Science, Stanford",
-			experience: "8 Years",
-			specialization: "AI/ML, Web Development",
-			achievements: [
-				"Tech Innovation Award 2023",
-				"Digital Learning Pioneer 2022",
-			],
-			image: "CM",
-			rating: 4.7,
-		},
-		{
-			name: "Dr. Priya Patel",
-			subject: "Biology",
-			education: "Ph.D. Biology, Harvard",
-			experience: "14 Years",
-			specialization: "Genetics, Molecular Biology",
-			achievements: [
-				"Science Research Award 2023",
-				"Lab Excellence Award 2021",
-			],
-			image: "PP",
-			rating: 4.8,
-		},
-		{
-			name: "Ms. Sophie Laurent",
-			subject: "French Language",
-			education: "M.A. French Literature, Sorbonne",
-			experience: "9 Years",
-			specialization: "Conversational French, French Culture",
-			achievements: [
-				"Language Excellence Award 2023",
-				"Cultural Ambassador 2022",
-			],
-			image: "SL",
-			rating: 4.9,
-		},
-	];
-
-	const nonTeachingStaff: NonTeachingStaff[] = [
-		{
-			name: "Mr. James Parker",
-			role: "IT Administrator",
-			department: "Technology",
-			education: "B.Tech Computer Engineering",
-			experience: "7 Years",
-			specialization: "Network Management, System Security",
-			image: "JP",
-		},
-		{
-			name: "Ms. Maria Gonzalez",
-			role: "School Nurse",
-			department: "Health Services",
-			education: "B.Sc. Nursing, RN License",
-			experience: "11 Years",
-			specialization: "Child Health, Emergency Care",
-			image: "MG",
-		},
-		{
-			name: "Mr. Ahmed Hassan",
-			role: "Sports Coordinator",
-			department: "Physical Education",
-			education: "M.P.Ed Physical Education",
-			experience: "6 Years",
-			specialization: "Athletic Training, Sports Psychology",
-			image: "AH",
-		},
-		{
-			name: "Ms. Rachel Green",
-			role: "Librarian",
-			department: "Library Services",
-			education: "M.L.I.S Library Science",
-			experience: "9 Years",
-			specialization: "Digital Archives, Research Support",
-			image: "RG",
-		},
-		{
-			name: "Mr. Thomas Brown",
-			role: "Lab Technician",
-			department: "Science Department",
-			education: "B.Sc. Chemistry",
-			experience: "5 Years",
-			specialization: "Lab Safety, Equipment Maintenance",
-			image: "TB",
-		},
-		{
-			name: "Ms. Anna Kim",
-			role: "Administrative Assistant",
-			department: "Administration",
-			education: "B.A. Business Administration",
-			experience: "8 Years",
-			specialization: "Student Records, Office Management",
-			image: "AK",
-		},
-	];
 
 	const FlipCard = ({
 		person,
@@ -229,7 +102,12 @@ export function StaffDirectory() {
 								whileHover={{ scale: 1.1 }}
 								whileTap={{ scale: 0.9 }}
 								className="absolute top-4 right-4 w-8 h-8 bg-primary/20 hover:bg-primary hover:text-white text-primary rounded-full flex items-center justify-center transition-all duration-300 shadow-md"
-								onClick={(e) => e.stopPropagation()}
+								onClick={(e) => {
+									e.stopPropagation();
+									if (teacher && teacher.email) {
+										window.location.href = `mailto:${teacher.email}`;
+									}
+								}}
 								title="Contact"
 							>
 								<Mail className="w-4 h-4" />
@@ -296,7 +174,12 @@ export function StaffDirectory() {
 								whileHover={{ scale: 1.1 }}
 								whileTap={{ scale: 0.9 }}
 								className="absolute top-4 left-4 w-8 h-8 bg-primary/20 hover:bg-primary hover:text-white text-primary rounded-full flex items-center justify-center transition-all duration-300 shadow-md"
-								onClick={(e) => e.stopPropagation()}
+								onClick={(e) => {
+									e.stopPropagation();
+									if (teacher && teacher.email) {
+										window.location.href = `mailto:${teacher.email}`;
+									}
+								}}
 								title="Contact"
 							>
 								<Mail className="w-4 h-4" />
@@ -533,5 +416,78 @@ export function StaffDirectory() {
 				</motion.div>
 			</div>
 		</section>
+	);
+}
+
+// Backward compatibility: Export the client component with default hardcoded data
+export function StaffDirectory() {
+	const defaultTeachers = [
+		{
+			name: "Ms. Jennifer Adams",
+			subject: "Mathematics",
+			education: "M.Sc. Mathematics, UCLA",
+			experience: "12 Years",
+			specialization: "Advanced Calculus, Statistics",
+			achievements: [
+				"Math Excellence Award 2023",
+				"Student Choice Teacher 2022",
+			],
+			image: "JA",
+			rating: 4.9,
+		},
+		{
+			name: "Dr. Robert Wilson",
+			subject: "Physics",
+			education: "Ph.D. Physics, MIT",
+			experience: "15 Years",
+			specialization: "Quantum Mechanics, Astrophysics",
+			achievements: [
+				"Science Innovation Award 2023",
+				"Research Excellence 2021",
+			],
+			image: "RW",
+			rating: 4.8,
+		},
+		{
+			name: "Ms. Lisa Thompson",
+			subject: "English Literature",
+			education: "M.A. English, Oxford University",
+			experience: "10 Years",
+			specialization: "Creative Writing, World Literature",
+			achievements: [
+				"Literary Excellence Award 2023",
+				"Creative Teaching Award 2022",
+			],
+			image: "LT",
+			rating: 4.9,
+		},
+	];
+
+	const defaultNonTeachingStaff = [
+		{
+			name: "Mr. James Parker",
+			role: "IT Administrator",
+			department: "Technology",
+			education: "B.Tech Computer Engineering",
+			experience: "7 Years",
+			specialization: "Network Management, System Security",
+			image: "JP",
+		},
+		{
+			name: "Ms. Maria Gonzalez",
+			role: "School Nurse",
+			department: "Health Services",
+			education: "B.Sc. Nursing, RN License",
+			experience: "11 Years",
+			specialization: "Child Health, Emergency Care",
+			image: "MG",
+		},
+	];
+
+	return (
+		<StaffDirectoryClient
+			teachers={defaultTeachers}
+			nonTeachingStaff={defaultNonTeachingStaff}
+		/>
 	);
 }
