@@ -26,6 +26,12 @@ import {
 	deletePrincipalInfo,
 	deleteLeadershipMember,
 	deleteSupportStaff,
+	deleteFacility,
+	deleteAdditionalFeature,
+	deleteCampusStat,
+	deleteAward,
+	deleteAchievementMetric,
+	deleteStudentAchievement,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -61,6 +67,12 @@ const deleteActionMap = {
 	principalInfo: deletePrincipalInfo,
 	leadershipMember: deleteLeadershipMember,
 	supportStaff: deleteSupportStaff,
+	facility: deleteFacility,
+	additionalFeature: deleteAdditionalFeature,
+	campusStat: deleteCampusStat,
+	award: deleteAward,
+	achievementMetric: deleteAchievementMetric,
+	studentAchievement: deleteStudentAchievement,
 	// Note: Payments, salaries, income, expense should not be deletable
 };
 
@@ -162,6 +174,33 @@ const LeadershipMemberForm = dynamic(
 const SupportStaffForm = dynamic(() => import("./forms/SupportStaffForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
+const FacilityForm = dynamic(() => import("./forms/FacilityForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const AdditionalFeatureForm = dynamic(
+	() => import("./forms/AdditionalFeatureForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
+const CampusStatForm = dynamic(() => import("./forms/CampusStatForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const AwardForm = dynamic(() => import("./forms/AwardForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const AchievementMetricForm = dynamic(
+	() => import("./forms/AchievementMetricForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
+const StudentAchievementForm = dynamic(
+	() => import("./forms/StudentAchievementForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
 
 const forms: {
 	[key: string]: (
@@ -341,6 +380,24 @@ const forms: {
 	),
 	supportStaff: (setOpen, type, data, relatedData) => (
 		<SupportStaffForm type={type} data={data} setOpen={setOpen} />
+	),
+	facility: (setOpen, type, data, relatedData) => (
+		<FacilityForm type={type} data={data} setOpen={setOpen} />
+	),
+	additionalFeature: (setOpen, type, data, relatedData) => (
+		<AdditionalFeatureForm type={type} data={data} setOpen={setOpen} />
+	),
+	campusStat: (setOpen, type, data, relatedData) => (
+		<CampusStatForm type={type} data={data} setOpen={setOpen} />
+	),
+	award: (setOpen, type, data, relatedData) => (
+		<AwardForm type={type} data={data} setOpen={setOpen} />
+	),
+	achievementMetric: (setOpen, type, data, relatedData) => (
+		<AchievementMetricForm type={type} data={data} setOpen={setOpen} />
+	),
+	studentAchievement: (setOpen, type, data, relatedData) => (
+		<StudentAchievementForm type={type} data={data} setOpen={setOpen} />
 	),
 };
 

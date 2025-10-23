@@ -399,6 +399,42 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 				visible: ["media-coordinator"],
 			},
 			{
+				icon: "/class.png",
+				label: "Facilities",
+				href: "/media-coordinator/facilities",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/lesson.png",
+				label: "Additional Features",
+				href: "/media-coordinator/additional-features",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/assignment.png",
+				label: "Campus Stats",
+				href: "/media-coordinator/campus-stats",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/result.png",
+				label: "Awards",
+				href: "/media-coordinator/awards",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/exam.png",
+				label: "Achievement Metrics",
+				href: "/media-coordinator/achievement-metrics",
+				visible: ["media-coordinator"],
+			},
+			{
+				icon: "/attendance.png",
+				label: "Student Achievements",
+				href: "/media-coordinator/student-achievements",
+				visible: ["media-coordinator"],
+			},
+			{
 				icon: "/profile.png",
 				label: "Profile",
 				href: "/profile",

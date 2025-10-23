@@ -196,6 +196,42 @@ const menuItems = [
 				href: "/media-coordinator/support-staff",
 				visible: ["media-coordinator", "admin"],
 			},
+			{
+				icon: "/class.png",
+				label: "Facilities",
+				href: "/media-coordinator/facilities",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
+				icon: "/lesson.png",
+				label: "Additional Features",
+				href: "/media-coordinator/additional-features",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
+				icon: "/assignment.png",
+				label: "Campus Stats",
+				href: "/media-coordinator/campus-stats",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
+				icon: "/result.png",
+				label: "Awards",
+				href: "/media-coordinator/awards",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
+				icon: "/exam.png",
+				label: "Achievement Metrics",
+				href: "/media-coordinator/achievement-metrics",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
+				icon: "/attendance.png",
+				label: "Student Achievements",
+				href: "/media-coordinator/student-achievements",
+				visible: ["media-coordinator", "admin"],
+			},
 		],
 	},
 	{

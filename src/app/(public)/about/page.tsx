@@ -6,8 +6,8 @@ import { PrincipalMessageServer } from "@/components/ui/principal-message-server
 import { VisionMission } from "@/components/ui/vision-mission";
 import { LeadershipTeamServer } from "@/components/ui/leadership-team-server";
 import { StaffDirectoryServer } from "@/components/ui/staff-directory-server";
-import { InfrastructureHighlights } from "@/components/ui/infrastructure-highlights";
-import { AwardsAchievements } from "@/components/ui/awards-achievements";
+import { InfrastructureHighlightsServer } from "@/components/ui/infrastructure-highlights-server";
+import { AwardsAchievementsServer } from "@/components/ui/awards-achievements-server";
 import { Suspense } from "react";
 
 export default function AboutPage() {
@@ -38,8 +38,18 @@ export default function AboutPage() {
 			>
 				<StaffDirectoryServer />
 			</Suspense>
-			<InfrastructureHighlights />
-			<AwardsAchievements />
+			<Suspense
+				fallback={
+					<div className="py-16 text-center">Loading infrastructure...</div>
+				}
+			>
+				<InfrastructureHighlightsServer />
+			</Suspense>
+			<Suspense
+				fallback={<div className="py-16 text-center">Loading awards...</div>}
+			>
+				<AwardsAchievementsServer />
+			</Suspense>
 			<ModernFooter />
 		</div>
 	);

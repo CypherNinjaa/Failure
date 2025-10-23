@@ -585,3 +585,79 @@ export const supportStaffSchema = z.object({
 });
 
 export type SupportStaffSchema = z.infer<typeof supportStaffSchema>;
+
+// Infrastructure Highlights Schemas
+export const facilitySchema = z.object({
+	id: z.coerce.number().optional(),
+	title: z.string().min(1, { message: "Title is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	icon: z.string().min(1, { message: "Icon name is required!" }),
+	features: z.string().min(1, { message: "At least one feature is required!" }), // Comma-separated string
+	image: z.string().min(1, { message: "Image/Emoji is required!" }),
+	color: z.string().min(1, { message: "Color gradient is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type FacilitySchema = z.infer<typeof facilitySchema>;
+
+export const additionalFeatureSchema = z.object({
+	id: z.coerce.number().optional(),
+	title: z.string().min(1, { message: "Title is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	icon: z.string().min(1, { message: "Icon name is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type AdditionalFeatureSchema = z.infer<typeof additionalFeatureSchema>;
+
+export const campusStatSchema = z.object({
+	id: z.coerce.number().optional(),
+	number: z.string().min(1, { message: "Number/Value is required!" }),
+	label: z.string().min(1, { message: "Label is required!" }),
+	icon: z.string().min(1, { message: "Icon/Emoji is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type CampusStatSchema = z.infer<typeof campusStatSchema>;
+
+// Awards & Achievements Schemas
+export const awardSchema = z.object({
+	id: z.coerce.number().optional(),
+	year: z.string().min(1, { message: "Year is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }),
+	organization: z.string().min(1, { message: "Organization is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	category: z.string().min(1, { message: "Category is required!" }),
+	icon: z.string().min(1, { message: "Icon name is required!" }),
+	color: z.string().min(1, { message: "Color gradient is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type AwardSchema = z.infer<typeof awardSchema>;
+
+export const achievementMetricSchema = z.object({
+	id: z.coerce.number().optional(),
+	metric: z.string().min(1, { message: "Metric value is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	detail: z.string().min(1, { message: "Detail is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type AchievementMetricSchema = z.infer<typeof achievementMetricSchema>;
+
+export const studentAchievementSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Achievement name is required!" }),
+	year: z.string().min(1, { message: "Year is required!" }),
+	winners: z.string().min(1, { message: "Winners info is required!" }),
+	icon: z.string().min(1, { message: "Icon/Emoji is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type StudentAchievementSchema = z.infer<typeof studentAchievementSchema>;

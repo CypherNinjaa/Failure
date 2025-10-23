@@ -1387,3 +1387,100 @@ model SupportStaff {
   @@index([isActive])
 }
 
+// Infrastructure Highlights Models
+model Facility {
+  id              Int      @id @default(autoincrement())
+  title           String   // e.g., "Smart Classrooms"
+  description     String   @db.Text // Description of the facility
+  icon            String   // Icon name (e.g., "Monitor", "Microscope")
+  features        Json     // Array of feature strings
+  image           String   // Emoji or image identifier
+  color           String   // Tailwind gradient classes (e.g., "from-primary to-secondary")
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([displayOrder])
+  @@index([isActive])
+}
+
+model AdditionalFeature {
+  id              Int      @id @default(autoincrement())
+  title           String   // e.g., "Safe Transport"
+  description     String   @db.Text // Description of the feature
+  icon            String   // Icon name (e.g., "Bus", "Wifi")
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([displayOrder])
+  @@index([isActive])
+}
+
+model CampusStat {
+  id              Int      @id @default(autoincrement())
+  number          String   // e.g., "15", "45", "24/7"
+  label           String   // e.g., "Acres Campus", "Classrooms"
+  icon            String   // Emoji or icon identifier
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([displayOrder])
+  @@index([isActive])
+}
+
+// Awards & Achievements Models
+model Award {
+  id              Int      @id @default(autoincrement())
+  year            String   // e.g., "2024"
+  title           String   // Award title
+  organization    String   // Awarding organization
+  description     String   @db.Text // Detailed description
+  category        String   // e.g., "Academic Excellence", "STEM Education"
+  icon            String   // Icon name (e.g., "Trophy", "Medal", "Award", "Star")
+  color           String   // Tailwind gradient classes
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([year])
+  @@index([category])
+  @@index([displayOrder])
+  @@index([isActive])
+}
+
+model AchievementMetric {
+  id              Int      @id @default(autoincrement())
+  metric          String   // e.g., "98%", "150+", "100%"
+  description     String   // e.g., "Board Exam Pass Rate"
+  detail          String   // Additional detail
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([displayOrder])
+  @@index([isActive])
+}
+
+model StudentAchievement {
+  id              Int      @id @default(autoincrement())
+  name            String   // Competition/event name
+  year            String   // Year of achievement
+  winners         String   // e.g., "5 Gold Medals", "Best Delegation"
+  icon            String   // Emoji identifier
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([year])
+  @@index([displayOrder])
+  @@index([isActive])
+}
+

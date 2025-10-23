@@ -33,7 +33,13 @@ export type FormContainerProps = {
 		| "timelineEvent"
 		| "principalInfo"
 		| "leadershipMember"
-		| "supportStaff";
+		| "supportStaff"
+		| "facility"
+		| "additionalFeature"
+		| "campusStat"
+		| "award"
+		| "achievementMetric"
+		| "studentAchievement";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;

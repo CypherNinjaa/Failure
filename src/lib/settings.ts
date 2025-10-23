@@ -39,6 +39,12 @@ export const routeAccessMap: RouteAccessMap = {
 	"/media-coordinator/principal-info": ["media-coordinator", "admin"],
 	"/media-coordinator/leadership-team": ["media-coordinator", "admin"],
 	"/media-coordinator/support-staff": ["media-coordinator", "admin"],
+	"/media-coordinator/facilities": ["media-coordinator", "admin"],
+	"/media-coordinator/additional-features": ["media-coordinator", "admin"],
+	"/media-coordinator/campus-stats": ["media-coordinator", "admin"],
+	"/media-coordinator/awards": ["media-coordinator", "admin"],
+	"/media-coordinator/achievement-metrics": ["media-coordinator", "admin"],
+	"/media-coordinator/student-achievements": ["media-coordinator", "admin"],
 	"/profile": ["admin", "teacher", "student", "parent", "media-coordinator"],
 	"/settings": ["admin", "teacher", "student", "parent", "media-coordinator"],
 };
