@@ -70,6 +70,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
 			changeFrequency: "weekly",
 			priority: 0.6,
 		},
+		// Testimonial submission - Medium priority
+		{
+			url: `${baseUrl}/submit-testimonial`,
+			lastModified: currentDate,
+			changeFrequency: "monthly",
+			priority: 0.5,
+		},
 	];
 
 	return staticPages;

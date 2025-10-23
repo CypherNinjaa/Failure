@@ -1,0 +1,136 @@
+import FormModal from "@/components/FormModal";
+import Pagination from "@/components/Pagination";
+import Table from "@/components/Table";
+import TableSearch from "@/components/TableSearch";
+import prisma from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import { Prisma, StudentAchievement } from "@prisma/client";
+import Image from "next/image";
+
+type StudentAchievementList = StudentAchievement;
+
+const StudentAchievementListPage = async ({
+	searchParams,
+}: {
+	searchParams: { [key: string]: string | undefined };
+}) => {
+	const { page, ...queryParams } = searchParams;
+
+	const p = page ? parseInt(page) : 1;
+
+	const query: Prisma.StudentAchievementWhereInput = {};
+
+	if (queryParams) {
+		for (const [key, value] of Object.entries(queryParams)) {
+			if (value !== undefined) {
+				switch (key) {
+					case "search":
+						query.OR = [
+							{ name: { contains: value, mode: "insensitive" } },
+							{ winners: { contains: value, mode: "insensitive" } },
+						];
+						break;
+					case "year":
+						query.year = value;
+						break;
+					default:
+						break;
+				}
+			}
+		}
+	}
+
+	const [data, count] = await prisma.$transaction([
+		prisma.studentAchievement.findMany({
+			where: query,
+			orderBy: { displayOrder: "asc" },
+			take: ITEM_PER_PAGE,
+			skip: ITEM_PER_PAGE * (p - 1),
+		}),
+		prisma.studentAchievement.count({ where: query }),
+	]);
+
+	const columns = [
+		{ header: "Achievement", accessor: "name" },
+		{ header: "Year", accessor: "year", className: "hidden md:table-cell" },
+		{
+			header: "Winners",
+			accessor: "winners",
+			className: "hidden lg:table-cell",
+		},
+		{ header: "Icon", accessor: "icon", className: "hidden md:table-cell" },
+		{ header: "Status", accessor: "status", className: "hidden md:table-cell" },
+		{
+			header: "Display Order",
+			accessor: "displayOrder",
+			className: "hidden md:table-cell",
+		},
+		{ header: "Actions", accessor: "action" },
+	];
+
+	const renderRow = (item: StudentAchievementList) => (
+		<tr
+			key={item.id}
+			className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+		>
+			<td className="p-4">
+				<h3 className="font-semibold">{item.name}</h3>
+			</td>
+			<td className="hidden md:table-cell">
+				<span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+					{item.year}
+				</span>
+			</td>
+			<td className="hidden lg:table-cell">
+				<span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+					{item.winners}
+				</span>
+			</td>
+			<td className="hidden md:table-cell text-2xl">{item.icon}</td>
+			<td className="hidden md:table-cell">
+				<span
+					className={`px-2 py-1 rounded-full text-xs ${
+						item.isActive
+							? "bg-green-100 text-green-700"
+							: "bg-red-100 text-red-700"
+					}`}
+				>
+					{item.isActive ? "Active" : "Inactive"}
+				</span>
+			</td>
+			<td className="hidden md:table-cell">{item.displayOrder}</td>
+			<td>
+				<div className="flex items-center gap-2">
+					<FormModal table="studentAchievement" type="update" data={item} />
+					<FormModal table="studentAchievement" type="delete" id={item.id} />
+				</div>
+			</td>
+		</tr>
+	);
+
+	return (
+		<div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+			<div className="flex items-center justify-between">
+				<h1 className="hidden md:block text-lg font-semibold">
+					Student Achievements Management
+				</h1>
+				<div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+					<TableSearch />
+					<div className="flex items-center gap-4 self-end">
+						<button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+							<Image src="/filter.png" alt="" width={14} height={14} />
+						</button>
+						<button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+							<Image src="/sort.png" alt="" width={14} height={14} />
+						</button>
+						<FormModal table="studentAchievement" type="create" />
+					</div>
+				</div>
+			</div>
+			<Table columns={columns} renderRow={renderRow} data={data} />
+			<Pagination page={p} count={count} />
+		</div>
+	);
+};
+
+export default StudentAchievementListPage;

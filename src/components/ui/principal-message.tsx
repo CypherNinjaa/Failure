@@ -4,7 +4,23 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Play, Mail, Phone, Book } from "lucide-react";
 
-export function PrincipalMessage() {
+interface PrincipalData {
+	name: string;
+	title: string;
+	message: string;
+	photo: string;
+	qualifications: string;
+	email: string;
+	phone: string;
+}
+
+interface PrincipalMessageClientProps {
+	principalData: PrincipalData;
+}
+
+export function PrincipalMessageClient({
+	principalData,
+}: PrincipalMessageClientProps) {
 	const [isPlaying, setIsPlaying] = useState(false);
 
 	return (
@@ -62,11 +78,7 @@ export function PrincipalMessage() {
 									className="space-y-4"
 								>
 									<p className="text-primary-foreground/90 leading-relaxed">
-										&ldquo;At Happy Child School, we believe every child has the
-										potential to shine. Our mission is to nurture not just
-										academic excellence, but to develop confident,
-										compassionate, and creative individuals who will make a
-										positive impact on the world.&rdquo;
+										&ldquo;{principalData.message}&rdquo;
 									</p>
 
 									<div className="flex items-center space-x-4 pt-4 border-t border-primary-foreground/20">
@@ -125,44 +137,53 @@ export function PrincipalMessage() {
 						<div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-border/50">
 							<div className="flex items-start space-x-4 mb-6">
 								<div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-primary-foreground text-2xl font-bold">
-									Dr. SK
+									{principalData.photo}
 								</div>
 								<div>
 									<h3 className="text-2xl font-bold text-foreground">
-										Chandan Thakur
+										{principalData.name}
 									</h3>
-									<p className="text-primary font-medium">Principal</p>
+									<p className="text-primary font-medium">
+										{principalData.title}
+									</p>
 									<p className="text-muted-foreground text-sm">
-										M.Ed, Ph.D. in Educational Leadership
+										{principalData.qualifications}
 									</p>
 								</div>
 							</div>
 
 							<div className="space-y-4">
 								<p className="text-muted-foreground leading-relaxed">
-									With over 20 years of experience in education, Chandan Thakur has
-									dedicated her career to fostering innovative learning
-									environments and empowering students to reach their full
-									potential.
+									{principalData.message}
 								</p>
 
 								<div className="flex flex-wrap gap-3">
-									<motion.button
-										whileHover={{ scale: 1.05 }}
-										whileTap={{ scale: 0.95 }}
-										className="flex items-center space-x-2 bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
-									>
-										<Mail className="w-4 h-4" />
-										<span className="text-sm">principal@happychild.edu</span>
-									</motion.button>
-									<motion.button
-										whileHover={{ scale: 1.05 }}
-										whileTap={{ scale: 0.95 }}
-										className="flex items-center space-x-2 bg-accent/10 text-accent px-4 py-2 rounded-lg hover:bg-accent/20 transition-colors"
-									>
-										<Phone className="w-4 h-4" />
-										<span className="text-sm">Schedule Meeting</span>
-									</motion.button>
+									{principalData.email && (
+										<motion.button
+											whileHover={{ scale: 1.05 }}
+											whileTap={{ scale: 0.95 }}
+											onClick={() =>
+												(window.location.href = `mailto:${principalData.email}`)
+											}
+											className="flex items-center space-x-2 bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
+										>
+											<Mail className="w-4 h-4" />
+											<span className="text-sm">{principalData.email}</span>
+										</motion.button>
+									)}
+									{principalData.phone && (
+										<motion.button
+											whileHover={{ scale: 1.05 }}
+											whileTap={{ scale: 0.95 }}
+											onClick={() =>
+												(window.location.href = `tel:${principalData.phone}`)
+											}
+											className="flex items-center space-x-2 bg-accent/10 text-accent px-4 py-2 rounded-lg hover:bg-accent/20 transition-colors"
+										>
+											<Phone className="w-4 h-4" />
+											<span className="text-sm">{principalData.phone}</span>
+										</motion.button>
+									)}
 								</div>
 							</div>
 						</div>
@@ -218,4 +239,20 @@ export function PrincipalMessage() {
 			</div>
 		</section>
 	);
+}
+
+// Backward compatibility export
+export function PrincipalMessage() {
+	const defaultData = {
+		name: "Chandan Thakur",
+		title: "Principal",
+		message:
+			"At Happy Child School, we believe every child has the potential to shine. Our mission is to nurture not just academic excellence, but to develop confident, compassionate, and creative individuals who will make a positive impact on the world.",
+		photo: "👨‍🏫",
+		qualifications: "M.Ed, Ph.D. in Educational Leadership",
+		email: "principal@happychild.edu",
+		phone: "+1 234 567 8900",
+	};
+
+	return <PrincipalMessageClient principalData={defaultData} />;
 }

@@ -3,131 +3,53 @@
 import { motion } from "framer-motion";
 import { Award, Trophy, Medal, Star } from "lucide-react";
 
-export function AwardsAchievements() {
-	const awards = [
-		{
-			year: "2024",
-			title: "National Education Excellence Award",
-			organization: "Ministry of Education",
-			description:
-				"Recognized as the leading educational institution for innovative teaching methods and outstanding student performance.",
-			category: "Academic Excellence",
-			icon: Trophy,
-			color: "from-primary to-accent",
-		},
-		{
-			year: "2023",
-			title: "Best STEM Education Program",
-			organization: "National Science Foundation",
-			description:
-				"Awarded for implementing cutting-edge STEM curriculum and achieving exceptional results in science and mathematics.",
-			category: "STEM Education",
-			icon: Medal,
-			color: "from-primary to-secondary",
-		},
-		{
-			year: "2023",
-			title: "Environmental Sustainability Award",
-			organization: "Green Schools Alliance",
-			description:
-				"Recognized for outstanding commitment to environmental education and sustainable campus practices.",
-			category: "Sustainability",
-			icon: Award,
-			color: "from-accent to-primary",
-		},
-		{
-			year: "2022",
-			title: "Digital Innovation in Education",
-			organization: "EdTech Excellence Foundation",
-			description:
-				"Honored for successfully integrating technology in education and creating engaging digital learning experiences.",
-			category: "Technology",
-			icon: Star,
-			color: "from-secondary to-accent",
-		},
-		{
-			year: "2022",
-			title: "Outstanding Sports Achievement",
-			organization: "State Athletic Association",
-			description:
-				"Awarded for exceptional performance in inter-school sports competitions and promoting physical fitness.",
-			category: "Sports",
-			icon: Trophy,
-			color: "from-red-500 to-pink-500",
-		},
-		{
-			year: "2021",
-			title: "Community Service Excellence",
-			organization: "National Volunteer Foundation",
-			description:
-				"Recognized for outstanding community outreach programs and social responsibility initiatives.",
-			category: "Community Service",
-			icon: Award,
-			color: "from-teal-500 to-cyan-500",
-		},
-	];
+// Icon mapping
+const iconMap: { [key: string]: any } = {
+	Award,
+	Trophy,
+	Medal,
+	Star,
+};
 
-	const achievements = [
-		{
-			metric: "98%",
-			description: "Board Exam Pass Rate",
-			detail: "Consistently high academic performance",
-		},
-		{
-			metric: "150+",
-			description: "National Competition Winners",
-			detail: "Students excelling in various competitions",
-		},
-		{
-			metric: "25+",
-			description: "International Awards",
-			detail: "Global recognition for excellence",
-		},
-		{
-			metric: "100%",
-			description: "University Placement",
-			detail: "All graduates admitted to top universities",
-		},
-	];
+interface AwardType {
+	year: string;
+	title: string;
+	organization: string;
+	description: string;
+	category: string;
+	icon: string;
+	color: string;
+}
 
-	const studentAchievements = [
-		{
-			name: "International Math Olympiad",
-			year: "2024",
-			winners: "5 Gold Medals",
-			icon: "🥇",
-		},
-		{
-			name: "National Science Fair",
-			year: "2024",
-			winners: "3 First Prizes",
-			icon: "🔬",
-		},
-		{
-			name: "Model UN Conference",
-			year: "2023",
-			winners: "Best Delegation",
-			icon: "🌍",
-		},
-		{
-			name: "Robotics Championship",
-			year: "2023",
-			winners: "State Champions",
-			icon: "🤖",
-		},
-		{
-			name: "Literary Festival",
-			year: "2024",
-			winners: "6 National Awards",
-			icon: "📚",
-		},
-		{
-			name: "Art & Design Contest",
-			year: "2024",
-			winners: "10 Regional Winners",
-			icon: "🎨",
-		},
-	];
+interface AchievementMetric {
+	metric: string;
+	description: string;
+	detail: string;
+}
+
+interface StudentAchievement {
+	name: string;
+	year: string;
+	winners: string;
+	icon: string;
+}
+
+interface AwardsAchievementsClientProps {
+	awards: AwardType[];
+	achievements: AchievementMetric[];
+	studentAchievements: StudentAchievement[];
+}
+
+export function AwardsAchievementsClient({
+	awards: awardsData,
+	achievements: achievementsData,
+	studentAchievements: studentAchievementsData,
+}: AwardsAchievementsClientProps) {
+	// Map icon strings to actual icon components
+	const awards = awardsData.map((a) => ({
+		...a,
+		icon: iconMap[a.icon] || Trophy,
+	}));
 
 	return (
 		<section className="py-16 md:py-24 bg-muted/30">
@@ -164,38 +86,40 @@ export function AwardsAchievements() {
 					viewport={{ once: true }}
 					className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 max-w-5xl mx-auto"
 				>
-					{achievements.map((achievement, index) => (
-						<motion.div
-							key={achievement.description}
-							initial={{ opacity: 0, y: 20 }}
-							whileInView={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
-							viewport={{ once: true }}
-							whileHover={{ y: -8, scale: 1.05 }}
-							className="text-center p-6 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300"
-						>
+					{achievementsData.map(
+						(achievement: AchievementMetric, index: number) => (
 							<motion.div
-								initial={{ scale: 0 }}
-								whileInView={{ scale: 1 }}
-								transition={{
-									duration: 0.8,
-									delay: 0.6 + index * 0.1,
-									type: "spring",
-									bounce: 0.5,
-								}}
+								key={achievement.description}
+								initial={{ opacity: 0, y: 20 }}
+								whileInView={{ opacity: 1, y: 0 }}
+								transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
 								viewport={{ once: true }}
-								className="text-4xl md:text-5xl font-bold text-gradient-primary mb-2"
+								whileHover={{ y: -8, scale: 1.05 }}
+								className="text-center p-6 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300"
 							>
-								{achievement.metric}
+								<motion.div
+									initial={{ scale: 0 }}
+									whileInView={{ scale: 1 }}
+									transition={{
+										duration: 0.8,
+										delay: 0.6 + index * 0.1,
+										type: "spring",
+										bounce: 0.5,
+									}}
+									viewport={{ once: true }}
+									className="text-4xl md:text-5xl font-bold text-gradient-primary mb-2"
+								>
+									{achievement.metric}
+								</motion.div>
+								<div className="text-sm font-semibold text-foreground mb-1">
+									{achievement.description}
+								</div>
+								<div className="text-xs text-muted-foreground">
+									{achievement.detail}
+								</div>
 							</motion.div>
-							<div className="text-sm font-semibold text-foreground mb-1">
-								{achievement.description}
-							</div>
-							<div className="text-xs text-muted-foreground">
-								{achievement.detail}
-							</div>
-						</motion.div>
-					))}
+						)
+					)}
 				</motion.div>
 
 				{/* Awards Wall */}
@@ -299,32 +223,34 @@ export function AwardsAchievements() {
 					</div>
 
 					<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-						{studentAchievements.map((achievement, index) => (
-							<motion.div
-								key={achievement.name}
-								initial={{ opacity: 0, y: 20 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-								viewport={{ once: true }}
-								whileHover={{ y: -4, scale: 1.02 }}
-								className="bg-card/60 backdrop-blur-sm rounded-2xl p-6 border border-border/50 hover:shadow-lg transition-all duration-300"
-							>
-								<div className="flex items-center gap-4 mb-4">
-									<div className="text-3xl">{achievement.icon}</div>
-									<div className="flex-1">
-										<h4 className="font-semibold text-foreground text-sm">
-											{achievement.name}
-										</h4>
-										<p className="text-xs text-muted-foreground">
-											{achievement.year}
-										</p>
+						{studentAchievementsData.map(
+							(achievement: StudentAchievement, index: number) => (
+								<motion.div
+									key={achievement.name}
+									initial={{ opacity: 0, y: 20 }}
+									whileInView={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
+									viewport={{ once: true }}
+									whileHover={{ y: -4, scale: 1.02 }}
+									className="bg-card/60 backdrop-blur-sm rounded-2xl p-6 border border-border/50 hover:shadow-lg transition-all duration-300"
+								>
+									<div className="flex items-center gap-4 mb-4">
+										<div className="text-3xl">{achievement.icon}</div>
+										<div className="flex-1">
+											<h4 className="font-semibold text-foreground text-sm">
+												{achievement.name}
+											</h4>
+											<p className="text-xs text-muted-foreground">
+												{achievement.year}
+											</p>
+										</div>
 									</div>
-								</div>
-								<div className="text-primary font-bold text-sm">
-									{achievement.winners}
-								</div>
-							</motion.div>
-						))}
+									<div className="text-primary font-bold text-sm">
+										{achievement.winners}
+									</div>
+								</motion.div>
+							)
+						)}
 					</div>
 				</motion.div>
 
@@ -400,5 +326,46 @@ export function AwardsAchievements() {
 				</motion.div>
 			</div>
 		</section>
+	);
+}
+
+// Default/backward compatibility export with minimal data
+export function AwardsAchievements() {
+	const defaultAwards = [
+		{
+			year: "2024",
+			title: "National Education Excellence Award",
+			organization: "Ministry of Education",
+			description:
+				"Recognized as the leading educational institution for innovative teaching methods and outstanding student performance.",
+			category: "Academic Excellence",
+			icon: "Trophy",
+			color: "from-primary to-accent",
+		},
+	];
+
+	const defaultAchievements = [
+		{
+			metric: "98%",
+			description: "Board Exam Pass Rate",
+			detail: "Consistently high academic performance",
+		},
+	];
+
+	const defaultStudentAchievements = [
+		{
+			name: "International Math Olympiad",
+			year: "2024",
+			winners: "5 Gold Medals",
+			icon: "🥇",
+		},
+	];
+
+	return (
+		<AwardsAchievementsClient
+			awards={defaultAwards}
+			achievements={defaultAchievements}
+			studentAchievements={defaultStudentAchievements}
+		/>
 	);
 }

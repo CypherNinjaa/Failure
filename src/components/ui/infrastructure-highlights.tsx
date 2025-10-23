@@ -14,121 +14,62 @@ import {
 	Zap,
 } from "lucide-react";
 
-export function InfrastructureHighlights() {
-	const facilities = [
-		{
-			title: "Smart Classrooms",
-			description:
-				"Interactive whiteboards, high-speed internet, and modern audio-visual equipment in every classroom.",
-			icon: Monitor,
-			features: [
-				"Interactive Whiteboards",
-				"HD Projectors",
-				"Surround Sound",
-				"Climate Control",
-			],
-			image: "🏫",
-			color: "from-primary to-secondary",
-		},
-		{
-			title: "Science Labs",
-			description:
-				"State-of-the-art laboratories for Physics, Chemistry, and Biology with advanced equipment.",
-			icon: Microscope,
-			features: [
-				"Advanced Microscopes",
-				"Safety Equipment",
-				"Digital Sensors",
-				"Research Tools",
-			],
-			image: "🔬",
-			color: "from-accent to-primary",
-		},
-		{
-			title: "Computer Labs",
-			description:
-				"Modern computer labs with latest hardware and software for coding and digital literacy.",
-			icon: Monitor,
-			features: [
-				"Latest Computers",
-				"High-Speed Internet",
-				"Programming Software",
-				"AI/ML Tools",
-			],
-			image: "💻",
-			color: "from-secondary to-accent",
-		},
-		{
-			title: "Math Labs",
-			description:
-				"Interactive mathematics laboratories with manipulatives and digital tools for concept visualization.",
-			icon: Calculator,
-			features: [
-				"Interactive Tools",
-				"3D Models",
-				"Graphing Software",
-				"Problem Solving Kits",
-			],
-			image: "🔢",
-			color: "from-primary to-accent",
-		},
-		{
-			title: "Library",
-			description:
-				"Extensive collection of books, digital resources, and quiet study spaces for research and learning.",
-			icon: BookOpen,
-			features: [
-				"50,000+ Books",
-				"Digital Database",
-				"Study Rooms",
-				"Research Assistance",
-			],
-			image: "📚",
-			color: "from-accent to-secondary",
-		},
-		{
-			title: "Sports Facilities",
-			description:
-				"Comprehensive sports complex with multiple courts, gymnasium, and swimming pool.",
-			icon: Trophy,
-			features: [
-				"Swimming Pool",
-				"Basketball Court",
-				"Football Ground",
-				"Indoor Gymnasium",
-			],
-			image: "🏆",
-			color: "from-secondary to-primary",
-		},
-	];
+// Icon mapping
+const iconMap: { [key: string]: any } = {
+	Monitor,
+	Microscope,
+	Calculator,
+	BookOpen,
+	Trophy,
+	Bus,
+	Wifi,
+	Camera,
+	Shield,
+	Zap,
+};
 
-	const additionalFeatures = [
-		{
-			icon: Bus,
-			title: "Safe Transport",
-			description: "GPS-tracked buses with trained drivers and attendants",
-		},
-		{
-			icon: Wifi,
-			title: "Campus-wide WiFi",
-			description: "High-speed internet connectivity throughout the campus",
-		},
-		{
-			icon: Camera,
-			title: "Security System",
-			description: "24/7 CCTV monitoring and access control systems",
-		},
-		{
-			icon: Shield,
-			title: "Safety Measures",
-			description: "Fire safety systems and emergency response protocols",
-		},
-		{
-			icon: Zap,
-			title: "Green Energy",
-			description: "Solar panels and energy-efficient lighting systems",
-		},
-	];
+interface Facility {
+	title: string;
+	description: string;
+	icon: string;
+	features: string[];
+	image: string;
+	color: string;
+}
+
+interface AdditionalFeature {
+	icon: string;
+	title: string;
+	description: string;
+}
+
+interface CampusStat {
+	number: string;
+	label: string;
+	icon: string;
+}
+
+interface InfrastructureHighlightsClientProps {
+	facilities: Facility[];
+	additionalFeatures: AdditionalFeature[];
+	campusStats: CampusStat[];
+}
+
+export function InfrastructureHighlightsClient({
+	facilities: facilitiesData,
+	additionalFeatures: additionalFeaturesData,
+	campusStats: campusStatsData,
+}: InfrastructureHighlightsClientProps) {
+	// Map icon strings to actual icon components
+	const facilities = facilitiesData.map((f) => ({
+		...f,
+		icon: iconMap[f.icon] || Monitor,
+	}));
+
+	const additionalFeatures = additionalFeaturesData.map((f) => ({
+		...f,
+		icon: iconMap[f.icon] || Monitor,
+	}));
 
 	return (
 		<section className="py-16 md:py-24 bg-background">
@@ -299,12 +240,7 @@ export function InfrastructureHighlights() {
 					</div>
 
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-						{[
-							{ number: "15", label: "Acres Campus", icon: "🏢" },
-							{ number: "45", label: "Classrooms", icon: "🏫" },
-							{ number: "12", label: "Laboratories", icon: "🔬" },
-							{ number: "24/7", label: "Security", icon: "🛡️" },
-						].map((stat, index) => (
+						{campusStatsData.map((stat, index) => (
 							<motion.div
 								key={stat.label}
 								initial={{ opacity: 0, scale: 0.8 }}
@@ -362,5 +298,45 @@ export function InfrastructureHighlights() {
 				</motion.div>
 			</div>
 		</section>
+	);
+}
+
+// Backward compatibility export with default data
+export function InfrastructureHighlights() {
+	const defaultFacilities = [
+		{
+			title: "Smart Classrooms",
+			description:
+				"Interactive whiteboards, high-speed internet, and modern audio-visual equipment in every classroom.",
+			icon: "Monitor",
+			features: [
+				"Interactive Whiteboards",
+				"HD Projectors",
+				"Surround Sound",
+				"Climate Control",
+			],
+			image: "🏫",
+			color: "from-primary to-secondary",
+		},
+	];
+
+	const defaultAdditionalFeatures = [
+		{
+			icon: "Bus",
+			title: "Safe Transport",
+			description: "GPS-tracked buses with trained drivers and attendants",
+		},
+	];
+
+	const defaultCampusStats = [
+		{ number: "15", label: "Acres Campus", icon: "🏢" },
+	];
+
+	return (
+		<InfrastructureHighlightsClient
+			facilities={defaultFacilities}
+			additionalFeatures={defaultAdditionalFeatures}
+			campusStats={defaultCampusStats}
+		/>
 	);
 }

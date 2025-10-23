@@ -496,3 +496,168 @@ export const testimonialSchema = z.object({
 });
 
 export type TestimonialSchema = z.infer<typeof testimonialSchema>;
+
+// ===== ABOUT PAGE SCHEMAS =====
+
+export const timelineEventSchema = z.object({
+	id: z.coerce.number().optional(),
+	year: z.string().min(1, { message: "Year is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }),
+	description: z
+		.string()
+		.min(10, { message: "Description must be at least 10 characters!" }),
+	icon: z.string().min(1, { message: "Icon/Emoji is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type TimelineEventSchema = z.infer<typeof timelineEventSchema>;
+
+export const principalInfoSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Name is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }),
+	qualifications: z
+		.string()
+		.min(1, { message: "Qualifications are required!" }),
+	photo: z.string().min(1, { message: "Photo/Initials are required!" }),
+	message: z
+		.string()
+		.min(20, { message: "Message must be at least 20 characters!" }),
+	messageAudio: z.string().optional().or(z.literal("")),
+	email: z
+		.string()
+		.email({ message: "Invalid email address!" })
+		.optional()
+		.or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	experience: z.string().optional().or(z.literal("")),
+	specialization: z.string().optional().or(z.literal("")),
+	isActive: z.boolean().default(true),
+});
+
+export type PrincipalInfoSchema = z.infer<typeof principalInfoSchema>;
+
+export const leadershipMemberSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Name is required!" }),
+	position: z.string().min(1, { message: "Position is required!" }),
+	category: z
+		.enum(["leadership", "academic", "administrative"])
+		.default("leadership"),
+	experience: z.string().optional().or(z.literal("")),
+	education: z.string().optional().or(z.literal("")),
+	photo: z.string().min(1, { message: "Photo/Initials are required!" }),
+	email: z
+		.string()
+		.email({ message: "Invalid email address!" })
+		.optional()
+		.or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	specialization: z.string().optional().or(z.literal("")),
+	bio: z.string().optional().or(z.literal("")),
+	quote: z.string().optional().or(z.literal("")),
+	linkedIn: z.string().optional().or(z.literal("")),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type LeadershipMemberSchema = z.infer<typeof leadershipMemberSchema>;
+
+// Support Staff Schema
+export const supportStaffSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Name is required!" }),
+	role: z.string().min(1, { message: "Role is required!" }),
+	department: z.string().min(1, { message: "Department is required!" }),
+	education: z.string().optional().or(z.literal("")),
+	experience: z.string().optional().or(z.literal("")),
+	specialization: z.string().optional().or(z.literal("")),
+	photo: z.string().min(1, { message: "Photo/Initials are required!" }),
+	email: z
+		.string()
+		.email({ message: "Invalid email address!" })
+		.optional()
+		.or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type SupportStaffSchema = z.infer<typeof supportStaffSchema>;
+
+// Infrastructure Highlights Schemas
+export const facilitySchema = z.object({
+	id: z.coerce.number().optional(),
+	title: z.string().min(1, { message: "Title is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	icon: z.string().min(1, { message: "Icon name is required!" }),
+	features: z.string().min(1, { message: "At least one feature is required!" }), // Comma-separated string
+	image: z.string().min(1, { message: "Image/Emoji is required!" }),
+	color: z.string().min(1, { message: "Color gradient is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type FacilitySchema = z.infer<typeof facilitySchema>;
+
+export const additionalFeatureSchema = z.object({
+	id: z.coerce.number().optional(),
+	title: z.string().min(1, { message: "Title is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	icon: z.string().min(1, { message: "Icon name is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type AdditionalFeatureSchema = z.infer<typeof additionalFeatureSchema>;
+
+export const campusStatSchema = z.object({
+	id: z.coerce.number().optional(),
+	number: z.string().min(1, { message: "Number/Value is required!" }),
+	label: z.string().min(1, { message: "Label is required!" }),
+	icon: z.string().min(1, { message: "Icon/Emoji is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type CampusStatSchema = z.infer<typeof campusStatSchema>;
+
+// Awards & Achievements Schemas
+export const awardSchema = z.object({
+	id: z.coerce.number().optional(),
+	year: z.string().min(1, { message: "Year is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }),
+	organization: z.string().min(1, { message: "Organization is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	category: z.string().min(1, { message: "Category is required!" }),
+	icon: z.string().min(1, { message: "Icon name is required!" }),
+	color: z.string().min(1, { message: "Color gradient is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type AwardSchema = z.infer<typeof awardSchema>;
+
+export const achievementMetricSchema = z.object({
+	id: z.coerce.number().optional(),
+	metric: z.string().min(1, { message: "Metric value is required!" }),
+	description: z.string().min(1, { message: "Description is required!" }),
+	detail: z.string().min(1, { message: "Detail is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type AchievementMetricSchema = z.infer<typeof achievementMetricSchema>;
+
+export const studentAchievementSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Achievement name is required!" }),
+	year: z.string().min(1, { message: "Year is required!" }),
+	winners: z.string().min(1, { message: "Winners info is required!" }),
+	icon: z.string().min(1, { message: "Icon/Emoji is required!" }),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type StudentAchievementSchema = z.infer<typeof studentAchievementSchema>;

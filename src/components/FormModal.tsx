@@ -22,6 +22,16 @@ import {
 	deleteNewsTicker,
 	deleteStatItem,
 	deleteTestimonial,
+	deleteTimelineEvent,
+	deletePrincipalInfo,
+	deleteLeadershipMember,
+	deleteSupportStaff,
+	deleteFacility,
+	deleteAdditionalFeature,
+	deleteCampusStat,
+	deleteAward,
+	deleteAchievementMetric,
+	deleteStudentAchievement,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -53,6 +63,16 @@ const deleteActionMap = {
 	newsTicker: deleteNewsTicker,
 	stat: deleteStatItem,
 	testimonial: deleteTestimonial,
+	timelineEvent: deleteTimelineEvent,
+	principalInfo: deletePrincipalInfo,
+	leadershipMember: deleteLeadershipMember,
+	supportStaff: deleteSupportStaff,
+	facility: deleteFacility,
+	additionalFeature: deleteAdditionalFeature,
+	campusStat: deleteCampusStat,
+	award: deleteAward,
+	achievementMetric: deleteAchievementMetric,
+	studentAchievement: deleteStudentAchievement,
 	// Note: Payments, salaries, income, expense should not be deletable
 };
 
@@ -139,6 +159,48 @@ const StatForm = dynamic(() => import("./forms/StatForm"), {
 const TestimonialForm = dynamic(() => import("./forms/TestimonialForm"), {
 	loading: () => <h1>Loading...</h1>,
 });
+const TimelineEventForm = dynamic(() => import("./forms/TimelineEventForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const PrincipalInfoForm = dynamic(() => import("./forms/PrincipalInfoForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const LeadershipMemberForm = dynamic(
+	() => import("./forms/LeadershipMemberForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
+const SupportStaffForm = dynamic(() => import("./forms/SupportStaffForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const FacilityForm = dynamic(() => import("./forms/FacilityForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const AdditionalFeatureForm = dynamic(
+	() => import("./forms/AdditionalFeatureForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
+const CampusStatForm = dynamic(() => import("./forms/CampusStatForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const AwardForm = dynamic(() => import("./forms/AwardForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
+const AchievementMetricForm = dynamic(
+	() => import("./forms/AchievementMetricForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
+const StudentAchievementForm = dynamic(
+	() => import("./forms/StudentAchievementForm"),
+	{
+		loading: () => <h1>Loading...</h1>,
+	}
+);
 
 const forms: {
 	[key: string]: (
@@ -306,6 +368,36 @@ const forms: {
 			setOpen={setOpen}
 			relatedData={relatedData}
 		/>
+	),
+	timelineEvent: (setOpen, type, data, relatedData) => (
+		<TimelineEventForm type={type} data={data} setOpen={setOpen} />
+	),
+	principalInfo: (setOpen, type, data, relatedData) => (
+		<PrincipalInfoForm type={type} data={data} setOpen={setOpen} />
+	),
+	leadershipMember: (setOpen, type, data, relatedData) => (
+		<LeadershipMemberForm type={type} data={data} setOpen={setOpen} />
+	),
+	supportStaff: (setOpen, type, data, relatedData) => (
+		<SupportStaffForm type={type} data={data} setOpen={setOpen} />
+	),
+	facility: (setOpen, type, data, relatedData) => (
+		<FacilityForm type={type} data={data} setOpen={setOpen} />
+	),
+	additionalFeature: (setOpen, type, data, relatedData) => (
+		<AdditionalFeatureForm type={type} data={data} setOpen={setOpen} />
+	),
+	campusStat: (setOpen, type, data, relatedData) => (
+		<CampusStatForm type={type} data={data} setOpen={setOpen} />
+	),
+	award: (setOpen, type, data, relatedData) => (
+		<AwardForm type={type} data={data} setOpen={setOpen} />
+	),
+	achievementMetric: (setOpen, type, data, relatedData) => (
+		<AchievementMetricForm type={type} data={data} setOpen={setOpen} />
+	),
+	studentAchievement: (setOpen, type, data, relatedData) => (
+		<StudentAchievementForm type={type} data={data} setOpen={setOpen} />
 	),
 };
 

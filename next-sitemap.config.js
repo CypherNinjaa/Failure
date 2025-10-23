@@ -14,8 +14,13 @@ module.exports = {
 		"/list/*",
 		"/profile",
 		"/settings",
-		"**/sign-in",
-		"**/sign-up",
+		"/sign-in*",
+		"/sign-out*",
+		"/api/*",
+		"/*.png",
+		"/*.jpg",
+		"/*.jpeg",
+		"/*.ico",
 	],
 	// Default transformation function
 	transform: async (config, path) => {
@@ -54,6 +59,11 @@ module.exports = {
 		) {
 			priority = 0.6;
 			changefreq = path.startsWith("/news") ? "daily" : "weekly";
+		}
+		// Testimonial submission - Medium priority
+		else if (path.startsWith("/submit-testimonial")) {
+			priority = 0.5;
+			changefreq = "monthly";
 		}
 
 		return {
