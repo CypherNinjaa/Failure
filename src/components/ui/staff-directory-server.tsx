@@ -40,63 +40,26 @@ export async function StaffDirectoryServer() {
 		phone: teacher.phone || "",
 	}));
 
-	// Hardcoded non-teaching staff for now (can be moved to database later)
-	const nonTeachingStaff = [
-		{
-			name: "Mr. James Parker",
-			role: "IT Administrator",
-			department: "Technology",
-			education: "B.Tech Computer Engineering",
-			experience: "7 Years",
-			specialization: "Network Management, System Security",
-			image: "JP",
+	// Fetch support staff from database
+	const supportStaffData = await prisma.supportStaff.findMany({
+		where: {
+			isActive: true,
 		},
-		{
-			name: "Ms. Maria Gonzalez",
-			role: "School Nurse",
-			department: "Health Services",
-			education: "B.Sc. Nursing, RN License",
-			experience: "11 Years",
-			specialization: "Child Health, Emergency Care",
-			image: "MG",
+		orderBy: {
+			displayOrder: "asc",
 		},
-		{
-			name: "Mr. Ahmed Hassan",
-			role: "Sports Coordinator",
-			department: "Physical Education",
-			education: "M.P.Ed Physical Education",
-			experience: "6 Years",
-			specialization: "Athletic Training, Sports Psychology",
-			image: "AH",
-		},
-		{
-			name: "Ms. Rachel Green",
-			role: "Librarian",
-			department: "Library Services",
-			education: "M.L.I.S Library Science",
-			experience: "9 Years",
-			specialization: "Digital Archives, Research Support",
-			image: "RG",
-		},
-		{
-			name: "Mr. Thomas Brown",
-			role: "Lab Technician",
-			department: "Science Department",
-			education: "B.Sc. Chemistry",
-			experience: "5 Years",
-			specialization: "Lab Safety, Equipment Maintenance",
-			image: "TB",
-		},
-		{
-			name: "Ms. Anna Kim",
-			role: "Administrative Assistant",
-			department: "Administration",
-			education: "B.A. Business Administration",
-			experience: "8 Years",
-			specialization: "Student Records, Office Management",
-			image: "AK",
-		},
-	];
+	});
+
+	// Transform database support staff to match the component interface
+	const nonTeachingStaff = supportStaffData.map((staff) => ({
+		name: staff.name,
+		role: staff.role,
+		department: staff.department,
+		education: staff.education || "N/A",
+		experience: staff.experience || "N/A",
+		specialization: staff.specialization || "N/A",
+		image: staff.photo,
+	}));
 
 	return (
 		<StaffDirectoryClient

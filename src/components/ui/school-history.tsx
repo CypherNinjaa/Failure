@@ -3,59 +3,20 @@
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 
-export function SchoolHistory() {
-	const timelineEvents = [
-		{
-			year: "1999",
-			title: "Foundation",
-			description:
-				"Happy Child School was established with a vision to provide quality education in a nurturing environment.",
-			icon: "🏫",
-		},
-		{
-			year: "2003",
-			title: "First Graduation",
-			description:
-				"Our first batch of students graduated with outstanding results, setting the foundation for excellence.",
-			icon: "🎓",
-		},
-		{
-			year: "2008",
-			title: "Campus Expansion",
-			description:
-				"Expanded our campus to include state-of-the-art science labs and computer facilities.",
-			icon: "🔬",
-		},
-		{
-			year: "2012",
-			title: "Sports Complex",
-			description:
-				"Added a modern sports complex with swimming pool, basketball court, and football ground.",
-			icon: "🏆",
-		},
-		{
-			year: "2016",
-			title: "Digital Learning",
-			description:
-				"Introduced smart classrooms and digital learning platforms for enhanced education.",
-			icon: "💻",
-		},
-		{
-			year: "2020",
-			title: "Online Excellence",
-			description:
-				"Successfully transitioned to hybrid learning during the pandemic without compromising quality.",
-			icon: "🌐",
-		},
-		{
-			year: "2024",
-			title: "AI Integration",
-			description:
-				"Pioneered AI-assisted learning and personalized education pathways for students.",
-			icon: "🤖",
-		},
-	];
+interface TimelineEvent {
+	year: string;
+	title: string;
+	description: string;
+	icon: string;
+}
 
+interface SchoolHistoryClientProps {
+	timelineEvents: TimelineEvent[];
+}
+
+export function SchoolHistoryClient({
+	timelineEvents,
+}: SchoolHistoryClientProps) {
 	return (
 		<section className="py-16 md:py-24 bg-muted/30">
 			<div className="container px-4">
@@ -180,4 +141,25 @@ export function SchoolHistory() {
 			</div>
 		</section>
 	);
+}
+
+// Backward compatibility export with default data
+export function SchoolHistory() {
+	const defaultEvents = [
+		{
+			year: "1999",
+			title: "Foundation",
+			description:
+				"Happy Child School was established with a vision to provide quality education.",
+			icon: "🏫",
+		},
+		{
+			year: "2024",
+			title: "AI Integration",
+			description: "Pioneered AI-assisted learning for students.",
+			icon: "🤖",
+		},
+	];
+
+	return <SchoolHistoryClient timelineEvents={defaultEvents} />;
 }

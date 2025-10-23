@@ -563,3 +563,25 @@ export const leadershipMemberSchema = z.object({
 });
 
 export type LeadershipMemberSchema = z.infer<typeof leadershipMemberSchema>;
+
+// Support Staff Schema
+export const supportStaffSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(1, { message: "Name is required!" }),
+	role: z.string().min(1, { message: "Role is required!" }),
+	department: z.string().min(1, { message: "Department is required!" }),
+	education: z.string().optional().or(z.literal("")),
+	experience: z.string().optional().or(z.literal("")),
+	specialization: z.string().optional().or(z.literal("")),
+	photo: z.string().min(1, { message: "Photo/Initials are required!" }),
+	email: z
+		.string()
+		.email({ message: "Invalid email address!" })
+		.optional()
+		.or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type SupportStaffSchema = z.infer<typeof supportStaffSchema>;

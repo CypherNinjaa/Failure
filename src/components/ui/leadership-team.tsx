@@ -3,72 +3,24 @@
 import { motion } from "framer-motion";
 import { Users, Mail, Phone, Linkedin, Award, Calendar } from "lucide-react";
 
-export function LeadershipTeam() {
-	const leaders = [
-		{
-			name: "Dr. Sarah Johnson",
-			position: "Principal & Chief Education Officer",
-			experience: "25+ Years",
-			education: "Ph.D. in Educational Leadership, Harvard University",
-			image: "SJ",
-			email: "sarah.johnson@happychild.edu",
-			phone: "+1 (555) 123-4567",
-			specialization: "Educational Leadership, Curriculum Development",
-			achievements: [
-				"National Education Excellence Award 2023",
-				"Educational Innovation Leader 2022",
-			],
-			quote: "Every child is a unique star waiting to shine.",
-		},
-		{
-			name: "Prof. Michael Chen",
-			position: "Vice Principal & Academic Director",
-			experience: "20+ Years",
-			education: "M.Ed. in Curriculum & Instruction, Stanford University",
-			image: "MC",
-			email: "michael.chen@happychild.edu",
-			phone: "+1 (555) 123-4568",
-			specialization: "STEM Education, Digital Learning",
-			achievements: [
-				"Technology Integration Award 2023",
-				"Outstanding Educator 2021",
-			],
-			quote: "Innovation in education opens doors to endless possibilities.",
-		},
-		{
-			name: "Dr. Emily Rodriguez",
-			position: "Director of Student Affairs",
-			experience: "18+ Years",
-			education: "Ph.D. in Child Psychology, MIT",
-			image: "ER",
-			email: "emily.rodriguez@happychild.edu",
-			phone: "+1 (555) 123-4569",
-			specialization: "Child Psychology, Student Counseling",
-			achievements: [
-				"Child Welfare Champion 2023",
-				"Counseling Excellence Award 2022",
-			],
-			quote:
-				"Understanding each child&apos;s journey is the key to their success.",
-		},
-		{
-			name: "Mr. David Kim",
-			position: "Head of Operations",
-			experience: "15+ Years",
-			education: "MBA in Educational Management, Wharton",
-			image: "DK",
-			email: "david.kim@happychild.edu",
-			phone: "+1 (555) 123-4570",
-			specialization: "Operations Management, Strategic Planning",
-			achievements: [
-				"Operational Excellence Award 2023",
-				"Leadership Recognition 2021",
-			],
-			quote:
-				"Efficient operations create the foundation for excellent education.",
-		},
-	];
+interface Leader {
+	name: string;
+	position: string;
+	experience: string;
+	education: string;
+	image: string;
+	email: string;
+	phone: string;
+	specialization: string;
+	achievements: string[];
+	quote: string;
+}
 
+interface LeadershipTeamClientProps {
+	leaders: Leader[];
+}
+
+export function LeadershipTeamClient({ leaders }: LeadershipTeamClientProps) {
 	return (
 		<section className="py-16 md:py-24 bg-background">
 			<div className="container px-4">
@@ -243,7 +195,7 @@ export function LeadershipTeam() {
 						{ number: "15+", label: "Awards Won", icon: "🏆" },
 						{ number: "5000+", label: "Students Mentored", icon: "👥" },
 						{ number: "25+", label: "Programs Led", icon: "📚" },
-					].map((stat, index) => (    
+					].map((stat, index) => (
 						<motion.div
 							key={stat.label}
 							initial={{ opacity: 0, y: 20 }}
@@ -290,4 +242,24 @@ export function LeadershipTeam() {
 			</div>
 		</section>
 	);
+}
+
+// Backward compatibility export with default data
+export function LeadershipTeam() {
+	const defaultLeaders = [
+		{
+			name: "Dr. Sarah Johnson",
+			position: "Principal & Chief Education Officer",
+			experience: "25+ Years",
+			education: "Ph.D. in Educational Leadership",
+			image: "SJ",
+			email: "sarah.johnson@school.edu",
+			phone: "+1 (555) 123-4567",
+			specialization: "Educational Leadership",
+			achievements: ["National Education Excellence Award 2023"],
+			quote: "Every child is a unique star waiting to shine.",
+		},
+	];
+
+	return <LeadershipTeamClient leaders={defaultLeaders} />;
 }

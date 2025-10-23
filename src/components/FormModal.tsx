@@ -25,6 +25,7 @@ import {
 	deleteTimelineEvent,
 	deletePrincipalInfo,
 	deleteLeadershipMember,
+	deleteSupportStaff,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -59,6 +60,7 @@ const deleteActionMap = {
 	timelineEvent: deleteTimelineEvent,
 	principalInfo: deletePrincipalInfo,
 	leadershipMember: deleteLeadershipMember,
+	supportStaff: deleteSupportStaff,
 	// Note: Payments, salaries, income, expense should not be deletable
 };
 
@@ -157,6 +159,9 @@ const LeadershipMemberForm = dynamic(
 		loading: () => <h1>Loading...</h1>,
 	}
 );
+const SupportStaffForm = dynamic(() => import("./forms/SupportStaffForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
 	[key: string]: (
@@ -333,6 +338,9 @@ const forms: {
 	),
 	leadershipMember: (setOpen, type, data, relatedData) => (
 		<LeadershipMemberForm type={type} data={data} setOpen={setOpen} />
+	),
+	supportStaff: (setOpen, type, data, relatedData) => (
+		<SupportStaffForm type={type} data={data} setOpen={setOpen} />
 	),
 };
 

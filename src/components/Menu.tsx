@@ -190,6 +190,12 @@ const menuItems = [
 				href: "/media-coordinator/leadership-team",
 				visible: ["media-coordinator", "admin"],
 			},
+			{
+				icon: "/parent.png",
+				label: "Support Staff",
+				href: "/media-coordinator/support-staff",
+				visible: ["media-coordinator", "admin"],
+			},
 		],
 	},
 	{

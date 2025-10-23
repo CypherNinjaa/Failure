@@ -25,6 +25,10 @@ import {
 	StatSchema,
 	TestimonialSchema,
 	testimonialSchema,
+	timelineEventSchema,
+	principalInfoSchema,
+	leadershipMemberSchema,
+	supportStaffSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";
@@ -5132,6 +5136,124 @@ export const deleteLeadershipMember = async (
 		return { success: true, error: false };
 	} catch (err) {
 		console.error("Error deleting leadership member:", err);
+		return { success: false, error: true };
+	}
+};
+
+// ======================= SUPPORT STAFF ACTIONS =======================
+
+export const createSupportStaff = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const validatedData = supportStaffSchema.safeParse({
+			name: data.get("name"),
+			role: data.get("role"),
+			department: data.get("department"),
+			education: data.get("education"),
+			experience: data.get("experience"),
+			specialization: data.get("specialization"),
+			photo: data.get("photo"),
+			email: data.get("email"),
+			phone: data.get("phone"),
+			displayOrder: data.get("displayOrder"),
+			isActive: data.get("isActive") === "true",
+		});
+
+		if (!validatedData.success) {
+			return { success: false, error: true };
+		}
+
+		await prisma.supportStaff.create({
+			data: validatedData.data,
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/support-staff");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating support staff:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateSupportStaff = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const validatedData = supportStaffSchema.safeParse({
+			id: data.get("id"),
+			name: data.get("name"),
+			role: data.get("role"),
+			department: data.get("department"),
+			education: data.get("education"),
+			experience: data.get("experience"),
+			specialization: data.get("specialization"),
+			photo: data.get("photo"),
+			email: data.get("email"),
+			phone: data.get("phone"),
+			displayOrder: data.get("displayOrder"),
+			isActive: data.get("isActive") === "true",
+		});
+
+		if (!validatedData.success) {
+			return { success: false, error: true };
+		}
+
+		const { id, ...updateData } = validatedData.data;
+
+		await prisma.supportStaff.update({
+			where: { id },
+			data: updateData,
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/support-staff");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating support staff:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteSupportStaff = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+		await prisma.supportStaff.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/about");
+		revalidatePath("/media-coordinator/support-staff");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting support staff:", err);
 		return { success: false, error: true };
 	}
 };

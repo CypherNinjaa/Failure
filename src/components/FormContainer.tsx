@@ -32,7 +32,8 @@ export type FormContainerProps = {
 		| "testimonial"
 		| "timelineEvent"
 		| "principalInfo"
-		| "leadershipMember";
+		| "leadershipMember"
+		| "supportStaff";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;

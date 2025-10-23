@@ -393,6 +393,12 @@ const BottomNav = ({ role, userId }: BottomNavProps) => {
 				visible: ["media-coordinator"],
 			},
 			{
+				icon: "/parent.png",
+				label: "Support Staff",
+				href: "/media-coordinator/support-staff",
+				visible: ["media-coordinator"],
+			},
+			{
 				icon: "/profile.png",
 				label: "Profile",
 				href: "/profile",
