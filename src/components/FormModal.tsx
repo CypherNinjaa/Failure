@@ -32,6 +32,7 @@ import {
 	deleteAward,
 	deleteAchievementMetric,
 	deleteStudentAchievement,
+	deleteGalleryAlbum,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -73,6 +74,7 @@ const deleteActionMap = {
 	award: deleteAward,
 	achievementMetric: deleteAchievementMetric,
 	studentAchievement: deleteStudentAchievement,
+	galleryAlbum: deleteGalleryAlbum,
 	// Note: Payments, salaries, income, expense should not be deletable
 };
 
@@ -201,6 +203,9 @@ const StudentAchievementForm = dynamic(
 		loading: () => <h1>Loading...</h1>,
 	}
 );
+const GalleryAlbumForm = dynamic(() => import("./forms/GalleryAlbumForm"), {
+	loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
 	[key: string]: (
@@ -398,6 +403,9 @@ const forms: {
 	),
 	studentAchievement: (setOpen, type, data, relatedData) => (
 		<StudentAchievementForm type={type} data={data} setOpen={setOpen} />
+	),
+	galleryAlbum: (setOpen, type, data, relatedData) => (
+		<GalleryAlbumForm type={type} data={data} setOpen={setOpen} />
 	),
 };
 

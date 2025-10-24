@@ -39,7 +39,8 @@ export type FormContainerProps = {
 		| "campusStat"
 		| "award"
 		| "achievementMetric"
-		| "studentAchievement";
+		| "studentAchievement"
+		| "galleryAlbum";
 	type: "create" | "update" | "delete";
 	data?: any;
 	id?: number | string;

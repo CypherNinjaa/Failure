@@ -16,10 +16,10 @@ export default function AdmissionsPage() {
 			<AdmissionsHero />
 			<WhyChooseUs />
 			<AdmissionProcess />
-			<EligibilityCriteria />
-			<FeeStructure />
+			{/* <EligibilityCriteria /> */}
+			{/* <FeeStructure /> */}
 			<OnlineAdmissionForm />
-			<ScholarshipHighlights />
+			{/* <ScholarshipHighlights /> */}
 			<AdmissionsFAQ />
 			<ModernFooter />
 		</main>

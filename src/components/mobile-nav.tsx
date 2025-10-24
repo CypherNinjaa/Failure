@@ -25,8 +25,8 @@ export function MobileNav({ className }: MobileNavProps) {
 	const navItems = [
 		{ href: "/", label: "Home", icon: Home },
 		{ href: "/about", label: "About", icon: Users },
-		{ href: "/academics", label: "Academics", icon: BookOpen },
-		{ href: "/facilities", label: "Facilities", icon: MapPin },
+		// { href: "/academics", label: "Academics", icon: BookOpen },
+		// { href: "/facilities", label: "Facilities", icon: MapPin },
 		{ href: "/admissions", label: "Admissions", icon: Users },
 		{ href: "/contact", label: "Contact", icon: Phone },
 	];

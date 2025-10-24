@@ -14,8 +14,27 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export function VideoGallery() {
-	const [playingVideo, setPlayingVideo] = useState<number | null>(null);
+interface VideoAlbum {
+	id: string | number;
+	title: string;
+	description: string;
+	category: "all" | "events" | "academics" | "sports" | "testimonials";
+	duration: string;
+	views: number;
+	uploadDate: string;
+	thumbnail: string;
+	thumbnailGradient: string;
+	featured: boolean;
+}
+
+interface VideoGalleryProps {
+	videos?: VideoAlbum[];
+}
+
+export function VideoGallery({
+	videos: providedVideos,
+}: VideoGalleryProps = {}) {
+	const [playingVideo, setPlayingVideo] = useState<string | null>(null);
 	const [selectedCategory, setSelectedCategory] = useState("all");
 	const [isMounted, setIsMounted] = useState(false);
 
@@ -23,15 +42,8 @@ export function VideoGallery() {
 		setIsMounted(true);
 	}, []);
 
-	const videoCategories = [
-		{ id: "all", name: "All Videos", count: 45 },
-		{ id: "events", name: "School Events", count: 18 },
-		{ id: "academics", name: "Academic Life", count: 12 },
-		{ id: "sports", name: "Sports Highlights", count: 8 },
-		{ id: "testimonials", name: "Testimonials", count: 7 },
-	];
-
-	const videos = [
+	// Default videos for backward compatibility
+	const defaultVideos = [
 		{
 			id: 1,
 			title: "Annual Day Celebration 2024",
@@ -130,6 +142,37 @@ export function VideoGallery() {
 		},
 	];
 
+	// Use provided videos or default
+	const videos =
+		providedVideos && providedVideos.length > 0
+			? providedVideos
+			: defaultVideos;
+
+	// Calculate category counts dynamically
+	const videoCategories = [
+		{ id: "all", name: "All Videos", count: videos.length },
+		{
+			id: "events",
+			name: "School Events",
+			count: videos.filter((v) => v.category === "events").length,
+		},
+		{
+			id: "academics",
+			name: "Academic Life",
+			count: videos.filter((v) => v.category === "academics").length,
+		},
+		{
+			id: "sports",
+			name: "Sports Highlights",
+			count: videos.filter((v) => v.category === "sports").length,
+		},
+		{
+			id: "testimonials",
+			name: "Testimonials",
+			count: videos.filter((v) => v.category === "testimonials").length,
+		},
+	];
+
 	const filteredVideos =
 		selectedCategory === "all"
 			? videos
@@ -137,8 +180,8 @@ export function VideoGallery() {
 
 	const featuredVideos = videos.filter((video) => video.featured);
 
-	const togglePlay = (videoId: number) => {
-		setPlayingVideo(playingVideo === videoId ? null : videoId);
+	const togglePlay = (videoId: string | number) => {
+		setPlayingVideo(playingVideo === String(videoId) ? null : String(videoId));
 	};
 
 	// Prevent hydration mismatch
@@ -459,3 +502,6 @@ export function VideoGallery() {
 		</section>
 	);
 }
+
+// Default export for backward compatibility
+export default VideoGallery;

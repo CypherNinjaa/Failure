@@ -33,12 +33,12 @@ export function ModernHeader() {
 	const navItems = [
 		{ name: "Home", href: "/" },
 		{ name: "About", href: "/about" },
-		{ name: "Academics", href: "/academics" },
-		{ name: "Activities", href: "/co-curricular" },
-		{ name: "Facilities", href: "/facilities" },
+		// { name: "Academics", href: "/academics" },
+		// { name: "Activities", href: "/co-curricular" },
+		// { name: "Facilities", href: "/facilities" },
 		{ name: "Admissions", href: "/admissions" },
-		{ name: "News", href: "/news" },
-		{ name: "Blog", href: "/blog" },
+		// { name: "News", href: "/news" },
+		// { name: "Blog", href: "/blog" },
 		{ name: "Gallery", href: "/gallery" },
 		{ name: "Contact", href: "/contact" },
 	];

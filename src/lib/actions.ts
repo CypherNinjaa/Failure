@@ -35,6 +35,7 @@ import {
 	awardSchema,
 	achievementMetricSchema,
 	studentAchievementSchema,
+	galleryAlbumSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";
@@ -5910,6 +5911,156 @@ export const deleteStudentAchievement = async (
 		return { success: true, error: false };
 	} catch (err) {
 		console.error("Error deleting student achievement:", err);
+		return { success: false, error: true };
+	}
+};
+
+// ============================================
+// GALLERY ALBUM ACTIONS
+// ============================================
+
+export const createGalleryAlbum = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const validatedData = galleryAlbumSchema.parse({
+			type: data.get("type"),
+			src: data.get("src"),
+			title: data.get("title"),
+			description: data.get("description"),
+			category: data.get("category"),
+			eventDate: data.get("eventDate"),
+			photographer: data.get("photographer"),
+			duration: data.get("duration"),
+			thumbnail: data.get("thumbnail"),
+			likes: data.get("likes"),
+			views: data.get("views"),
+			featured: data.get("featured") === "true",
+			displayOrder: data.get("displayOrder"),
+			isActive: data.get("isActive") === "true",
+		});
+
+		await prisma.galleryAlbum.create({
+			data: {
+				type: validatedData.type,
+				src: validatedData.src,
+				title: validatedData.title,
+				description: validatedData.description,
+				category: validatedData.category,
+				eventDate: validatedData.eventDate || null,
+				photographer: validatedData.photographer || null,
+				duration: validatedData.duration || null,
+				thumbnail: validatedData.thumbnail || null,
+				likes: validatedData.likes || 0,
+				views: validatedData.views || 0,
+				featured: validatedData.featured || false,
+				displayOrder: validatedData.displayOrder || 0,
+				isActive: validatedData.isActive ?? true,
+			},
+		});
+
+		revalidatePath("/gallery");
+		revalidatePath("/media-coordinator/gallery");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating gallery album:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateGalleryAlbum = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const validatedData = galleryAlbumSchema.parse({
+			id: data.get("id"),
+			type: data.get("type"),
+			src: data.get("src"),
+			title: data.get("title"),
+			description: data.get("description"),
+			category: data.get("category"),
+			eventDate: data.get("eventDate"),
+			photographer: data.get("photographer"),
+			duration: data.get("duration"),
+			thumbnail: data.get("thumbnail"),
+			likes: data.get("likes"),
+			views: data.get("views"),
+			featured: data.get("featured") === "true",
+			displayOrder: data.get("displayOrder"),
+			isActive: data.get("isActive") === "true",
+		});
+
+		if (!validatedData.id) {
+			return { success: false, error: true, message: "ID is required" };
+		}
+
+		await prisma.galleryAlbum.update({
+			where: { id: validatedData.id },
+			data: {
+				type: validatedData.type,
+				src: validatedData.src,
+				title: validatedData.title,
+				description: validatedData.description,
+				category: validatedData.category,
+				eventDate: validatedData.eventDate || null,
+				photographer: validatedData.photographer || null,
+				duration: validatedData.duration || null,
+				thumbnail: validatedData.thumbnail || null,
+				likes: validatedData.likes || 0,
+				views: validatedData.views || 0,
+				featured: validatedData.featured || false,
+				displayOrder: validatedData.displayOrder || 0,
+				isActive: validatedData.isActive ?? true,
+			},
+		});
+
+		revalidatePath("/gallery");
+		revalidatePath("/media-coordinator/gallery");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating gallery album:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteGalleryAlbum = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "media-coordinator" && role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+		await prisma.galleryAlbum.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/gallery");
+		revalidatePath("/media-coordinator/gallery");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting gallery album:", err);
 		return { success: false, error: true };
 	}
 };
