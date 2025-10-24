@@ -16,26 +16,41 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export function FilterableAlbums() {
+interface GalleryAlbum {
+	id: string | number;
+	src?: string; // Optional for backward compatibility
+	title: string;
+	category:
+		| "all"
+		| "events"
+		| "sports"
+		| "academics"
+		| "cultural"
+		| "achievements";
+	date: string;
+	likes: number;
+	views: number;
+	photographer: string;
+	description: string;
+	color: string;
+}
+
+interface FilterableAlbumsProps {
+	albums?: GalleryAlbum[];
+}
+
+export function FilterableAlbums({ albums }: FilterableAlbumsProps = {}) {
 	const [activeFilter, setActiveFilter] = useState("all");
-	const [selectedImage, setSelectedImage] = useState<number | null>(null);
-	const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+	const [selectedImage, setSelectedImage] = useState<string | null>(null);
+	const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 	const [isMounted, setIsMounted] = useState(false);
 
 	useEffect(() => {
 		setIsMounted(true);
 	}, []);
 
-	const filters = [
-		{ id: "all", name: "All Photos", count: 450 },
-		{ id: "events", name: "School Events", count: 120 },
-		{ id: "sports", name: "Sports Day", count: 85 },
-		{ id: "academics", name: "Academic Activities", count: 95 },
-		{ id: "cultural", name: "Cultural Programs", count: 75 },
-		{ id: "achievements", name: "Achievements", count: 75 },
-	];
-
-	const galleryImages = [
+	// Use provided albums or fallback to hardcoded data for backward compatibility
+	const defaultGalleryImages = [
 		{
 			id: 1,
 			title: "Annual Sports Day 2024",
@@ -152,6 +167,41 @@ export function FilterableAlbums() {
 		},
 	];
 
+	// Use provided albums or fallback to default
+	const galleryImages =
+		albums && albums.length > 0 ? albums : defaultGalleryImages;
+
+	// Calculate filter counts dynamically
+	const filters = [
+		{ id: "all", name: "All Photos", count: galleryImages.length },
+		{
+			id: "events",
+			name: "School Events",
+			count: galleryImages.filter((img) => img.category === "events").length,
+		},
+		{
+			id: "sports",
+			name: "Sports Day",
+			count: galleryImages.filter((img) => img.category === "sports").length,
+		},
+		{
+			id: "academics",
+			name: "Academic Activities",
+			count: galleryImages.filter((img) => img.category === "academics").length,
+		},
+		{
+			id: "cultural",
+			name: "Cultural Programs",
+			count: galleryImages.filter((img) => img.category === "cultural").length,
+		},
+		{
+			id: "achievements",
+			name: "Achievements",
+			count: galleryImages.filter((img) => img.category === "achievements")
+				.length,
+		},
+	];
+
 	const filteredImages =
 		activeFilter === "all"
 			? galleryImages
@@ -160,7 +210,7 @@ export function FilterableAlbums() {
 	// Simulate lazy loading
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			setLoadedImages(new Set(filteredImages.map((img) => img.id)));
+			setLoadedImages(new Set(filteredImages.map((img) => String(img.id))));
 		}, 500);
 		return () => clearTimeout(timer);
 	}, [filteredImages]);
@@ -272,13 +322,13 @@ export function FilterableAlbums() {
 								exit={{ opacity: 0, scale: 0.8 }}
 								transition={{ duration: 0.3, delay: 0.1 * index }}
 								className="group cursor-pointer"
-								onClick={() => setSelectedImage(image.id)}
+								onClick={() => setSelectedImage(String(image.id))}
 							>
 								<Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:-translate-y-2 border-0 bg-card/50 backdrop-blur">
 									<CardContent className="p-0">
 										{/* Image Container */}
 										<div className="aspect-[4/3] relative overflow-hidden">
-											{loadedImages.has(image.id) ? (
+											{loadedImages.has(String(image.id)) ? (
 												<div
 													className={`w-full h-full bg-gradient-to-br ${image.color} flex items-center justify-center relative`}
 												>
@@ -443,3 +493,6 @@ export function FilterableAlbums() {
 		</section>
 	);
 }
+
+// Default export for backward compatibility
+export default FilterableAlbums;

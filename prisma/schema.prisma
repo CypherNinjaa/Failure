@@ -1231,6 +1231,47 @@ enum GalleryCategory {
   ACHIEVEMENT
 }
 
+// Dynamic Gallery Album System - Media Coordinator Management
+model GalleryAlbum {
+  id           Int           @id @default(autoincrement())
+  type         AlbumType
+  src          String        // Image/video URL (Cloudinary)
+  title        String
+  description  String
+  category     AlbumCategory
+  eventDate    DateTime?     // Date when photo/video was taken
+  photographer String?       // For images
+  duration     String?       // For videos (e.g., "15:30")
+  thumbnail    String?       // Thumbnail gradient color class (e.g., "from-blue-400 to-purple-600")
+  likes        Int           @default(0)
+  views        Int           @default(0)
+  featured     Boolean       @default(false)
+  isActive     Boolean       @default(true)
+  displayOrder Int           @default(0) // For custom ordering
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@index([displayOrder])
+  @@index([featured])
+  @@index([type])
+}
+
+enum AlbumType {
+  IMAGE
+  VIDEO
+}
+
+enum AlbumCategory {
+  EVENTS
+  SPORTS
+  ACADEMICS
+  CULTURAL
+  ACHIEVEMENTS
+  TESTIMONIALS
+}
+
 // News Ticker Management
 model NewsTickerItem {
   id          Int       @id @default(autoincrement())

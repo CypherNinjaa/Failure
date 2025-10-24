@@ -19,20 +19,20 @@ import {
 export function ModernFooter() {
 	const quickLinks = [
 		{ name: "About Us", href: "/about" },
-		{ name: "Academics", href: "/academics" },
+		// { name: "Academics", href: "/academics" },
 		{ name: "Admissions", href: "/admissions" },
-		{ name: "Facilities", href: "/facilities" },
+		// { name: "Facilities", href: "/facilities" },
 		{ name: "Gallery", href: "/gallery" },
 		{ name: "Contact", href: "/contact" },
 	];
 
 	const portalLinks = [
-		{ name: "Student Login", href: "/portal/student" },
-		{ name: "Teacher Login", href: "/portal/teacher" },
-		{ name: "Parent Login", href: "/portal/parent" },
-		{ name: "Admin Panel", href: "/portal/admin" },
-		{ name: "E-Learning", href: "/e-learning" },
-		{ name: "Digital Library", href: "/library" },
+		{ name: "Student Login", href: "/sign-in" },
+		{ name: "Teacher Login", href: "/sign-in" },
+		{ name: "Parent Login", href: "/sign-in" },
+		// { name: "Admin Panel", href: "/sign-in" },
+		// { name: "E-Learning", href: "/e-learning" },
+		// { name: "Digital Library", href: "/library" },
 	];
 
 	const contactInfo = [
@@ -53,7 +53,7 @@ export function ModernFooter() {
 		},
 		{
 			icon: Globe,
-			text: "www.happychildschool.edu",
+			text: "www.happychild.in",
 			color: "text-orange-400",
 		},
 	];

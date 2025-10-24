@@ -661,3 +661,41 @@ export const studentAchievementSchema = z.object({
 });
 
 export type StudentAchievementSchema = z.infer<typeof studentAchievementSchema>;
+
+// Gallery Album Schema
+export const galleryAlbumSchema = z.object({
+	id: z.coerce.number().optional(),
+	type: z.enum(["IMAGE", "VIDEO"], {
+		message: "Type must be either IMAGE or VIDEO!",
+	}),
+	src: z.string().min(1, { message: "Image/Video URL is required!" }),
+	title: z.string().min(1, { message: "Title is required!" }).max(200),
+	description: z
+		.string()
+		.min(1, { message: "Description is required!" })
+		.max(500),
+	category: z.enum(
+		[
+			"EVENTS",
+			"SPORTS",
+			"ACADEMICS",
+			"CULTURAL",
+			"ACHIEVEMENTS",
+			"TESTIMONIALS",
+		],
+		{
+			message: "Please select a valid category!",
+		}
+	),
+	eventDate: z.coerce.date().optional().or(z.literal("")),
+	photographer: z.string().max(100).optional().or(z.literal("")),
+	duration: z.string().max(10).optional().or(z.literal("")), // For videos (e.g., "15:30")
+	thumbnail: z.string().max(100).optional().or(z.literal("")), // Tailwind gradient classes
+	likes: z.coerce.number().default(0),
+	views: z.coerce.number().default(0),
+	featured: z.boolean().default(false),
+	displayOrder: z.coerce.number().default(0),
+	isActive: z.boolean().default(true),
+});
+
+export type GalleryAlbumSchema = z.infer<typeof galleryAlbumSchema>;

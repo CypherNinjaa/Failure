@@ -155,6 +155,12 @@ const menuItems = [
 				visible: ["media-coordinator", "admin"],
 			},
 			{
+				icon: "/images/gallery.png",
+				label: "Gallery Albums",
+				href: "/media-coordinator/gallery-albums",
+				visible: ["media-coordinator", "admin"],
+			},
+			{
 				icon: "/announcement.png",
 				label: "News Ticker",
 				href: "/media-coordinator/news-ticker",
