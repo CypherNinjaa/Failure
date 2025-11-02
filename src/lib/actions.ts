@@ -36,6 +36,7 @@ import {
 	achievementMetricSchema,
 	studentAchievementSchema,
 	galleryAlbumSchema,
+	contactSubmissionSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { clerkClient, auth } from "@clerk/nextjs/server";
@@ -6061,6 +6062,111 @@ export const deleteGalleryAlbum = async (
 		return { success: true, error: false };
 	} catch (err) {
 		console.error("Error deleting gallery album:", err);
+		return { success: false, error: true };
+	}
+};
+
+// ============= CONTACT SUBMISSION ACTIONS =============
+
+export const createContactSubmission = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const formData = {
+			name: data.get("name") as string,
+			email: data.get("email") as string,
+			phone: data.get("phone") as string,
+			subject: data.get("subject") as string,
+			message: data.get("message") as string,
+			type: data.get("type") as string,
+		};
+
+		const validatedData = contactSubmissionSchema.parse(formData);
+
+		await prisma.contactSubmission.create({
+			data: {
+				name: validatedData.name,
+				email: validatedData.email,
+				phone: validatedData.phone,
+				subject: validatedData.subject,
+				message: validatedData.message,
+				type: validatedData.type,
+				status: "NEW",
+			},
+		});
+
+		// TODO: Send email notification to admin
+
+		revalidatePath("/admin/website/contact-submissions");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error creating contact submission:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const updateContactSubmissionStatus = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+		const userId = (sessionClaims?.metadata as { userId?: string })?.userId;
+
+		if (role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = parseInt(data.get("id") as string);
+		const status = data.get("status") as "NEW" | "PENDING" | "RESOLVED";
+		const notes = data.get("notes") as string;
+
+		const updateData: any = {
+			status,
+			notes: notes || null,
+		};
+
+		if (status === "RESOLVED") {
+			updateData.resolvedAt = new Date();
+			updateData.resolvedBy = userId;
+		}
+
+		await prisma.contactSubmission.update({
+			where: { id },
+			data: updateData,
+		});
+
+		revalidatePath("/admin/website/contact-submissions");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error updating contact submission status:", err);
+		return { success: false, error: true };
+	}
+};
+
+export const deleteContactSubmission = async (
+	currentState: CurrentState,
+	data: FormData
+) => {
+	try {
+		const { sessionClaims } = auth();
+		const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+		if (role !== "admin") {
+			return { success: false, error: true, message: "Unauthorized" };
+		}
+
+		const id = data.get("id") as string;
+		await prisma.contactSubmission.delete({
+			where: { id: parseInt(id) },
+		});
+
+		revalidatePath("/admin/website/contact-submissions");
+		return { success: true, error: false };
+	} catch (err) {
+		console.error("Error deleting contact submission:", err);
 		return { success: false, error: true };
 	}
 };

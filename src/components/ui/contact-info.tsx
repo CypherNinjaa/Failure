@@ -19,9 +19,7 @@ export function ContactInfo() {
 			icon: Phone,
 			title: "Phone Numbers",
 			items: [
-				{ label: "Main Office", value: "+91 98765 43210" },
-				{ label: "Admissions", value: "+91 98765 43211" },
-				{ label: "Principal", value: "+91 98765 43212" },
+				{ label: "Principal", value: "+91 7004770530" }
 			],
 			color: "from-green-400 to-blue-500",
 		},
@@ -29,9 +27,8 @@ export function ContactInfo() {
 			icon: Mail,
 			title: "Email Addresses",
 			items: [
-				{ label: "General Inquiries", value: "info@happychildschool.edu" },
-				{ label: "Admissions", value: "admissions@happychildschool.edu" },
-				{ label: "Support", value: "support@happychildschool.edu" },
+				{ label: "General Inquiries", value: "Happychildedu2017@gmail.com" }
+				
 			],
 			color: "from-purple-400 to-pink-500",
 		},
@@ -39,9 +36,9 @@ export function ContactInfo() {
 			icon: MapPin,
 			title: "Address",
 			items: [
-				{ label: "Main Campus", value: "123 Education Street" },
-				{ label: "City", value: "New Delhi, India" },
-				{ label: "Postal Code", value: "110001" },
+				{ label: "Main Campus", value: "Manju Complex, LIC Building, Bharat Chowk, Benipur" },
+				{ label: "City", value: "Darbhanga, Bihar" },
+				{ label: "Postal Code", value: "847103" },
 			],
 			color: "from-yellow-400 to-orange-500",
 		},
@@ -150,7 +147,7 @@ export function ContactInfo() {
 				</motion.div>
 
 				{/* Quick Actions */}
-				<motion.div
+				{/* <motion.div
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					viewport={{ once: true }}
@@ -184,7 +181,7 @@ export function ContactInfo() {
 							</Card>
 						))}
 					</div>
-				</motion.div>
+				</motion.div> */}
 			</div>
 		</section>
 	);

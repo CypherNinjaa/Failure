@@ -31,6 +31,7 @@ export const routeAccessMap: RouteAccessMap = {
 	"/list/income": ["admin"],
 	"/list/expenses": ["admin"],
 	"/admin-notifications": ["admin"],
+	"/admin/website/contact-submissions": ["admin"],
 	"/media-coordinator/gallery": ["media-coordinator", "admin"],
 	"/media-coordinator/gallery-albums": ["media-coordinator", "admin"],
 	"/media-coordinator/news-ticker": ["media-coordinator", "admin"],

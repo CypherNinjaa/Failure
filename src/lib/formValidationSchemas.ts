@@ -699,3 +699,32 @@ export const galleryAlbumSchema = z.object({
 });
 
 export type GalleryAlbumSchema = z.infer<typeof galleryAlbumSchema>;
+
+// Contact Submission Schema
+export const contactSubmissionSchema = z.object({
+	id: z.coerce.number().optional(),
+	name: z.string().min(2, { message: "Name must be at least 2 characters!" }),
+	email: z.string().email({ message: "Invalid email address!" }),
+	phone: z
+		.string()
+		.min(10, { message: "Phone number must be at least 10 digits!" }),
+	subject: z
+		.string()
+		.min(5, { message: "Subject must be at least 5 characters!" }),
+	message: z
+		.string()
+		.min(10, { message: "Message must be at least 10 characters!" }),
+	type: z.enum([
+		"general",
+		"admissions",
+		"academics",
+		"facilities",
+		"support",
+		"other",
+	]),
+	status: z.enum(["NEW", "PENDING", "RESOLVED"]).optional().default("NEW"),
+	notes: z.string().optional(),
+	resolvedBy: z.string().optional(),
+});
+
+export type ContactSubmissionSchema = z.infer<typeof contactSubmissionSchema>;

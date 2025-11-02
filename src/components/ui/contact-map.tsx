@@ -12,10 +12,12 @@ export function ContactMap() {
 	// School location details
 	const schoolLocation = {
 		name: "Happy Child School",
-		address: "123 Education Street, New Delhi, India 110001",
-		coordinates: { lat: 28.6139, lng: 77.209 }, // Delhi coordinates
-		googleMapsUrl: "https://goo.gl/maps/example",
-		directions: "https://goo.gl/maps/directions-example",
+		address:
+			"Manju Complex, LIC Building, Bharat Chowk, Benipur, Darbhanga, Bihar, 847103",
+		coordinates: { lat: 26.05380364229944, lng: 86.15594963069059 }, // HCS coordinates
+		googleMapsUrl: "https://maps.app.goo.gl/mydc8RfkWTG8pHyX6",
+		directions:
+			"https://www.google.com/maps/dir//Happy+Child+Play+School+Bharat+Chowk+Benipur,+Karhari,+Bihar+847103/@26.0535434,86.1558638,16z/data=!4m5!4m4!1m0!1m2!1m1!1s0x39eddc3898551b67:0xf5256624d56a300b",
 	};
 
 	const handleMapLoad = () => {
@@ -89,11 +91,11 @@ export function ContactMap() {
 
 					{/* Embedded Google Map */}
 					<iframe
-						src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3502.2416097784157!2d77.20689731508227!3d28.613938982422853!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd368f3e0091%3A0x8b8b8b8b8b8b8b8b!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1600000000000!5m2!1sen!2sin`}
-						width="100%"
-						height="100%"
+						src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3584.388911105427!2d86.15586379999999!3d26.05354339999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eddc3898551b67%3A0xf5256624d56a300b!2sHappy%20Child%20Play%20School!5e0!3m2!1sen!2sin!4v1762096577879!5m2!1sen!2sin"
+						width="600"
+						height="450"
 						style={{ border: 0 }}
-						allowFullScreen
+						allowFullScreen={true}
 						loading="lazy"
 						referrerPolicy="no-referrer-when-downgrade"
 						onLoad={handleMapLoad}
@@ -104,7 +106,7 @@ export function ContactMap() {
 			</Card>
 
 			{/* Additional Location Info */}
-			<Card className="p-6 bg-card border-border">
+			{/* <Card className="p-6 bg-card border-border">
 				<h4 className="text-lg font-semibold text-foreground mb-4">
 					Getting Here
 				</h4>
@@ -146,7 +148,7 @@ export function ContactMap() {
 						</ul>
 					</div>
 				</div>
-			</Card>
+			</Card> */}
 		</motion.div>
 	);
 }

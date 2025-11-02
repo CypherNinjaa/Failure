@@ -19,7 +19,7 @@ export default function ContactPage() {
 					<ContactForm />
 					<ContactMap />
 				</div>
-				<SocialMedia />
+				{/* <SocialMedia /> */}
 			</div>
 			<ModernFooter />
 		</div>

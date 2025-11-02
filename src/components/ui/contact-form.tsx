@@ -1,37 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useFormState } from "react-dom";
 import { motion } from "framer-motion";
 import { Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-
-interface FormData {
-	name: string;
-	email: string;
-	phone: string;
-	subject: string;
-	message: string;
-	type: string;
-}
+import { createContactSubmission } from "@/lib/actions";
 
 interface FormErrors {
 	[key: string]: string;
 }
 
 export function ContactForm() {
-	const [formData, setFormData] = useState<FormData>({
-		name: "",
-		email: "",
-		phone: "",
-		subject: "",
-		message: "",
-		type: "general",
+	const [state, formAction] = useFormState(createContactSubmission, {
+		success: false,
+		error: false,
 	});
 	const [errors, setErrors] = useState<FormErrors>({});
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
 	// Simulate initial loading
@@ -41,6 +28,14 @@ export function ContactForm() {
 		return () => clearTimeout(timer);
 	}, []);
 
+	// Handle success state
+	useEffect(() => {
+		if (state.success) {
+			// Form will be reset automatically
+			setErrors({});
+		}
+	}, [state]);
+
 	const inquiryTypes = [
 		{ value: "general", label: "General Inquiry" },
 		{ value: "admissions", label: "Admissions" },
@@ -49,85 +44,6 @@ export function ContactForm() {
 		{ value: "support", label: "Technical Support" },
 		{ value: "other", label: "Other" },
 	];
-
-	const validateForm = (): boolean => {
-		const newErrors: FormErrors = {};
-
-		if (!formData.name.trim()) {
-			newErrors.name = "Name is required";
-		} else if (formData.name.length < 2) {
-			newErrors.name = "Name must be at least 2 characters";
-		}
-
-		if (!formData.email.trim()) {
-			newErrors.email = "Email is required";
-		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-			newErrors.email = "Please enter a valid email address";
-		}
-
-		if (!formData.phone.trim()) {
-			newErrors.phone = "Phone number is required";
-		} else if (!/^[+]?[\d\s-()]{10,}$/.test(formData.phone)) {
-			newErrors.phone = "Please enter a valid phone number";
-		}
-
-		if (!formData.subject.trim()) {
-			newErrors.subject = "Subject is required";
-		} else if (formData.subject.length < 5) {
-			newErrors.subject = "Subject must be at least 5 characters";
-		}
-
-		if (!formData.message.trim()) {
-			newErrors.message = "Message is required";
-		} else if (formData.message.length < 10) {
-			newErrors.message = "Message must be at least 10 characters";
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!validateForm()) {
-			return;
-		}
-
-		setIsSubmitting(true);
-
-		// Simulate API call
-		try {
-			await new Promise((resolve) => setTimeout(resolve, 2000));
-			setIsSubmitted(true);
-			setFormData({
-				name: "",
-				email: "",
-				phone: "",
-				subject: "",
-				message: "",
-				type: "general",
-			});
-		} catch (error) {
-			console.error("Form submission error:", error);
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
-
-	const handleChange = (
-		e: React.ChangeEvent<
-			HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-		>
-	) => {
-		const { name, value } = e.target;
-		setFormData((prev) => ({ ...prev, [name]: value }));
-
-		// Clear error when user starts typing
-		if (errors[name]) {
-			setErrors((prev) => ({ ...prev, [name]: "" }));
-		}
-	};
 
 	// Skeleton loader component
 	const SkeletonLoader = () => (
@@ -157,7 +73,7 @@ export function ContactForm() {
 		);
 	}
 
-	if (isSubmitted) {
+	if (state.success) {
 		return (
 			<motion.div
 				initial={{ opacity: 0, scale: 0.9 }}
@@ -176,7 +92,7 @@ export function ContactForm() {
 						hours.
 					</p>
 					<Button
-						onClick={() => setIsSubmitted(false)}
+						onClick={() => window.location.reload()}
 						className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
 					>
 						Send Another Message
@@ -204,7 +120,7 @@ export function ContactForm() {
 					</p>
 				</div>
 
-				<form onSubmit={handleSubmit} className="space-y-6">
+				<form action={formAction} className="space-y-6">
 					{/* Inquiry Type */}
 					<div>
 						<label className="block text-sm font-medium text-foreground mb-2">
@@ -212,8 +128,7 @@ export function ContactForm() {
 						</label>
 						<select
 							name="type"
-							value={formData.type}
-							onChange={handleChange}
+							defaultValue="general"
 							className="w-full p-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
 						>
 							{inquiryTypes.map((type) => (
@@ -233,8 +148,7 @@ export function ContactForm() {
 							<Input
 								type="text"
 								name="name"
-								value={formData.name}
-								onChange={handleChange}
+								required
 								placeholder="Enter your full name"
 								className={`${errors.name ? "border-destructive" : ""}`}
 							/>
@@ -253,8 +167,7 @@ export function ContactForm() {
 							<Input
 								type="email"
 								name="email"
-								value={formData.email}
-								onChange={handleChange}
+								required
 								placeholder="Enter your email"
 								className={`${errors.email ? "border-destructive" : ""}`}
 							/>
@@ -276,8 +189,7 @@ export function ContactForm() {
 							<Input
 								type="tel"
 								name="phone"
-								value={formData.phone}
-								onChange={handleChange}
+								required
 								placeholder="+91 98765 43210"
 								className={`${errors.phone ? "border-destructive" : ""}`}
 							/>
@@ -296,8 +208,7 @@ export function ContactForm() {
 							<Input
 								type="text"
 								name="subject"
-								value={formData.subject}
-								onChange={handleChange}
+								required
 								placeholder="What is this about?"
 								className={`${errors.subject ? "border-destructive" : ""}`}
 							/>
@@ -317,8 +228,7 @@ export function ContactForm() {
 						</label>
 						<textarea
 							name="message"
-							value={formData.message}
-							onChange={handleChange}
+							required
 							rows={6}
 							placeholder="Tell us more about your inquiry..."
 							className={`w-full p-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 resize-vertical ${
@@ -336,20 +246,10 @@ export function ContactForm() {
 					{/* Submit Button */}
 					<Button
 						type="submit"
-						disabled={isSubmitting}
-						className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 text-lg font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+						className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 text-lg font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
 					>
-						{isSubmitting ? (
-							<>
-								<Loader2 className="w-5 h-5 mr-2 animate-spin" />
-								Sending Message...
-							</>
-						) : (
-							<>
-								<Send className="w-5 h-5 mr-2" />
-								Send Message
-							</>
-						)}
+						<Send className="w-5 h-5 mr-2" />
+						Send Message
 					</Button>
 				</form>
 			</Card>

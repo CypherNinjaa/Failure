@@ -46,6 +46,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
 			changeFrequency: "monthly",
 			priority: 0.5,
 		},
+		// Developer page - Medium priority
+		{
+			url: `${baseUrl}/developer`,
+			lastModified: currentDate,
+			changeFrequency: "monthly",
+			priority: 0.6,
+		},
 		// Legal pages - Low priority
 		{
 			url: `${baseUrl}/privacy`,

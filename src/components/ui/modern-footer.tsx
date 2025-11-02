@@ -48,7 +48,7 @@ export function ModernFooter() {
 		},
 		{
 			icon: Mail,
-			text: "info@happychildschool.edu",
+			text: "Happychildedu2017@gmail.com",
 			color: "text-purple-400",
 		},
 		{
@@ -245,11 +245,17 @@ export function ModernFooter() {
 							© 2025 Happy Child School. All rights reserved.
 						</p>
 
-						<div className="flex items-center gap-1 text-sm text-gray-400">
+						<Link
+							href="/developer"
+							className="flex items-center gap-1 text-sm text-gray-400 hover:text-purple-400 transition-colors group"
+						>
 							<span>Made with</span>
-							<Heart className="w-4 h-4 text-red-400 fill-current" />
+							<Heart className="w-4 h-4 text-red-400 fill-current group-hover:scale-110 transition-transform" />
 							<span>for education</span>
-						</div>
+							<span className="ml-1 text-purple-400 group-hover:text-purple-300">
+								• By Developer
+							</span>
+						</Link>
 
 						<div className="flex flex-wrap items-center gap-4 text-sm">
 							<Link

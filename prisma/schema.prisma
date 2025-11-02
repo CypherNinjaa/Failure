@@ -1525,3 +1525,31 @@ model StudentAchievement {
   @@index([isActive])
 }
 
+// Contact Submission Model
+model ContactSubmission {
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String
+  phone           String
+  subject         String
+  message         String   @db.Text
+  type            String   // general, admissions, academics, facilities, support, other
+  status          ContactStatus @default(NEW)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  resolvedAt      DateTime?
+  resolvedBy      String?  // Admin ID who resolved it
+  notes           String?  @db.Text // Admin notes
+  
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@index([email])
+}
+
+enum ContactStatus {
+  NEW
+  PENDING
+  RESOLVED
+}
+
