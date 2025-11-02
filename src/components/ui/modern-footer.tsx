@@ -38,12 +38,12 @@ export function ModernFooter() {
 	const contactInfo = [
 		{
 			icon: MapPin,
-			text: "123 Education Street, Learning City, 560001",
+			text: "Manju Complex, LIC Building, Bharat Chowk, Benipur, Darbhanga, Bihar 847103",
 			color: "text-green-400",
 		},
 		{
 			icon: Phone,
-			text: "+91 98765 43210",
+			text: "+91 7004770530",
 			color: "text-blue-400",
 		},
 		{
@@ -59,10 +59,14 @@ export function ModernFooter() {
 	];
 
 	const socialLinks = [
-		{ icon: Facebook, href: "#", color: "hover:text-blue-400" },
-		{ icon: Twitter, href: "#", color: "hover:text-sky-400" },
-		{ icon: Instagram, href: "#", color: "hover:text-pink-400" },
-		{ icon: Youtube, href: "#", color: "hover:text-red-400" },
+		{
+			icon: Facebook,
+			href: "https://www.facebook.com/share/1MiBotJZGg/",
+			color: "hover:text-blue-400",
+		},
+		// { icon: Twitter, href: "#", color: "hover:text-sky-400" },
+		// { icon: Instagram, href: "#", color: "hover:text-pink-400" },
+		// { icon: Youtube, href: "#", color: "hover:text-red-400" },
 	];
 
 	return (
