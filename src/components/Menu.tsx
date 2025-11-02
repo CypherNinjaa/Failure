@@ -241,6 +241,17 @@ const menuItems = [
 		],
 	},
 	{
+		title: "WEBSITE",
+		items: [
+			{
+				icon: "/mail.png",
+				label: "Contact Submissions",
+				href: "/admin/website/contact-submissions",
+				visible: ["admin"],
+			},
+		],
+	},
+	{
 		title: "FINANCE",
 		items: [
 			{

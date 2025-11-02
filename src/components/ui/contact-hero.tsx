@@ -71,19 +71,20 @@ export function ContactHero() {
 							{
 								icon: Phone,
 								title: "Call Us",
-								value: "+91 98765 43210",
+								value: "+91 7004770530",
 								color: "from-green-400 to-blue-500",
 							},
 							{
 								icon: Mail,
 								title: "Email",
-								value: "info@happychildschool.edu",
+								value: "Happychildedu2017@gmail.com",
 								color: "from-purple-400 to-pink-500",
 							},
 							{
 								icon: MapPin,
 								title: "Visit Us",
-								value: "123 Education Street, City",
+								value:
+									"Manju Complex, LIC Building, Bharat Chowk, Benipur, Darbhanga, Bihar 847103",
 								color: "from-yellow-400 to-orange-500",
 							},
 							{
