@@ -28,47 +28,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
 		},
 		// Main sections - High priority
 		{
-			url: `${baseUrl}/academics`,
-			lastModified: currentDate,
-			changeFrequency: "weekly",
-			priority: 0.8,
-		},
-		{
 			url: `${baseUrl}/admissions`,
 			lastModified: currentDate,
 			changeFrequency: "weekly",
 			priority: 0.8,
 		},
 		{
-			url: `${baseUrl}/facilities`,
-			lastModified: currentDate,
-			changeFrequency: "monthly",
-			priority: 0.7,
-		},
-		{
-			url: `${baseUrl}/co-curricular`,
-			lastModified: currentDate,
-			changeFrequency: "monthly",
-			priority: 0.7,
-		},
-		// Content sections - Medium priority
-		{
 			url: `${baseUrl}/gallery`,
 			lastModified: currentDate,
 			changeFrequency: "weekly",
-			priority: 0.6,
-		},
-		{
-			url: `${baseUrl}/news`,
-			lastModified: currentDate,
-			changeFrequency: "daily",
-			priority: 0.6,
-		},
-		{
-			url: `${baseUrl}/blog`,
-			lastModified: currentDate,
-			changeFrequency: "weekly",
-			priority: 0.6,
+			priority: 0.7,
 		},
 		// Testimonial submission - Medium priority
 		{
@@ -76,6 +45,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
 			lastModified: currentDate,
 			changeFrequency: "monthly",
 			priority: 0.5,
+		},
+		// Legal pages - Low priority
+		{
+			url: `${baseUrl}/privacy`,
+			lastModified: currentDate,
+			changeFrequency: "yearly",
+			priority: 0.3,
+		},
+		{
+			url: `${baseUrl}/terms`,
+			lastModified: currentDate,
+			changeFrequency: "yearly",
+			priority: 0.3,
+		},
+		{
+			url: `${baseUrl}/accessibility`,
+			lastModified: currentDate,
+			changeFrequency: "yearly",
+			priority: 0.3,
 		},
 	];
 
