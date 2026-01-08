@@ -203,12 +203,13 @@ export const createTeacher = async (
 	data: TeacherSchema
 ) => {
 	try {
-		const user = await clerkClient().users.createUser({
+		const user = await (clerkClient().users.createUser as any)({
 			username: data.username,
 			password: data.password,
 			firstName: data.name,
 			lastName: data.surname,
 			publicMetadata: { role: "teacher" },
+			legalAcceptedAt: new Date(),
 		});
 
 		await prisma.teacher.create({
@@ -327,12 +328,13 @@ export const createStudent = async (
 			};
 		}
 
-		const user = await clerkClient().users.createUser({
+		const user = await (clerkClient().users.createUser as any)({
 			username: data.username,
 			password: data.password,
 			firstName: data.name,
 			lastName: data.surname,
 			publicMetadata: { role: "student" },
+			legalAcceptedAt: new Date(),
 		});
 
 		await prisma.student.create({
@@ -556,12 +558,13 @@ export const createParent = async (
 	data: ParentSchema
 ) => {
 	try {
-		const user = await clerkClient().users.createUser({
+		const user = await (clerkClient().users.createUser as any)({
 			username: data.username,
 			password: data.password,
 			firstName: data.name,
 			lastName: data.surname,
 			publicMetadata: { role: "parent" },
+			legalAcceptedAt: new Date(),
 		});
 
 		await prisma.parent.create({
