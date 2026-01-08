@@ -3,7 +3,7 @@
  * Handles offline functionality, caching, and push notifications
  */
 
-const CACHE_VERSION = "v1.0.0";
+const CACHE_VERSION = "v1.0.1";
 const CACHE_NAME = `hcs-school-${CACHE_VERSION}`;
 
 // Assets to cache on install
@@ -203,6 +203,11 @@ self.addEventListener("fetch", (event) => {
 
 	// Skip cross-origin requests
 	if (url.origin !== self.location.origin) {
+		return;
+	}
+
+	// Skip POST, PUT, DELETE, PATCH requests (server actions, mutations)
+	if (request.method !== "GET" && request.method !== "HEAD") {
 		return;
 	}
 

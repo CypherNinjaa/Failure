@@ -4,16 +4,8 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import UpdatePrompt from "@/components/UpdatePrompt";
-import OfflineIndicator from "@/components/OfflineIndicator";
-import dynamic from "next/dynamic";
 import FestivalProvider from "@/components/festival/FestivalProvider";
-
-const PWAPerformanceMonitor = dynamic(
-	() => import("@/components/PWAPerformanceMonitor"),
-	{ ssr: false }
-);
+import UnregisterServiceWorker from "@/components/UnregisterServiceWorker";
 
 const inter = Inter({
 	subsets: ["latin"],
@@ -41,15 +33,6 @@ export const metadata: Metadata = {
 		"digital learning",
 		"school portal",
 	],
-	manifest: "/manifest.json",
-	appleWebApp: {
-		capable: true,
-		statusBarStyle: "default",
-		title: "HCS School",
-	},
-	formatDetection: {
-		telephone: false,
-	},
 	icons: {
 		icon: "/logo.png",
 		shortcut: "/logo.png",
@@ -86,7 +69,6 @@ export const viewport: Viewport = {
 	initialScale: 1,
 	maximumScale: 5,
 	userScalable: true,
-	viewportFit: "cover",
 	themeColor: "#417AF5",
 	colorScheme: "light",
 };
@@ -108,15 +90,7 @@ export default function RootLayout({
 		>
 			<html lang="en" suppressHydrationWarning className={inter.variable}>
 				<head>
-					<link rel="manifest" href="/manifest.json" />
 					<meta name="theme-color" content="#417AF5" />
-					<meta name="apple-mobile-web-app-capable" content="yes" />
-					<meta
-						name="apple-mobile-web-app-status-bar-style"
-						content="default"
-					/>
-					<meta name="apple-mobile-web-app-title" content="HCS School" />
-					<link rel="apple-touch-icon" href="/logo.png" />
 					<link rel="icon" type="image/png" href="/logo.png" />
 					<link rel="preconnect" href="https://fonts.googleapis.com" />
 					<link
@@ -127,40 +101,15 @@ export default function RootLayout({
 					{/* Preconnect to Clerk for faster loading */}
 					<link rel="preconnect" href="https://clerk.accounts.dev" />
 					<link rel="dns-prefetch" href="https://clerk.accounts.dev" />
-					<script
-						dangerouslySetInnerHTML={{
-							__html: `
-								if ('serviceWorker' in navigator) {
-									window.addEventListener('load', function() {
-										navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-											.then(function(registration) {
-												console.log('Service Worker registered successfully:', registration.scope);
-												
-												// Check for updates every hour
-												setInterval(function() {
-													registration.update();
-												}, 3600000);
-											})
-											.catch(function(error) {
-												console.log('Service Worker registration failed:', error);
-											});
-									});
-								}
-							`,
-						}}
-					/>
 				</head>
 				<body
 					className={`${inter.className} min-h-screen bg-background font-sans antialiased overflow-x-hidden`}
 				>
+					<UnregisterServiceWorker />
 					<FestivalProvider>
-						<PWAPerformanceMonitor />
-						<UpdatePrompt />
-						<OfflineIndicator />
 						<div className="relative flex min-h-screen flex-col w-full">
 							<main className="flex-1 w-full">{children}</main>
 						</div>
-						<PWAInstallPrompt />
 						<ToastContainer position="bottom-right" theme="light" />
 					</FestivalProvider>
 				</body>
