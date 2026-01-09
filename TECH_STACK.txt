@@ -1,0 +1,324 @@
+================================================================================
+           HAPPY CHILD SCHOOL - TECHNOLOGY STACK DOCUMENTATION
+================================================================================
+
+Project: School Management System
+Website: https://happychild.in
+Version: 0.1.0
+
+================================================================================
+                              CORE TECHNOLOGIES
+================================================================================
+
+FRONTEND FRAMEWORK
+------------------
+• Next.js 14.2.35 (App Router)
+  - Server-Side Rendering (SSR)
+  - Server Components
+  - Server Actions for mutations
+  - API Routes
+  - Middleware for route protection
+
+• React 18
+  - Modern React with Hooks
+  - Concurrent Features
+  - Suspense for data fetching
+
+• TypeScript 5
+  - Type-safe development
+  - Enhanced code quality and maintainability
+
+================================================================================
+                              STYLING & UI
+================================================================================
+
+CSS FRAMEWORK
+-------------
+• Tailwind CSS 3.4.1
+  - Utility-first CSS framework
+  - Responsive design
+  - Custom theme configuration
+
+UI COMPONENT LIBRARIES
+----------------------
+• Radix UI (Headless Components)
+  - @radix-ui/react-accordion
+  - @radix-ui/react-dialog
+  - @radix-ui/react-dropdown-menu
+  - @radix-ui/react-tabs
+  - @radix-ui/react-toast
+  - @radix-ui/react-slot
+
+• Lucide React 0.539.0
+  - Icon library
+
+• Class Variance Authority 0.7.1
+  - Component variant management
+
+• Tailwind Merge 3.3.1
+  - Tailwind class merging utility
+
+• clsx 2.1.1
+  - Conditional className utility
+
+ANIMATIONS
+----------
+• Framer Motion 12.23.24
+  - Production-ready animations
+  - Page transitions
+  - Micro-interactions
+
+================================================================================
+                              BACKEND & DATABASE
+================================================================================
+
+DATABASE
+--------
+• PostgreSQL
+  - Relational database
+  - ACID compliant
+  - Scalable and reliable
+
+ORM (Object-Relational Mapping)
+-------------------------------
+• Prisma 6.17.1
+  - Type-safe database client
+  - Database migrations
+  - Schema management
+  - Query optimization
+
+================================================================================
+                         AUTHENTICATION & SECURITY
+================================================================================
+
+AUTHENTICATION
+--------------
+• Clerk 5.4.1 (@clerk/nextjs)
+  - Complete user management
+  - Role-Based Access Control (RBAC)
+  - Multi-factor authentication
+  - Session management
+  - Social login support
+
+• @clerk/elements 0.14.6
+  - Customizable auth UI components
+
+================================================================================
+                            FORM HANDLING
+================================================================================
+
+FORM MANAGEMENT
+---------------
+• React Hook Form 7.52.2
+  - Performant form handling
+  - Minimal re-renders
+  - Easy integration
+
+• Zod 3.23.8
+  - Schema validation
+  - Type inference
+  - Runtime validation
+
+• @hookform/resolvers 3.9.0
+  - Zod integration with React Hook Form
+
+================================================================================
+                         REAL-TIME FEATURES
+================================================================================
+
+REAL-TIME COMMUNICATION
+-----------------------
+• Pusher 5.2.0 (Server)
+• Pusher-js 8.4.0 (Client)
+  - Real-time notifications
+  - Live updates
+  - WebSocket connections
+
+PUSH NOTIFICATIONS
+------------------
+• Web-Push 3.6.7
+  - Browser push notifications
+  - Service worker integration
+
+================================================================================
+                            MEDIA & FILES
+================================================================================
+
+IMAGE MANAGEMENT
+----------------
+• Cloudinary 2.8.0
+• Next-Cloudinary 6.13.0
+  - Image upload
+  - Image optimization
+  - CDN delivery
+  - Transformations
+
+IMAGE PROCESSING
+----------------
+• Sharp 0.34.4
+  - Image optimization
+  - Format conversion
+  - Resizing
+
+FACIAL RECOGNITION
+------------------
+• Face-API.js 0.22.2
+  - Face detection
+  - Face recognition
+  - Attendance verification
+
+================================================================================
+                         DATA VISUALIZATION
+================================================================================
+
+CHARTS & GRAPHS
+---------------
+• Recharts 2.12.7
+  - Interactive charts
+  - Responsive design
+  - Customizable components
+
+CALENDAR
+--------
+• React Big Calendar 1.13.2
+  - Event scheduling
+  - Multiple views (month, week, day)
+  - Drag and drop
+
+• React Calendar 5.0.0
+  - Date picker
+  - Date range selection
+
+================================================================================
+                              UTILITIES
+================================================================================
+
+DATE HANDLING
+-------------
+• Moment.js 2.30.1
+  - Date formatting
+  - Date manipulation
+  - Timezone support
+
+EMAIL
+-----
+• Nodemailer 7.0.9
+  - Email sending
+  - SMTP integration
+  - Template support
+
+EXCEL EXPORT
+------------
+• XLSX 0.18.5
+  - Excel file generation
+  - Data export functionality
+
+NOTIFICATIONS
+-------------
+• React-Toastify 10.0.5
+  - Toast notifications
+  - Customizable alerts
+
+================================================================================
+                         DEVELOPMENT TOOLS
+================================================================================
+
+LINTING & CODE QUALITY
+----------------------
+• ESLint 8
+• ESLint-Config-Next 14.2.5
+  - Code quality enforcement
+  - Best practices
+
+BUILD TOOLS
+-----------
+• PostCSS 8
+  - CSS processing
+  - Autoprefixer
+
+TYPE DEFINITIONS
+----------------
+• @types/node 20
+• @types/react 18
+• @types/react-dom 18
+• @types/nodemailer 7.0.2
+• @types/react-big-calendar 1.8.9
+• @types/web-push 3.6.4
+
+================================================================================
+                         DEPLOYMENT & HOSTING
+================================================================================
+
+HOSTING PLATFORM
+----------------
+• Railway
+  - Container-based deployment
+  - Automatic builds
+  - Environment management
+  - PostgreSQL database hosting
+
+DOMAIN & DNS
+------------
+• Cloudflare
+  - DNS management
+  - SSL/TLS certificates
+  - CDN caching
+  - DDoS protection
+
+SEO
+---
+• Next-Sitemap 4.2.3
+  - Automatic sitemap generation
+  - SEO optimization
+
+================================================================================
+                         ARCHITECTURE HIGHLIGHTS
+================================================================================
+
+DESIGN PATTERNS
+---------------
+• Server Components by default
+• Container/Presenter pattern
+• Role-Based Access Control (RBAC)
+• Server Actions for mutations
+• Optimistic UI updates
+
+KEY FEATURES
+------------
+✓ Multi-role dashboard (Admin, Teacher, Student, Parent)
+✓ Real-time notifications
+✓ Attendance management with facial recognition
+✓ Class scheduling and calendar
+✓ Exam and result management
+✓ Student/Teacher/Parent management
+✓ Analytics and reporting
+✓ Mobile-responsive design
+✓ Export to Excel functionality
+✓ Email notifications
+✓ Push notifications
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+This is a modern, full-stack school management system built with:
+
+• Frontend: Next.js 14 + React 18 + TypeScript + Tailwind CSS
+• Backend: Next.js Server Actions + Prisma ORM
+• Database: PostgreSQL
+• Authentication: Clerk
+• Real-time: Pusher
+• Media: Cloudinary
+• Hosting: Railway
+• DNS/CDN: Cloudflare
+
+The application follows modern web development best practices with a focus on:
+- Type safety
+- Performance optimization
+- Security
+- Scalability
+- User experience
+
+================================================================================
+                    Document Generated: January 2026
+================================================================================
